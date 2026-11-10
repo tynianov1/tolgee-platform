@@ -95,6 +95,7 @@ declare namespace DataCy {
         "ai-prompt-show-result-toggle": true;
         "ai-prompt-tab-advanced": true;
         "ai-prompt-tab-basic": true;
+        "ai-prompt-translate-chip": true;
         "ai-prompt-type-review": true;
         "ai-prompt-type-switch": true;
         "ai-prompt-type-translate": true;

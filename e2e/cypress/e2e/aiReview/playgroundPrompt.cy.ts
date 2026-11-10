@@ -111,10 +111,18 @@ describe('AI review prompts in the playground', () => {
     );
   });
 
-  it('prompts list shows the review chip', () => {
+  it('prompts list shows a type chip per prompt', () => {
     visitAiSettings(projectId);
     gcy('ai-prompt-item-name').should('have.length', 2);
     gcy('ai-prompt-review-chip').should('have.length', 1);
+    gcy('ai-prompt-translate-chip').should('have.length', 1);
+  });
+
+  it('prompts list shows no translate chip without the feature', () => {
+    withoutAiReviewFeature();
+    visitAiSettings(projectId);
+    gcy('ai-prompt-item-name').should('have.length', 1);
+    gcy('ai-prompt-translate-chip').should('not.exist');
   });
 
   it('deleting a prompt used by an active rule warns', () => {
