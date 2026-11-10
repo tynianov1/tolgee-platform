@@ -78,6 +78,9 @@ export const AiReviewPopover = ({
 
   const protectedNoteVisible =
     aiReview.status === 'BELOW_THRESHOLD' && state === 'REVIEWED';
+  const scoreOnly =
+    aiReview.status === 'SCORE_ONLY_PASS' ||
+    aiReview.status === 'SCORE_ONLY_FAIL';
   const showRetry =
     aiReview.status !== 'SUPERSEDED' &&
     (aiReview.status === 'FAILED' || Boolean(details?.lastFailureReason)) &&
@@ -121,15 +124,27 @@ export const AiReviewPopover = ({
             </Typography>
           )}
           {details.score != null && (
-            <Typography variant="body2" data-cy="ai-review-popover-score">
-              {t(
-                'ai_review_popover_score',
-                'Score {score} / 100, threshold {threshold}',
-                {
-                  score: details.score,
-                  threshold: details.threshold ?? '—',
-                }
-              )}
+            <Typography
+              variant="body2"
+              data-cy="ai-review-popover-score"
+              data-cy-with-threshold={String(!scoreOnly)}
+            >
+              {scoreOnly
+                ? t(
+                    'ai_review_popover_score_only_score',
+                    'Score {score} / 100',
+                    {
+                      score: details.score,
+                    }
+                  )
+                : t(
+                    'ai_review_popover_score',
+                    'Score {score} / 100, threshold {threshold}',
+                    {
+                      score: details.score,
+                      threshold: details.threshold ?? '—',
+                    }
+                  )}
             </Typography>
           )}
           <Box display="grid" color="text.secondary">

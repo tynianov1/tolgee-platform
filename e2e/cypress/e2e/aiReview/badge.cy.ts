@@ -95,7 +95,10 @@ describe('AI review badge', () => {
   it('shows score, threshold, rule, prompt, model and issues in the popover', () => {
     visitKey('key_with_issues');
     new E2AiReviewBadge('key_with_issues').openPopover('BELOW_THRESHOLD');
-    gcy('ai-review-popover-score').should('be.visible');
+    gcyAdvanced({
+      value: 'ai-review-popover-score',
+      'with-threshold': 'true',
+    }).should('be.visible');
     gcyAdvanced({ value: 'ai-review-popover-rule', rule: 'UI rule' }).should(
       'be.visible'
     );
@@ -106,6 +109,15 @@ describe('AI review badge', () => {
       value: 'ai-review-issue',
       severity: 'critical',
       points: '35',
+    }).should('be.visible');
+  });
+
+  it('a score only popover shows the score without the threshold', () => {
+    visitKey('key_score_only_pass');
+    new E2AiReviewBadge('key_score_only_pass').openPopover('SCORE_ONLY_PASS');
+    gcyAdvanced({
+      value: 'ai-review-popover-score',
+      'with-threshold': 'false',
     }).should('be.visible');
   });
 
