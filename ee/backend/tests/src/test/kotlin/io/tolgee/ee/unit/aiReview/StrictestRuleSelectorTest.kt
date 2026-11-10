@@ -1,6 +1,5 @@
 package io.tolgee.ee.unit.aiReview
 
-import io.tolgee.ee.service.aiReview.matching.EffectiveValue
 import io.tolgee.ee.service.aiReview.matching.RuleDecision
 import io.tolgee.ee.service.aiReview.matching.RuleSnapshot
 import io.tolgee.ee.service.aiReview.matching.StrictestRuleSelector
@@ -25,19 +24,6 @@ class StrictestRuleSelectorTest {
   @Test
   fun `any Never gives Never even with a lower threshold elsewhere`() {
     decide(rule(id = 1, threshold = 50), rule(id = 2, never = true)).assert.isEqualTo(RuleDecision.Never)
-  }
-
-  @Test
-  fun `language override beats the rule value for that language only`() {
-    val ruleWithOverride = rule(id = 1, threshold = 92, overrides = mapOf(DE to EffectiveValue(95, false)))
-    decide(ruleWithOverride, languageId = DE)
-      .review()
-      .threshold.assert
-      .isEqualTo(95)
-    decide(ruleWithOverride, languageId = FR)
-      .review()
-      .threshold.assert
-      .isEqualTo(92)
   }
 
   @Test
@@ -67,13 +53,6 @@ class StrictestRuleSelectorTest {
       .review()
       .rule.id.assert
       .isEqualTo(3)
-  }
-
-  @Test
-  fun `override never applies only to its language`() {
-    val ruleWithNever = rule(id = 1, overrides = mapOf(AR to EffectiveValue(85, true)))
-    decide(ruleWithNever, languageId = AR).assert.isEqualTo(RuleDecision.Never)
-    decide(ruleWithNever, languageId = DE).assert.isInstanceOf(RuleDecision.Review::class.java)
   }
 
   @Test
@@ -112,15 +91,5 @@ class StrictestRuleSelectorTest {
         activeOnly = true,
       )
     decision.assert.isEqualTo(RuleDecision.Never)
-  }
-
-  @Test
-  fun `threshold override makes an exception to a rule-level Never`() {
-    val neverRule = rule(never = true, overrides = mapOf(DE to EffectiveValue(98, false)))
-    decide(neverRule, languageId = DE)
-      .review()
-      .threshold.assert
-      .isEqualTo(98)
-    decide(neverRule, languageId = FR).assert.isEqualTo(RuleDecision.Never)
   }
 }

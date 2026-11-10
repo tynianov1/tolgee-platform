@@ -51,9 +51,12 @@ class AiReviewRuleControllerTest : AuthorizedControllerTest() {
 
   @Test
   fun `creates a rule with defaults`() {
-    performAuthPost(rulesUrl, mapOf("tagIn" to listOf("checkout"))).andIsOk.andAssertThatJson {
+    performAuthPost(
+      rulesUrl,
+      mapOf("name" to "Checkout", "tagIn" to listOf("checkout")),
+    ).andIsOk.andAssertThatJson {
       node("id").isNumber
-      node("name").isNull()
+      node("name").isEqualTo("Checkout")
       node("enabled").isEqualTo(true)
       node("tagIn").isArray.containsExactly("checkout")
       node("threshold").isEqualTo(85)
@@ -62,12 +65,17 @@ class AiReviewRuleControllerTest : AuthorizedControllerTest() {
       node("skipOpenQaIssues").isEqualTo(true)
       node("promptId").isNull()
       node("languageIds").isArray.isEmpty()
-      node("overrides").isArray.isEmpty()
     }
   }
 
   @Test
-  fun `creates a rule with languages, branches, overrides and a review prompt`() {
+  fun `a rule without a name is rejected`() {
+    performAuthPost(rulesUrl, mapOf("tagIn" to listOf("checkout"))).andIsBadRequest
+    performAuthPost(rulesUrl, mapOf("name" to "  ", "tagIn" to listOf("checkout"))).andIsBadRequest
+  }
+
+  @Test
+  fun `creates a rule with languages, branches and a review prompt`() {
     val body =
       mapOf(
         "name" to "Checkout",
@@ -77,7 +85,6 @@ class AiReviewRuleControllerTest : AuthorizedControllerTest() {
         "threshold" to 92,
         "mode" to "ACTIVE",
         "promptId" to testData.reviewPrompt.id,
-        "overrides" to listOf(mapOf("languageId" to testData.german.id, "threshold" to 95)),
       )
     performAuthPost(rulesUrl, body).andIsOk.andAssertThatJson {
       node("name").isEqualTo("Checkout")
@@ -87,9 +94,6 @@ class AiReviewRuleControllerTest : AuthorizedControllerTest() {
       node("threshold").isEqualTo(92)
       node("mode").isEqualTo("ACTIVE")
       node("promptId").isEqualTo(testData.reviewPrompt.id)
-      node("overrides[0].languageId").isEqualTo(testData.german.id)
-      node("overrides[0].threshold").isEqualTo(95)
-      node("overrides[0].never").isEqualTo(false)
     }
   }
 
@@ -100,14 +104,14 @@ class AiReviewRuleControllerTest : AuthorizedControllerTest() {
 
   @Test
   fun `rejects a TRANSLATE prompt`() {
-    performAuthPost(rulesUrl, mapOf("promptId" to testData.translatePrompt.id))
+    performAuthPost(rulesUrl, mapOf("name" to "R", "promptId" to testData.translatePrompt.id))
       .andIsBadRequest
       .andHasErrorMessage(Message.AI_REVIEW_PROMPT_MUST_BE_REVIEW_TYPE)
   }
 
   @Test
   fun `rejects a language of another project`() {
-    performAuthPost(rulesUrl, mapOf("languageIds" to listOf(testData.otherProjectLanguage.id)))
+    performAuthPost(rulesUrl, mapOf("name" to "R", "languageIds" to listOf(testData.otherProjectLanguage.id)))
       .andIsBadRequest
       .andHasErrorMessage(Message.LANGUAGE_NOT_FROM_PROJECT)
   }
@@ -115,7 +119,7 @@ class AiReviewRuleControllerTest : AuthorizedControllerTest() {
   @Test
   fun `a rule of another project is not found`() {
     val otherRuleUrl = "$rulesUrl/${testData.otherProjectRule.id}"
-    val body = mapOf("tagIn" to listOf("ui"))
+    val body = mapOf("name" to "R", "tagIn" to listOf("ui"))
     performAuthGet(otherRuleUrl).andIsNotFound
     performAuthPut(otherRuleUrl, body).andIsNotFound
     performAuthPut("$otherRuleUrl/enabled", mapOf("enabled" to false)).andIsNotFound
@@ -131,61 +135,39 @@ class AiReviewRuleControllerTest : AuthorizedControllerTest() {
 
   @Test
   fun `rejects a review prompt of another project`() {
-    performAuthPost(rulesUrl, mapOf("promptId" to testData.otherProjectReviewPrompt.id)).andIsNotFound
-    performAuthPut("$rulesUrl/${testData.rule.id}", mapOf("promptId" to testData.otherProjectReviewPrompt.id))
+    performAuthPost(rulesUrl, mapOf("name" to "R", "promptId" to testData.otherProjectReviewPrompt.id))
       .andIsNotFound
+    performAuthPut(
+      "$rulesUrl/${testData.rule.id}",
+      mapOf("name" to "R", "promptId" to testData.otherProjectReviewPrompt.id),
+    ).andIsNotFound
   }
 
   @Test
   fun `rejects the base language`() {
-    performAuthPost(rulesUrl, mapOf("languageIds" to listOf(testData.englishLanguage.id)))
+    performAuthPost(rulesUrl, mapOf("name" to "R", "languageIds" to listOf(testData.englishLanguage.id)))
       .andIsBadRequest
       .andHasErrorMessage(Message.AI_REVIEW_RULE_BASE_LANGUAGE)
   }
 
   @Test
-  fun `rejects duplicate override language`() {
-    val overrides =
-      listOf(
-        mapOf("languageId" to testData.german.id, "threshold" to 90),
-        mapOf("languageId" to testData.german.id, "never" to true),
-      )
-    performAuthPost(rulesUrl, mapOf("overrides" to overrides))
-      .andIsBadRequest
-      .andHasErrorMessage(Message.AI_REVIEW_DUPLICATE_LANGUAGE_OVERRIDE)
-  }
-
-  @Test
   fun `rejects a branch pattern with more than 5 wildcards`() {
-    performAuthPost(rulesUrl, mapOf("branchIn" to listOf("*a*b*c*d*e*")))
+    performAuthPost(rulesUrl, mapOf("name" to "R", "branchIn" to listOf("*a*b*c*d*e*")))
       .andIsBadRequest
       .andHasErrorMessage(Message.FILTER_PATTERN_NOT_VALID)
   }
 
   @Test
-  fun `updates scope and overrides`() {
+  fun `updates the scope`() {
     performAuthPut(
       "$rulesUrl/${testData.rule.id}",
       mapOf(
+        "name" to "Scoped",
         "tagIn" to listOf("legal"),
-        "overrides" to listOf(mapOf("languageId" to testData.french.id, "never" to true)),
       ),
     ).andIsOk.andAssertThatJson {
+      node("name").isEqualTo("Scoped")
       node("tagIn").isArray.containsExactly("legal")
-      node("overrides").isArray.hasSize(1)
-      node("overrides[0].languageId").isEqualTo(testData.french.id)
-      node("overrides[0].never").isEqualTo(true)
-    }
-  }
-
-  @Test
-  fun `updating an override of the same language keeps one override`() {
-    val germanOverride = listOf(mapOf("languageId" to testData.german.id, "threshold" to 90))
-    performAuthPut("$rulesUrl/${testData.rule.id}", mapOf("overrides" to germanOverride)).andIsOk
-    val changed = listOf(mapOf("languageId" to testData.german.id, "threshold" to 97))
-    performAuthPut("$rulesUrl/${testData.rule.id}", mapOf("overrides" to changed)).andIsOk.andAssertThatJson {
-      node("overrides").isArray.hasSize(1)
-      node("overrides[0].threshold").isEqualTo(97)
     }
   }
 

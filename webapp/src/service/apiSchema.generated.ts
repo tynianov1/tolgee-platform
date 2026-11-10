@@ -1444,30 +1444,15 @@ export interface components {
       languageIds: number[];
       /** @enum {string} */
       mode: "DRY_RUN" | "ACTIVE";
-      name?: string;
+      name: string;
       namespaceIn: string[];
       namespaceNotIn: string[];
       never: boolean;
-      overrides: components["schemas"]["AiReviewRuleOverrideModel"][];
       /** Format: int64 */
       promptId?: number;
       skipOpenQaIssues: boolean;
       tagIn: string[];
       tagNotIn: string[];
-      /** Format: int32 */
-      threshold: number;
-    };
-    AiReviewRuleOverrideModel: {
-      /** Format: int64 */
-      languageId: number;
-      never: boolean;
-      /** Format: int32 */
-      threshold: number;
-    };
-    AiReviewRuleOverrideRequest: {
-      /** Format: int64 */
-      languageId: number;
-      never: boolean;
       /** Format: int32 */
       threshold: number;
     };
@@ -1478,11 +1463,10 @@ export interface components {
       languageIds: number[];
       /** @enum {string} */
       mode: "DRY_RUN" | "ACTIVE";
-      name?: string;
+      name: string;
       namespaceIn: string[];
       namespaceNotIn: string[];
       never: boolean;
-      overrides: components["schemas"]["AiReviewRuleOverrideRequest"][];
       /** Format: int64 */
       promptId?: number;
       skipOpenQaIssues: boolean;
@@ -3452,7 +3436,6 @@ export interface components {
         | "ai_review_rule_not_found"
         | "ai_review_prompt_must_be_review_type"
         | "ai_review_rule_base_language"
-        | "ai_review_duplicate_language_override"
         | "ai_review_not_an_approval"
         | "ai_review_nothing_to_review"
         | "prompt_type_cannot_be_changed"
@@ -7460,7 +7443,6 @@ export interface components {
         | "ai_review_rule_not_found"
         | "ai_review_prompt_must_be_review_type"
         | "ai_review_rule_base_language"
-        | "ai_review_duplicate_language_override"
         | "ai_review_not_an_approval"
         | "ai_review_nothing_to_review"
         | "prompt_type_cannot_be_changed"

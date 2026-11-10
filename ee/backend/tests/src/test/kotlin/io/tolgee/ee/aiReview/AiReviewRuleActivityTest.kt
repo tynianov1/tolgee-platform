@@ -46,7 +46,6 @@ class AiReviewRuleActivityTest : AuthorizedControllerTest() {
         "never" to true,
         "promptId" to testData.reviewPrompt.id,
         "languageIds" to listOf(testData.german.id),
-        "overrides" to listOf(mapOf("languageId" to testData.german.id, "threshold" to 98)),
       )
     performAuthPost("$projectUrl/ai-review-rules", body).andIsOk
 
@@ -62,15 +61,15 @@ class AiReviewRuleActivityTest : AuthorizedControllerTest() {
       node("_embedded.activities[0].modifiedEntities.AiReviewRule[0].modifications.languages.new")
         .isArray
         .containsExactly(testData.german.id)
-      node("_embedded.activities[0].modifiedEntities.AiReviewRuleLanguageOverride[0].modifications.threshold.new")
-        .isEqualTo(98)
     }
   }
 
   @Test
   fun `updating a rule is logged with old and new values`() {
-    performAuthPut("$projectUrl/ai-review-rules/${testData.rule.id}", mapOf("threshold" to 60, "mode" to "ACTIVE"))
-      .andIsOk
+    performAuthPut(
+      "$projectUrl/ai-review-rules/${testData.rule.id}",
+      mapOf("name" to "UI", "threshold" to 60, "mode" to "ACTIVE"),
+    ).andIsOk
 
     performAuthGet("$projectUrl/activity").andIsOk.andAssertThatJson {
       node("_embedded.activities[0].type").isEqualTo("AI_REVIEW_RULE_UPDATE")

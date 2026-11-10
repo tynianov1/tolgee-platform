@@ -367,14 +367,14 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `NOT_REVIEWED_YET respects the rule languages and never overrides`() {
+  fun `NOT_REVIEWED_YET respects the rule languages and never`() {
     testData.rule.languages = mutableSetOf(testData.german)
-    testData
-      .addRule {
-        name = "French with never override"
-        tagIn = mutableListOf("ui")
-        languages = mutableSetOf(testData.french)
-      }.addOverride(testData.french, never = true)
+    testData.addRule {
+      name = "French never"
+      tagIn = mutableListOf("ui")
+      languages = mutableSetOf(testData.french)
+      never = true
+    }
     save()
 
     keysFor("filterAiReviewStatus=NOT_REVIEWED_YET&filterAiReviewInLang=de")

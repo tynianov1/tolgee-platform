@@ -40,7 +40,9 @@ describe('AI review rule runs', () => {
     gcy('batch-operations-summary').should('exist');
     gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule' }).within(
       () => {
-        gcy('ai-review-rule-backlog', { timeout: 60_000 }).should('not.exist');
+        gcy('ai-review-rule-review-now', { timeout: 60_000 }).should(
+          'not.exist'
+        );
       }
     );
   });
@@ -56,7 +58,9 @@ describe('AI review rule runs', () => {
     runDialog.assertVariant('score').start();
     gcyAdvanced({ value: 'ai-review-rule-item', name: 'Legal dry run' }).within(
       () => {
-        gcy('ai-review-rule-backlog', { timeout: 60_000 }).should('not.exist');
+        gcy('ai-review-rule-review-now', { timeout: 60_000 }).should(
+          'not.exist'
+        );
       }
     );
   });
@@ -70,7 +74,7 @@ describe('AI review rule runs', () => {
     );
     runDialog.assertVariant('retry').start();
     gcyAdvanced(
-      { value: 'ai-review-rule-counts-active', failed: '0' },
+      { value: 'ai-review-rule-counts', mode: 'ACTIVE', failed: '0' },
       { timeout: 60_000 }
     ).should('exist');
   });

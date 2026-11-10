@@ -50,9 +50,8 @@ class AiReviewPersistenceTest : AbstractSpringTest() {
   }
 
   @Test
-  fun `deleting a language removes its overrides and review rows`() {
+  fun `deleting a language removes it from rules and deletes its review rows`() {
     val rule = testData.addRule { languages = mutableSetOf(testData.german, testData.french) }
-    rule.addOverride(testData.german, threshold = 95)
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.APPROVED, 90)
     testDataService.saveTestData(testData.root)
 
@@ -63,7 +62,6 @@ class AiReviewPersistenceTest : AbstractSpringTest() {
     getReview(testData.deTranslation.id).assert.isNull()
     executeInNewTransaction(platformTransactionManager) {
       val reloaded = aiReviewRuleRepository.findById(rule.self.id).get()
-      reloaded.overrides.assert.isEmpty()
       reloaded.languages
         .map { it.tag }
         .assert

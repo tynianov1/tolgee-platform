@@ -69,21 +69,6 @@ class AiReviewScopeDriftTest : AbstractSpringTest() {
   }
 
   @Test
-  fun `deleting a language removes its override`() {
-    testData.ruleBuilder.addOverride(testData.german, threshold = 95)
-    testData.ruleBuilder.addOverride(testData.french, threshold = 90)
-    testDataService.saveTestData(testData.root)
-
-    deleteLanguage(testData.german.id)
-
-    loadRule(testData.rule.id)
-      .overrides
-      .map { it.language.tag }
-      .assert
-      .containsExactly("fr")
-  }
-
-  @Test
   fun `renaming a namespace updates namespaceIn and namespaceNotIn`() {
     testData.addKeyWithTranslations("k.checkout").keyBuilder.setNamespace("checkout")
     testData.rule.namespaceIn = mutableListOf("checkout", "")
@@ -127,7 +112,6 @@ class AiReviewScopeDriftTest : AbstractSpringTest() {
     executeInNewTransaction(platformTransactionManager) {
       aiReviewRuleRepository.findById(id).get().also {
         it.languages.size
-        it.overrides.forEach { override -> override.language.tag }
       }
     }
 }

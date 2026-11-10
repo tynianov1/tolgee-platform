@@ -1,14 +1,12 @@
 package io.tolgee.ee.service.aiReview
 
 import io.tolgee.constants.Message
-import io.tolgee.ee.data.aiReview.AiReviewRuleOverrideRequest
 import io.tolgee.ee.data.aiReview.AiReviewRuleRequest
 import io.tolgee.exceptions.BadRequestException
 import io.tolgee.exceptions.NotFoundException
 import io.tolgee.model.Language
 import io.tolgee.model.Project
 import io.tolgee.model.aiReview.AiReviewRule
-import io.tolgee.model.aiReview.AiReviewRuleLanguageOverride
 import io.tolgee.model.enums.PromptType
 import io.tolgee.model.enums.aiReview.AiReviewRuleMode
 import io.tolgee.model.enums.aiReview.AiReviewStatus
@@ -55,7 +53,7 @@ class AiReviewRuleService(
     project: Project,
   ) {
     if (aiReviewRuleRepository.findAllWithScopeByProjectId(projectId).isNotEmpty()) return
-    aiReviewRuleRepository.save(AiReviewRule(project = project))
+    aiReviewRuleRepository.save(AiReviewRule(project = project).apply { name = "Default rule" })
     aiReviewRuleCache.evict(projectId)
   }
 
@@ -155,7 +153,6 @@ class AiReviewRuleService(
     rules.forEach { rule ->
       val hadLanguages = rule.languages.isNotEmpty()
       rule.languages.removeIf { it.id == languageId }
-      rule.overrides.removeIf { it.language.id == languageId }
       // An empty language list means "all languages", so a delete must never leave a scoped rule enabled
       if (hadLanguages && rule.languages.isEmpty()) rule.enabled = false
     }
@@ -209,7 +206,7 @@ class AiReviewRuleService(
   ) {
     WildcardLikeUtil.validatePatterns(request.branchIn)
     WildcardLikeUtil.validatePatterns(request.branchNotIn)
-    val languages = languagesOfProject(projectId, request.languageIds + request.overrides.map { it.languageId })
+    val languages = languagesOfProject(projectId, request.languageIds)
 
     rule.name = request.name
     rule.enabled = request.enabled
@@ -225,27 +222,6 @@ class AiReviewRuleService(
     rule.mode = request.mode
     rule.prompt = request.promptId?.let { reviewPrompt(projectId, it) }
     rule.skipOpenQaIssues = request.skipOpenQaIssues
-    applyOverrides(rule, request.overrides, languages)
-  }
-
-  private fun applyOverrides(
-    rule: AiReviewRule,
-    requests: List<AiReviewRuleOverrideRequest>,
-    languages: Map<Long, Language>,
-  ) {
-    if (requests.map { it.languageId }.toSet().size != requests.size) {
-      throw BadRequestException(Message.AI_REVIEW_DUPLICATE_LANGUAGE_OVERRIDE)
-    }
-    val existing = rule.overrides.associateBy { it.language.id }
-    rule.overrides.removeIf { override -> requests.none { it.languageId == override.language.id } }
-    requests.forEach { request ->
-      val override =
-        existing[request.languageId]
-          ?: AiReviewRuleLanguageOverride(rule = rule, language = languages.getValue(request.languageId))
-            .also { rule.overrides.add(it) }
-      override.threshold = request.threshold
-      override.never = request.never
-    }
   }
 
   private fun languagesOfProject(

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { getAiReviewFiltersName } from './SubfilterAiReview';
+import {
+  getAiReviewFiltersLength,
+  getAiReviewFiltersName,
+} from './SubfilterAiReview';
 import { AiReviewFilterOutcome } from 'tg.views/projects/translations/TranslationFilters/tools';
 
 const nameKey = (outcome: AiReviewFilterOutcome) =>
@@ -17,5 +20,23 @@ describe('AI review filter name', () => {
 
   it('has no name without a selected outcome', () => {
     expect(getAiReviewFiltersName({})).toBeUndefined();
+  });
+
+  it('names both dry-run outcomes with the single dry-run label', () => {
+    expect(nameKey('DRY_RUN_PASS')).toBe('ai_review_filter_dry_run');
+    expect(nameKey('DRY_RUN_FAIL')).toBe('ai_review_filter_dry_run');
+  });
+
+  it('counts the merged dry-run selection as one filter', () => {
+    expect(
+      getAiReviewFiltersLength({
+        filterAiReviewOutcomes: ['DRY_RUN_PASS', 'DRY_RUN_FAIL'],
+      })
+    ).toBe(1);
+    expect(
+      getAiReviewFiltersLength({
+        filterAiReviewOutcomes: ['DRY_RUN_PASS', 'DRY_RUN_FAIL', 'FAILED'],
+      })
+    ).toBe(2);
   });
 });

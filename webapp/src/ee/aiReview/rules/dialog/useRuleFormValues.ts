@@ -3,12 +3,6 @@ import { components } from 'tg.service/apiSchema.generated';
 type AiReviewRuleModel = components['schemas']['AiReviewRuleModel'];
 type AiReviewRuleRequest = components['schemas']['AiReviewRuleRequest'];
 
-export type RuleOverrideFormValue = {
-  languageId: number;
-  threshold: number | string;
-  never: boolean;
-};
-
 export type RuleFormValues = {
   name: string;
   tagIn: string[];
@@ -25,7 +19,6 @@ export type RuleFormValues = {
   mode: AiReviewRuleModel['mode'];
   promptId: number | '';
   skipOpenQaIssues: boolean;
-  overrides: RuleOverrideFormValue[];
 };
 
 export const getRuleInitialValues = (
@@ -45,19 +38,13 @@ export const getRuleInitialValues = (
   mode: rule?.mode ?? 'DRY_RUN',
   promptId: rule?.promptId ?? '',
   skipOpenQaIssues: rule?.skipOpenQaIssues ?? true,
-  overrides:
-    rule?.overrides.map((override) => ({
-      languageId: override.languageId,
-      threshold: override.threshold,
-      never: override.never,
-    })) ?? [],
 });
 
 export const ruleValuesToRequest = (
   values: RuleFormValues,
   enabled: boolean
 ): AiReviewRuleRequest => ({
-  name: values.name || undefined,
+  name: values.name,
   enabled,
   tagIn: values.tagIn,
   tagNotIn: values.tagNotIn,
@@ -71,11 +58,6 @@ export const ruleValuesToRequest = (
   mode: values.mode,
   promptId: values.promptId === '' ? undefined : values.promptId,
   skipOpenQaIssues: values.skipOpenQaIssues,
-  overrides: values.overrides.map((override) => ({
-    languageId: override.languageId,
-    threshold: toThreshold(override.threshold),
-    never: override.never,
-  })),
 });
 
 function toThreshold(value: number | string): number {

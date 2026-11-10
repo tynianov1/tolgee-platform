@@ -43,7 +43,7 @@ class AiReviewRule(
 ) : StandardAuditModel() {
   @ActivityLoggedProp
   @ActivityDescribingProp
-  var name: String? = null
+  var name: String = ""
 
   @ActivityLoggedProp
   @ColumnDefault("true")
@@ -110,9 +110,6 @@ class AiReviewRule(
   @ActivityLoggedProp
   @ColumnDefault("true")
   var skipOpenQaIssues: Boolean = true
-
-  @OneToMany(mappedBy = "rule", cascade = [CascadeType.ALL], orphanRemoval = true)
-  var overrides: MutableList<AiReviewRuleLanguageOverride> = mutableListOf()
 
   /** Change it only with the atomic updates in AiReviewRuleRepository: an entity write loses concurrent increments. */
   @ColumnDefault("0")

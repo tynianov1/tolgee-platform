@@ -66,8 +66,10 @@ describe('AI review rules page', () => {
         gcyAdvanced({ value: 'ai-review-scope-chip', scope: 'ui' }).should(
           'exist'
         );
-        gcy('ai-review-rule-counts-active').should('exist');
-        gcy('ai-review-rule-backlog').should('exist');
+        gcyAdvanced({ value: 'ai-review-rule-counts', mode: 'ACTIVE' }).should(
+          'exist'
+        );
+        gcy('ai-review-rule-review-now').should('exist');
         gcyAdvanced({ value: 'ai-review-rule-mode', mode: 'ACTIVE' }).should(
           'exist'
         );
@@ -77,25 +79,63 @@ describe('AI review rules page', () => {
       value: 'ai-review-rule-item',
       name: 'Legal dry run',
     }).within(() => {
-      gcy('ai-review-rule-counts-dry-run').should('exist');
+      gcyAdvanced({ value: 'ai-review-rule-counts', mode: 'DRY_RUN' }).should(
+        'exist'
+      );
       gcyAdvanced({ value: 'ai-review-rule-mode', mode: 'DRY_RUN' }).should(
         'exist'
       );
     });
   });
 
-  it('toggles a rule enabled state', () => {
+  it('toggles a rule enabled state from the menu', () => {
     login('test_username');
     rulesView.visit(projectId);
-    gcyAdvanced({ value: 'ai-review-rule-switch', name: 'UI rule' })
-      .find('input')
-      .should('be.checked');
+    gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule' }).within(
+      () => {
+        gcy('ai-review-rule-disabled').should('not.exist');
+      }
+    );
+    gcyAdvanced({ value: 'ai-review-rule-menu', name: 'UI rule' }).click();
     gcyAdvanced({ value: 'ai-review-rule-switch', name: 'UI rule' }).click();
     waitForGlobalLoading();
     cy.reload();
-    gcyAdvanced({ value: 'ai-review-rule-switch', name: 'UI rule' })
+    gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule' }).within(
+      () => {
+        gcy('ai-review-rule-disabled').should('exist');
+      }
+    );
+  });
+
+  it('duplicates a rule with a numbered name', () => {
+    login('test_username');
+    rulesView.visit(projectId);
+    gcyAdvanced({ value: 'ai-review-rule-menu', name: 'UI rule' }).click();
+    gcy('ai-review-rule-menu-duplicate').click();
+    gcy('ai-review-rule-form-name')
       .find('input')
-      .should('not.be.checked');
+      .should('have.value', 'UI rule 2');
+    gcy('ai-review-rule-form-save').click();
+    waitForGlobalLoading();
+    gcy('ai-review-rule-item').should('have.length', 3);
+    gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule 2' }).should(
+      'exist'
+    );
+  });
+
+  it('rules stay editable while AI review is off', () => {
+    login('test_username');
+    rulesView.visit(projectId);
+    gcy('ai-review-enabled-toggle').click();
+    waitForGlobalLoading();
+    gcy('ai-review-enabled-toggle').find('input').should('not.be.checked');
+    const dialog = rulesView.openEditDialog('UI rule');
+    gcy('ai-review-rule-form-name').find('input').clear().type('UI rule off');
+    dialog.save();
+    waitForGlobalLoading();
+    gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule off' }).should(
+      'exist'
+    );
   });
 
   it('deletes a rule with confirmation', () => {
@@ -113,7 +153,7 @@ describe('AI review rules page', () => {
     rulesView.visit(projectId);
     gcy('ai-review-rule-item').should('have.length', 2);
     gcy('ai-review-add-rule-button').should('be.visible');
-    gcyAdvanced({ value: 'ai-review-rule-switch', name: 'UI rule' }).should(
+    gcyAdvanced({ value: 'ai-review-rule-menu', name: 'UI rule' }).should(
       'exist'
     );
   });

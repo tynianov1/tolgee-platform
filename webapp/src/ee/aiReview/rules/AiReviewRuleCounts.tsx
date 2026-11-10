@@ -68,11 +68,8 @@ export const AiReviewRuleCounts = ({ rule, canRun, onRun }: Props) => {
 
   return (
     <StyledInfoLine
-      data-cy={
-        isDryRun
-          ? 'ai-review-rule-counts-dry-run'
-          : 'ai-review-rule-counts-active'
-      }
+      data-cy="ai-review-rule-counts"
+      data-cy-mode={isDryRun ? 'DRY_RUN' : 'ACTIVE'}
       data-cy-failed={String(counts.failed)}
       onClick={(e) => e.stopPropagation()}
     >

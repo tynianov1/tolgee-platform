@@ -6158,7 +6158,9 @@
             <column name="project_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
-            <column name="name" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
             <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>
             </column>
@@ -6202,31 +6204,6 @@
             </column>
             <column name="language_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="ai_review_rule_languagePK"/>
-            </column>
-        </createTable>
-    </changeSet>
-    <changeSet author="bdshadow" id="1792666142000-3">
-        <createTable tableName="ai_review_rule_language_override">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="ai_review_rule_language_overridePK"/>
-            </column>
-            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="rule_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="language_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="threshold" type="INTEGER">
-                <constraints nullable="false"/>
-            </column>
-            <column name="never" type="BOOLEAN" defaultValueBoolean="false">
-                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
@@ -6275,9 +6252,6 @@
             <column name="reviewed_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
         </createTable>
     </changeSet>
-    <changeSet author="bdshadow" id="1792666142000-5">
-        <addUniqueConstraint columnNames="rule_id, language_id" constraintName="ai_review_rule_language_override_rule_language" tableName="ai_review_rule_language_override"/>
-    </changeSet>
     <changeSet author="bdshadow" id="1792666142000-6">
         <addUniqueConstraint columnNames="translation_id" constraintName="translation_ai_review_translation" tableName="translation_ai_review"/>
     </changeSet>
@@ -6292,12 +6266,6 @@
     </changeSet>
     <changeSet author="bdshadow" id="1792666142000-10">
         <addForeignKeyConstraint baseColumnNames="language_id" baseTableName="ai_review_rule_language" constraintName="FK_ai_review_rule_language_language_id" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="language" validate="true"/>
-    </changeSet>
-    <changeSet author="bdshadow" id="1792666142000-11">
-        <addForeignKeyConstraint baseColumnNames="rule_id" baseTableName="ai_review_rule_language_override" constraintName="FK_ai_review_rule_language_override_rule_id" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="ai_review_rule" validate="true"/>
-    </changeSet>
-    <changeSet author="bdshadow" id="1792666142000-12">
-        <addForeignKeyConstraint baseColumnNames="language_id" baseTableName="ai_review_rule_language_override" constraintName="FK_ai_review_rule_language_override_language_id" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="language" validate="true"/>
     </changeSet>
     <changeSet author="bdshadow" id="1792666142000-13">
         <addForeignKeyConstraint baseColumnNames="translation_id" baseTableName="translation_ai_review" constraintName="FK_translation_ai_review_translation_id" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="translation" validate="true"/>

@@ -82,7 +82,7 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
         rule.mode.assert.isEqualTo(AiReviewRuleMode.DRY_RUN)
         rule.threshold.assert.isEqualTo(85)
         rule.never.assert.isFalse()
-        rule.name.assert.isNull()
+        rule.name.assert.isEqualTo("Default rule")
         rule.prompt.assert.isNull()
         rule.skipOpenQaIssues.assert.isTrue()
         rule.tagIn.assert.isEmpty()
@@ -92,7 +92,6 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
         rule.branchIn.assert.isEmpty()
         rule.branchNotIn.assert.isEmpty()
         rule.languages.assert.isEmpty()
-        rule.overrides.assert.isEmpty()
       }
     } finally {
       testDataService.cleanTestData(data.root)

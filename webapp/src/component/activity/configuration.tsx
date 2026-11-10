@@ -319,7 +319,6 @@ export const actionsConfiguration: Partial<
     },
     entities: {
       AiReviewRule: [],
-      AiReviewRuleLanguageOverride: [],
     },
   },
   AI_REVIEW_RULE_UPDATE: {
@@ -334,7 +333,6 @@ export const actionsConfiguration: Partial<
     },
     entities: {
       AiReviewRule: [],
-      AiReviewRuleLanguageOverride: [],
     },
   },
   AI_REVIEW_RULE_DELETE: {
@@ -349,7 +347,6 @@ export const actionsConfiguration: Partial<
     },
     entities: {
       AiReviewRule: [],
-      AiReviewRuleLanguageOverride: [],
     },
   },
   AI_REVIEW_SETTINGS_UPDATE: {

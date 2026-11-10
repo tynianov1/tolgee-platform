@@ -126,6 +126,7 @@ declare namespace DataCy {
         "ai-review-popover-status": true;
         "ai-review-prompt-delete-warning": true;
         "ai-review-prompt-save-warning": true;
+        "ai-review-rule-counts": true;
         "ai-review-rule-dialog": true;
         "ai-review-rule-dialog-content": true;
         "ai-review-rule-disabled": true;

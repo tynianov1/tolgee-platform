@@ -11,18 +11,18 @@ object StrictestRuleSelector {
     activeOnly: Boolean = false,
   ): RuleDecision {
     val matching = rules.filter { RuleScopeMatcher.matches(it, key, languageId, branchingEnabled) }
-    if (matching.any { it.valueFor(languageId).never }) return RuleDecision.Never
+    if (matching.any { it.never }) return RuleDecision.Never
 
     val candidates = matching.filter { !activeOnly || it.mode == AiReviewRuleMode.ACTIVE }
     if (candidates.isEmpty()) return RuleDecision.NoRule
 
     val winner =
       candidates.minWith(
-        compareByDescending<RuleSnapshot> { it.valueFor(languageId).threshold }
+        compareByDescending<RuleSnapshot> { it.threshold }
           .thenBy { tieOrder(it.mode) }
           .thenBy { it.id },
       )
-    return RuleDecision.Review(winner, winner.valueFor(languageId).threshold)
+    return RuleDecision.Review(winner, winner.threshold)
   }
 
   private fun tieOrder(mode: AiReviewRuleMode): Int =

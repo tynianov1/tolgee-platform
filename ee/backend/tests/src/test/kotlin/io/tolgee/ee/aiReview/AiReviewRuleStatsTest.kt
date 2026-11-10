@@ -241,7 +241,10 @@ class AiReviewRuleStatsTest : AuthorizedControllerTest() {
   @Test
   fun `the POST response has no counts and the list has them`() {
     save()
-    performAuthPost(rulesUrl, mapOf("tagIn" to listOf("ui"), "threshold" to 95)).andIsOk.andAssertThatJson {
+    performAuthPost(
+      rulesUrl,
+      mapOf("name" to "UI", "tagIn" to listOf("ui"), "threshold" to 95),
+    ).andIsOk.andAssertThatJson {
       node("counts").isNull()
     }
     performAuthGet(rulesUrl).andIsOk.andAssertThatJson {

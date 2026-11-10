@@ -101,9 +101,9 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a never override for the language demotes and deletes the row`() {
+  fun `switching the rule to Never demotes and deletes the row`() {
     save()
-    updateRule(threshold = 85, overrideNeverLanguageId = testData.german.id)
+    updateRule(threshold = 85, never = true)
 
     waitForNotThrowing(pollTime = 100, timeout = 30_000) {
       review(testData.deTranslation.id).assert.isNull()
@@ -492,13 +492,9 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
     threshold: Int,
     tagIn: List<String> = listOf("ui"),
     mode: AiReviewRuleMode = AiReviewRuleMode.ACTIVE,
-    overrideNeverLanguageId: Long? = null,
+    never: Boolean = false,
     enabled: Boolean = true,
   ) {
-    val overrides =
-      overrideNeverLanguageId?.let {
-        listOf(mapOf("languageId" to it, "never" to true))
-      } ?: emptyList()
     performAuthPut(
       ruleUrl,
       mapOf(
@@ -506,7 +502,7 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
         "mode" to mode.name,
         "threshold" to threshold,
         "tagIn" to tagIn,
-        "overrides" to overrides,
+        "never" to never,
         "enabled" to enabled,
       ),
     ).andIsOk

@@ -38,13 +38,16 @@ describe('AI review project switch', () => {
     login('test_username');
     rulesView.visit(switchProjectId);
     gcy('ai-review-empty-state').should('be.visible');
-    gcy('ai-review-project-switch').find('input').should('not.be.checked');
+    gcy('ai-review-enabled-toggle').find('input').should('not.be.checked');
 
-    gcy('ai-review-project-switch').click();
+    gcy('ai-review-enabled-toggle').click();
     waitForGlobalLoading();
 
-    gcy('ai-review-project-switch').find('input').should('be.checked');
+    gcy('ai-review-enabled-toggle').find('input').should('be.checked');
     gcy('ai-review-rule-item').should('have.length', 1);
+    gcyAdvanced({ value: 'ai-review-rule-item', name: 'Default rule' }).should(
+      'exist'
+    );
     gcyAdvanced({ value: 'ai-review-rule-mode', mode: 'DRY_RUN' }).should(
       'exist'
     );
@@ -53,11 +56,11 @@ describe('AI review project switch', () => {
   it('turning it off hides AI review from the translations view', () => {
     login('test_username');
     rulesView.visit(projectId);
-    gcy('ai-review-project-switch').find('input').should('be.checked');
+    gcy('ai-review-enabled-toggle').find('input').should('be.checked');
 
-    gcy('ai-review-project-switch').click();
+    gcy('ai-review-enabled-toggle').click();
     waitForGlobalLoading();
-    gcy('ai-review-project-switch').find('input').should('not.be.checked');
+    gcy('ai-review-enabled-toggle').find('input').should('not.be.checked');
     gcy('ai-review-rule-item').should('have.length', 2);
 
     const view = new E2TranslationsView();
@@ -95,6 +98,6 @@ describe('AI review project switch', () => {
   it('a user without the edit permission cannot toggle', () => {
     login('prompts_viewer_username');
     rulesView.visit(projectId);
-    gcy('ai-review-project-switch').find('input').should('be.disabled');
+    gcy('ai-review-enabled-toggle').find('input').should('be.disabled');
   });
 });

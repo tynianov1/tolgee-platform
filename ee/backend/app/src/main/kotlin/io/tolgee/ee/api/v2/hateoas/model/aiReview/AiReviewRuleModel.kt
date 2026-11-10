@@ -8,7 +8,7 @@ import org.springframework.hateoas.server.core.Relation
 @Relation(collectionRelation = "aiReviewRules", itemRelation = "aiReviewRule")
 class AiReviewRuleModel(
   val id: Long,
-  val name: String?,
+  val name: String,
   val enabled: Boolean,
   val tagIn: List<String>,
   val tagNotIn: List<String>,
@@ -22,16 +22,9 @@ class AiReviewRuleModel(
   val mode: AiReviewRuleMode,
   val promptId: Long?,
   val skipOpenQaIssues: Boolean,
-  val overrides: List<AiReviewRuleOverrideModel>,
   @Schema(description = "Null in the create, update and enable responses. The rule list has the counts.")
   val counts: AiReviewRuleCountsModel?,
 ) : RepresentationModel<AiReviewRuleModel>()
-
-class AiReviewRuleOverrideModel(
-  val languageId: Long,
-  val threshold: Int,
-  val never: Boolean,
-)
 
 class AiReviewRuleCountsModel(
   val autoReviewed: Long,

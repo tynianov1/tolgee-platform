@@ -17,8 +17,6 @@ interface AiReviewRuleRepository : JpaRepository<AiReviewRule, Long> {
     """
     select distinct r from AiReviewRule r
     left join fetch r.languages
-    left join fetch r.overrides o
-    left join fetch o.language
     left join fetch r.prompt
     where r.project.id = :projectId
     order by r.id
@@ -30,8 +28,6 @@ interface AiReviewRuleRepository : JpaRepository<AiReviewRule, Long> {
     """
     select r from AiReviewRule r
     left join fetch r.languages
-    left join fetch r.overrides o
-    left join fetch o.language
     left join fetch r.prompt
     where r.project.id = :projectId and r.id = :id
     """,
@@ -61,8 +57,6 @@ interface AiReviewRuleRepository : JpaRepository<AiReviewRule, Long> {
     """
     select distinct r from AiReviewRule r
     left join fetch r.languages
-    left join fetch r.overrides o
-    left join fetch o.language
     where r.project.id = :projectId and r.enabled = true
     """,
   )

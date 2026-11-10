@@ -689,40 +689,6 @@ export const activityEntities: Record<EntityEnum, EntityOptions> = {
       },
     },
   },
-  AiReviewRuleLanguageOverride: {
-    label() {
-      return (
-        <T
-          keyName="activity_entity_ai_review_rule_override"
-          defaultValue="AI review rule language override"
-        />
-      );
-    },
-    fields: {
-      threshold: {
-        type: 'text',
-        label() {
-          return (
-            <T
-              keyName="activity_entity_ai_review_rule_override.threshold"
-              defaultValue="Threshold"
-            />
-          );
-        },
-      },
-      never: {
-        type: 'text',
-        label() {
-          return (
-            <T
-              keyName="activity_entity_ai_review_rule_override.never"
-              defaultValue="Never auto-review"
-            />
-          );
-        },
-      },
-    },
-  },
 };
 
 const getKeyWithLanguages = (relations: any): KeyReferenceData | undefined => {

@@ -18,12 +18,14 @@ type AiReviewStatus =
   components['schemas']['TranslationAiReviewSummaryModel']['status'];
 
 const OUTCOMES: {
-  outcome: AiReviewFilterOutcome;
+  outcomes: AiReviewFilterOutcome[];
+  cyOutcome: string;
   label: React.ReactElement;
   badgeStatus?: AiReviewStatus;
 }[] = [
   {
-    outcome: 'REVIEWED_BY_AI',
+    outcomes: ['REVIEWED_BY_AI'],
+    cyOutcome: 'REVIEWED_BY_AI',
     label: (
       <T
         keyName="ai_review_filter_reviewed_by_ai"
@@ -33,7 +35,8 @@ const OUTCOMES: {
     badgeStatus: 'APPROVED',
   },
   {
-    outcome: 'BELOW_THRESHOLD',
+    outcomes: ['BELOW_THRESHOLD'],
+    cyOutcome: 'BELOW_THRESHOLD',
     label: (
       <T
         keyName="ai_review_filter_below_threshold"
@@ -43,32 +46,20 @@ const OUTCOMES: {
     badgeStatus: 'BELOW_THRESHOLD',
   },
   {
-    outcome: 'DRY_RUN_PASS',
-    label: (
-      <T
-        keyName="ai_review_filter_dry_run_pass"
-        defaultValue="Dry run: would be auto-reviewed"
-      />
-    ),
+    outcomes: ['DRY_RUN_PASS', 'DRY_RUN_FAIL'],
+    cyOutcome: 'DRY_RUN',
+    label: <T keyName="ai_review_filter_dry_run" defaultValue="Dry run" />,
     badgeStatus: 'DRY_RUN_PASS',
   },
   {
-    outcome: 'DRY_RUN_FAIL',
-    label: (
-      <T
-        keyName="ai_review_filter_dry_run_fail"
-        defaultValue="Dry run: would not be auto-reviewed"
-      />
-    ),
-    badgeStatus: 'DRY_RUN_FAIL',
-  },
-  {
-    outcome: 'FAILED',
+    outcomes: ['FAILED'],
+    cyOutcome: 'FAILED',
     label: <T keyName="ai_review_filter_failed" defaultValue="Failed" />,
     badgeStatus: 'FAILED',
   },
   {
-    outcome: 'CONFIRMED',
+    outcomes: ['CONFIRMED'],
+    cyOutcome: 'CONFIRMED',
     label: (
       <T
         keyName="ai_review_filter_confirmed"
@@ -78,7 +69,8 @@ const OUTCOMES: {
     badgeStatus: 'CONFIRMED',
   },
   {
-    outcome: 'REJECTED',
+    outcomes: ['REJECTED'],
+    cyOutcome: 'REJECTED',
     label: (
       <T
         keyName="ai_review_filter_rejected"
@@ -88,7 +80,8 @@ const OUTCOMES: {
     badgeStatus: 'REJECTED',
   },
   {
-    outcome: 'NOT_REVIEWED_YET',
+    outcomes: ['NOT_REVIEWED_YET'],
+    cyOutcome: 'NOT_REVIEWED_YET',
     label: (
       <T
         keyName="ai_review_filter_not_reviewed_yet"
@@ -110,12 +103,21 @@ export const SubfilterAiReview = ({
     value.filterAiReviewOutcomeLanguage !== undefined
   );
 
-  function handleToggleOutcome(outcome: AiReviewFilterOutcome) {
-    if (value.filterAiReviewOutcomes?.includes(outcome)) {
-      actions.removeFilter('filterAiReviewOutcomes', outcome);
-    } else {
-      actions.addFilter('filterAiReviewOutcomes', outcome);
-    }
+  // One setFilters call: addFilter reads the filters of the current render, so
+  // two calls in a row would lose the first outcome of a merged option.
+  function handleToggleOutcomes(outcomes: AiReviewFilterOutcome[]) {
+    const selected = value.filterAiReviewOutcomes ?? [];
+    const allSelected = outcomes.every((outcome) => selected.includes(outcome));
+    const next = allSelected
+      ? selected.filter((outcome) => !outcomes.includes(outcome))
+      : [
+          ...selected,
+          ...outcomes.filter((outcome) => !selected.includes(outcome)),
+        ];
+    actions.setFilters({
+      ...value,
+      filterAiReviewOutcomes: next.length > 0 ? next : undefined,
+    });
   }
 
   function toggleLanguageScope(
@@ -156,14 +158,14 @@ export const SubfilterAiReview = ({
           slotProps={{ paper: { style: { minWidth: 250 } } }}
         >
           <Box display="grid">
-            {OUTCOMES.map(({ outcome, label, badgeStatus }) => (
+            {OUTCOMES.map(({ outcomes, cyOutcome, label, badgeStatus }) => (
               <FilterItem
-                key={outcome}
+                key={cyOutcome}
                 label={label}
-                selected={Boolean(
-                  value.filterAiReviewOutcomes?.includes(outcome)
+                selected={outcomes.every((outcome) =>
+                  Boolean(value.filterAiReviewOutcomes?.includes(outcome))
                 )}
-                onClick={() => handleToggleOutcome(outcome)}
+                onClick={() => handleToggleOutcomes(outcomes)}
                 indicator={
                   badgeStatus && (
                     <AiReviewBadge
@@ -176,7 +178,7 @@ export const SubfilterAiReview = ({
                   )
                 }
                 data-cy="ai-review-filter-item"
-                data-cy-outcome={outcome}
+                data-cy-outcome={cyOutcome}
               />
             ))}
             <CompactListSubheader>
@@ -236,10 +238,14 @@ export const SubfilterAiReview = ({
 };
 
 export function getAiReviewFiltersLength(value: FiltersInternal) {
-  return value.filterAiReviewOutcomes?.length ?? 0;
+  const selected = value.filterAiReviewOutcomes ?? [];
+  return OUTCOMES.filter(({ outcomes }) =>
+    outcomes.some((outcome) => selected.includes(outcome))
+  ).length;
 }
 
 export function getAiReviewFiltersName(value: FiltersInternal) {
   const first = value.filterAiReviewOutcomes?.[0];
-  return OUTCOMES.find(({ outcome }) => outcome === first)?.label;
+  if (first === undefined) return undefined;
+  return OUTCOMES.find(({ outcomes }) => outcomes.includes(first))?.label;
 }

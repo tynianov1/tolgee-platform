@@ -604,11 +604,6 @@ export function useErrorTranslation() {
           'ai_review_rule_base_language',
           'A rule cannot apply to the base language'
         );
-      case 'ai_review_duplicate_language_override':
-        return t(
-          'ai_review_duplicate_language_override',
-          'A language can have only one override'
-        );
       case 'ai_review_not_an_approval':
         return t(
           'ai_review_not_an_approval',

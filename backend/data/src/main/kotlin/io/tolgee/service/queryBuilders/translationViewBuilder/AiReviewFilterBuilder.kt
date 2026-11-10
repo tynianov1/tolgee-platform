@@ -131,7 +131,7 @@ internal class AiReviewFilterBuilder(
       val (nevers, positives) =
         data.rules
           .filter { AiReviewRuleSqlPredicates.coversLanguage(it, languageId) }
-          .partition { AiReviewRuleSqlPredicates.effectiveNever(it, languageId) }
+          .partition { AiReviewRuleSqlPredicates.effectiveNever(it) }
       if (positives.isEmpty()) return@mapNotNull null
       val parts = mutableListOf<Predicate>()
       parts.add(cb.equal(t.get(Translation_.language).get(Language_.id), languageId))

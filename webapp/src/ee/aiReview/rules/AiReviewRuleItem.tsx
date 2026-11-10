@@ -32,7 +32,6 @@ import {
 } from 'tg.ee.module/aiReview/runs/AiReviewRunDialog';
 import { AiReviewRuleCounts } from 'tg.ee.module/aiReview/rules/AiReviewRuleCounts';
 import { stopBubble } from 'tg.fixtures/eventHandler';
-import { useRuleLabel } from 'tg.ee.module/aiReview/rules/useRuleLabel';
 
 type AiReviewRuleModel = components['schemas']['AiReviewRuleModel'];
 
@@ -99,8 +98,7 @@ export const AiReviewRuleItem = ({ rule, promptNames }: Props) => {
   const project = useProject();
   const { satisfiesPermission } = useProjectPermissions();
   const canEdit = satisfiesPermission('prompts.edit');
-  const ruleLabel = useRuleLabel();
-  const label = ruleLabel(rule);
+  const label = rule.name;
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [duplicateOpen, setDuplicateOpen] = useState(false);

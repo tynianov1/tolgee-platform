@@ -59,12 +59,13 @@ export const AiReviewBadge = ({ aiReview }: Props) => {
   const { status, score, lastFailed } = aiReview;
 
   const look = clsx({
-    green:
-      status === 'APPROVED' ||
+    green: status === 'APPROVED' || status === 'CONFIRMED',
+    orange: status === 'BELOW_THRESHOLD',
+    grey:
+      status === 'FAILED' ||
+      status === 'REJECTED' ||
       status === 'DRY_RUN_PASS' ||
-      status === 'CONFIRMED',
-    orange: status === 'BELOW_THRESHOLD' || status === 'DRY_RUN_FAIL',
-    grey: status === 'FAILED' || status === 'REJECTED',
+      status === 'DRY_RUN_FAIL',
     dryRun: status === 'DRY_RUN_PASS' || status === 'DRY_RUN_FAIL',
   });
 

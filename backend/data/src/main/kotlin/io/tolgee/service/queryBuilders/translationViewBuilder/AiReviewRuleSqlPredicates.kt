@@ -36,10 +36,7 @@ class AiReviewRuleSqlPredicates(
       languageId: Long,
     ): Boolean = rule.languages.isEmpty() || rule.languages.any { it.id == languageId }
 
-    fun effectiveNever(
-      rule: AiReviewRule,
-      languageId: Long,
-    ): Boolean = rule.overrides.find { it.language.id == languageId }?.never ?: rule.never
+    fun effectiveNever(rule: AiReviewRule): Boolean = rule.never
   }
 
   fun scopePredicate(

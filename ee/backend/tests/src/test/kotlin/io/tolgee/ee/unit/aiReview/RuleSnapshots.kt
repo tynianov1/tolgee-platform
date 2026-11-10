@@ -1,6 +1,5 @@
 package io.tolgee.ee.unit.aiReview
 
-import io.tolgee.ee.service.aiReview.matching.EffectiveValue
 import io.tolgee.ee.service.aiReview.matching.KeyScope
 import io.tolgee.ee.service.aiReview.matching.RuleSnapshot
 import io.tolgee.model.enums.aiReview.AiReviewRuleMode
@@ -21,7 +20,6 @@ fun rule(
   branchNotIn: List<String> = emptyList(),
   threshold: Int = 85,
   never: Boolean = false,
-  overrides: Map<Long, EffectiveValue> = emptyMap(),
   mode: AiReviewRuleMode = AiReviewRuleMode.ACTIVE,
 ) = RuleSnapshot(
   id = id,
@@ -33,8 +31,8 @@ fun rule(
   languageIds = languageIds,
   branchIn = branchIn,
   branchNotIn = branchNotIn,
-  value = EffectiveValue(threshold = threshold, never = never),
-  overrides = overrides,
+  threshold = threshold,
+  never = never,
   mode = mode,
   promptId = null,
   skipOpenQaIssues = true,
