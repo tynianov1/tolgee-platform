@@ -222,6 +222,19 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `un-review with the project switch off deletes the approval and does not count a rejection`() {
+    testData.project.useAiReview = false
+    save()
+    performAuthPut(
+      "$projectUrl/translations/${testData.deTranslation.id}/set-state/TRANSLATED",
+      null,
+    ).andIsOk
+
+    review(testData.deTranslation.id).assert.isNull()
+    rejectedCount().assert.isEqualTo(0)
+  }
+
+  @Test
   fun `a bulk un-review without the feature deletes a FAILED marker`() {
     testData.frTranslation.state = TranslationState.REVIEWED
     testData.frTranslation.auto = true

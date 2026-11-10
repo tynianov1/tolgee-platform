@@ -5,7 +5,8 @@ import { components } from 'tg.service/apiSchema.generated';
 import { useApiMutation, useApiQuery } from 'tg.service/http/useQueryApi';
 import { useProject } from 'tg.hooks/useProject';
 import { useProjectPermissions } from 'tg.hooks/useProjectPermissions';
-import { useEnabledFeatures } from 'tg.globalContext/helpers';
+import { useAiReviewActive } from 'tg.ee.module/aiReview/hooks/useAiReviewActive';
+import { useAiReviewEnabled } from 'tg.ee.module/aiReview/hooks/useAiReviewEnabled';
 
 type SourceChangeSettingsModel =
   components['schemas']['SourceChangeSettingsModel'];
@@ -38,7 +39,8 @@ export const SourceChangeSettings = () => {
   const project = useProject();
   const { satisfiesPermission } = useProjectPermissions();
   const canEdit = satisfiesPermission('project.edit');
-  const aiReviewEnabled = useEnabledFeatures().isEnabled('AI_REVIEW');
+  const aiReviewFeature = useAiReviewEnabled();
+  const aiReviewEnabled = useAiReviewActive();
 
   const settingsLoadable = useApiQuery({
     url: '/v2/projects/{projectId}/source-change-settings',
@@ -53,7 +55,7 @@ export const SourceChangeSettings = () => {
   });
 
   const settings = settingsLoadable.data;
-  if (!settings) {
+  if (!aiReviewFeature || !settings) {
     return null;
   }
 

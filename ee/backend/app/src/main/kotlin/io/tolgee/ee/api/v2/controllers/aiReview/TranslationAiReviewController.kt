@@ -22,6 +22,7 @@ import io.tolgee.security.authentication.AuthenticationFacade
 import io.tolgee.security.authorization.RequiresFeatures
 import io.tolgee.security.authorization.RequiresProjectPermissions
 import io.tolgee.security.authorization.UseDefaultPermissions
+import io.tolgee.service.project.ProjectFeatureGuard
 import io.tolgee.service.security.SecurityService
 import io.tolgee.service.translation.TranslationService
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -46,6 +47,7 @@ class TranslationAiReviewController(
   private val authenticationFacade: AuthenticationFacade,
   private val aiReviewRunService: AiReviewRunService,
   private val batchJobModelAssembler: BatchJobModelAssembler,
+  private val projectFeatureGuard: ProjectFeatureGuard,
 ) {
   @GetMapping("")
   @Operation(summary = "Get the AI review of a translation")
@@ -114,6 +116,8 @@ class TranslationAiReviewController(
     return translation
   }
 
-  private fun loadTranslation(translationId: Long): Translation =
-    translationService.get(projectHolder.project.id, translationId)
+  private fun loadTranslation(translationId: Long): Translation {
+    projectFeatureGuard.checkEnabled(Feature.AI_REVIEW)
+    return translationService.get(projectHolder.project.id, translationId)
+  }
 }

@@ -45,6 +45,7 @@ open class AiReviewTestData : BaseTestData() {
 
   init {
     project.useQaChecks = false
+    project.useAiReview = true
     projectBuilder.build {
       german = addGerman().self
       french = addFrench().self
@@ -100,6 +101,7 @@ open class AiReviewTestData : BaseTestData() {
     root
       .addProject(userAccountBuilder.defaultOrganizationBuilder.self) { name = "Other project" }
       .build {
+        self.useAiReview = true
         self.baseLanguage = addEnglish().self
         otherProjectLanguage = addGerman().self
         otherProjectKey =

@@ -17,6 +17,7 @@ import { waitForGlobalLoading } from '../../common/loading';
 describe('AI review source change settings', () => {
   let projectId: number;
   let protectedProjectId: number;
+  let switchOffProjectId: number;
 
   beforeEach(() => {
     aiReviewTestData.clean();
@@ -28,6 +29,10 @@ describe('AI review source change settings', () => {
       protectedProjectId = getProjectByNameFromTestData(
         res.body,
         'ai_review_empty_project'
+      )!.id;
+      switchOffProjectId = getProjectByNameFromTestData(
+        res.body,
+        'ai_review_switch_project'
       )!.id;
     });
     login('test_username');
@@ -77,9 +82,15 @@ describe('AI review source change settings', () => {
     }).should('exist');
   });
 
-  it('hides the AI approved row without the AI review feature', () => {
+  it('hides the whole block without the AI review feature', () => {
     withoutAiReviewFeature();
     visitProjectSettingsAdvanced(projectId);
+    gcy('project-settings-use-namespaces-switch').should('be.visible');
+    gcy('ai-review-source-change-settings').should('not.exist');
+  });
+
+  it('hides the AI approved row when the project switch is off', () => {
+    visitProjectSettingsAdvanced(switchOffProjectId);
     gcy('ai-review-source-change-settings').should('be.visible');
     gcyAdvanced({
       value: 'source-change-select',

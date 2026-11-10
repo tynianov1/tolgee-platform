@@ -158,7 +158,7 @@ export const AiReviewRuleDialog = ({ onClose, rule, onRequestRun }: Props) => {
                       'Create AI review rule'
                     )}
               </DialogTitle>
-              <StyledDialogContent>
+              <StyledDialogContent data-cy="ai-review-rule-dialog-content">
                 <TextField
                   name="name"
                   size="small"

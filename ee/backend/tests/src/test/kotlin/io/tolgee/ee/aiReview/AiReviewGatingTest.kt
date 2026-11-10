@@ -143,6 +143,34 @@ class AiReviewGatingTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `with the project switch off, a running job keeps the rows and stops processing`() {
+    testData.project.useAiReview = false
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)
+    save()
+
+    val job =
+      executeInNewTransaction(platformTransactionManager) {
+        batchJobService.startJob(
+          request = AiReviewRequest(translationIds = listOf(testData.deTranslation.id)),
+          project = entityManager.getReference(Project::class.java, testData.project.id),
+          author = null,
+          type = BatchJobType.AI_REVIEW,
+          isHidden = true,
+        )
+      }
+    waitForNotThrowing(pollTime = 100, timeout = 30_000) {
+      batchJobService
+        .getJobDtoNoCache(job.id)
+        .status.assert
+        .isEqualTo(BatchJobStatus.SUCCESS)
+    }
+
+    val row = review(testData.deTranslation.id)!!
+    row.status.assert.isEqualTo(AiReviewStatus.PENDING)
+    row.score.assert.isNull()
+  }
+
+  @Test
   fun `regaining the feature reviews the queued rows`() {
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)
     save()

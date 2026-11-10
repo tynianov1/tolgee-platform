@@ -29,6 +29,7 @@ import io.tolgee.security.authentication.AllowApiAccess
 import io.tolgee.security.authentication.AuthenticationFacade
 import io.tolgee.security.authorization.RequiresProjectPermissions
 import io.tolgee.service.AiPlaygroundResultService
+import io.tolgee.service.project.ProjectFeatureGuard
 import io.tolgee.service.security.SecurityService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -50,6 +51,7 @@ class StartBatchJobController(
   private val batchJobModelAssembler: BatchJobModelAssembler,
   private val aiPlaygroundResultService: AiPlaygroundResultService,
   private val enabledFeaturesProvider: EnabledFeaturesProvider,
+  private val projectFeatureGuard: ProjectFeatureGuard,
 ) {
   @PostMapping(value = ["/pre-translate-by-tm"])
   @Operation(
@@ -112,10 +114,7 @@ class StartBatchJobController(
       )
     }
     if (data.llmPrompt?.type == PromptType.REVIEW) {
-      enabledFeaturesProvider.checkFeatureEnabled(
-        projectHolder.project.organizationOwnerId,
-        Feature.AI_REVIEW,
-      )
+      projectFeatureGuard.checkEnabled(Feature.AI_REVIEW)
     }
     securityService.checkKeyIdsExistAndIsFromProject(data.keyIds, projectHolder.project.id)
     aiPlaygroundResultService.removeResults(projectHolder.project.id, authenticationFacade.authenticatedUserEntity.id)

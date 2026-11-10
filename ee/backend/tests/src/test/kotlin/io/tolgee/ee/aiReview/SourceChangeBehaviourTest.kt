@@ -359,6 +359,20 @@ class SourceChangeBehaviourTest : AuthorizedControllerTest() {
     }
   }
 
+  @Test
+  fun `with the project switch off an AI approval behaves like today and loses its row`() {
+    aiApproval()
+    testData.project.useAiReview = false
+    save()
+    changeBaseText()
+
+    waitForNotThrowing(pollTime = 100, timeout = 30_000) {
+      val de = translation(testData.deTranslation.id)
+      de.text.assert.isNotEqualTo("Jetzt bezahlen")
+      review(testData.deTranslation.id).assert.isNull()
+    }
+  }
+
   private fun aiApproval() {
     testData.deTranslation.state = TranslationState.REVIEWED
     testData.deTranslation.auto = true

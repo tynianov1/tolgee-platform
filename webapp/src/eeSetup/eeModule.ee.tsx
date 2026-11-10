@@ -108,6 +108,7 @@ export { AiContextData } from '../ee/llm/AiContextData/AiContextData';
 export { AiPromptsList } from '../ee/llm/AiPromptsList/AiPromptsList';
 export { AiReviewRulesView } from 'tg.ee.module/aiReview/rules/AiReviewRulesView';
 export { useAiReviewEnabled } from 'tg.ee.module/aiReview/hooks/useAiReviewEnabled';
+export { useAiReviewActive } from 'tg.ee.module/aiReview/hooks/useAiReviewActive';
 export { AiReviewCellButton } from 'tg.ee.module/aiReview/translations/AiReviewCellButton';
 export { getAiReviewCellVisibility } from 'tg.ee.module/aiReview/translations/aiReviewVisibility';
 export {
@@ -244,7 +245,7 @@ export const useAddBatchOperations = () => {
           id: 'ai_review',
           label: t('batch_operations_ai_review', 'AI review'),
           enabled: canBatchMachine,
-          hidden: !aiReviewFeature,
+          hidden: !aiReviewFeature || !project.useAiReview,
           component: OperationAiReview,
         },
       ],

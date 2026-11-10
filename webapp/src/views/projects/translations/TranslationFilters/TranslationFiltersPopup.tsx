@@ -26,7 +26,7 @@ import {
   SubfilterQaChecks,
   SubfilterTasks,
   getTaskFiltersLength,
-  useAiReviewEnabled,
+  useAiReviewActive,
 } from 'tg.ee';
 
 type Props = {
@@ -53,7 +53,7 @@ export const TranslationFiltersPopup = ({
   const { t } = useTranslate();
   const project = useProject();
   const { isEnabled } = useEnabledFeatures();
-  const aiReviewEnabled = useAiReviewEnabled();
+  const aiReviewEnabled = useAiReviewActive();
   const tasksEnabled = isEnabled('TASKS') || isEnabled('ORDER_TRANSLATION');
   const tasksFilterAvailable =
     tasksEnabled || Boolean(getTaskFiltersLength(value));

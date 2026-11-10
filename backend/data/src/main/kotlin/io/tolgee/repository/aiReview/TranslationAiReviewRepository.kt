@@ -190,6 +190,31 @@ interface TranslationAiReviewRepository : JpaRepository<TranslationAiReview, Lon
   @Query(
     """
     delete from TranslationAiReview r
+    where r.translation.id in (
+      select t.id from Translation t where t.key.project.id = :projectId
+    )
+    and r.status = io.tolgee.model.enums.aiReview.AiReviewStatus.PENDING
+    """,
+  )
+  fun deletePendingByProject(projectId: Long): Int
+
+  @Modifying
+  @Query(
+    """
+    update TranslationAiReview r
+    set r.reReviewRequested = false, r.manualRunBatchJobId = null
+    where r.reReviewRequested = true
+      and r.translation.id in (
+        select t.id from Translation t where t.key.project.id = :projectId
+      )
+    """,
+  )
+  fun clearReReviewByProject(projectId: Long): Int
+
+  @Modifying
+  @Query(
+    """
+    delete from TranslationAiReview r
     where r.rule.id = :ruleId and r.status in :statuses
       and not exists (
         select 1 from Translation t where t.id = r.translation.id and ${AiReviewManaged.JPQL}

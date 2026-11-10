@@ -103,6 +103,7 @@ export const AiContextData = Empty;
 export const AiPromptsList = Empty;
 export const AiReviewRulesView = Empty;
 export const useAiReviewEnabled = () => false;
+export const useAiReviewActive = () => false;
 export const AiReviewCellButton = (_props: AiReviewCellButtonProps) =>
   Empty() as JSX.Element;
 export const getAiReviewCellVisibility = (

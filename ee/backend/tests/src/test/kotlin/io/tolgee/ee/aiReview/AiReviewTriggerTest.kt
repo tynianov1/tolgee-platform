@@ -355,6 +355,35 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `with the project switch off, editing a translation queues no review`() {
+    testData.project.useAiReview = false
+    save()
+    editTranslation("de", "Gleich zahlen")
+
+    review(testData.deTranslation.id).assert.isNull()
+    aiReviewJobCount().assert.isZero()
+  }
+
+  @Test
+  fun `with the project switch off, a source change deletes stale rows and queues nothing`() {
+    testData.project.useAiReview = false
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.DRY_RUN_PASS, 90)
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.BELOW_THRESHOLD, 40)
+    save()
+    editTranslation("en", "Pay immediately")
+
+    review(testData.deTranslation.id).assert.isNull()
+    review(testData.frTranslation.id).assert.isNull()
+    aiReviewJobCount().assert.isZero()
+  }
+
+  @Test
+  fun `with the project switch off, MT under Protect reviewed keeps an AI-managed FAILED row`() {
+    testData.project.useAiReview = false
+    assertMtKeepsAiManagedRow()
+  }
+
+  @Test
   fun `a rule delete keeps the rows of AI-managed reviews and MT then queues a re-review`() {
     initMachineTranslationProperties(-1)
     internalProperties.fakeMtProviders = true

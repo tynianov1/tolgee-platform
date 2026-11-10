@@ -16,6 +16,7 @@ import io.tolgee.repository.PromptRepository
 import io.tolgee.repository.aiReview.AiReviewRuleRepository
 import io.tolgee.repository.aiReview.TranslationAiReviewRepository
 import io.tolgee.service.language.LanguageService
+import io.tolgee.service.project.ProjectService
 import io.tolgee.service.queryBuilders.translationViewBuilder.WildcardLikeUtil
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Service
@@ -30,7 +31,34 @@ class AiReviewRuleService(
   private val entityManager: EntityManager,
   private val aiReviewQueueService: AiReviewQueueService,
   private val translationAiReviewRepository: TranslationAiReviewRepository,
+  private val projectService: ProjectService,
 ) {
+  @Transactional
+  fun setProjectEnabled(
+    projectId: Long,
+    enabled: Boolean,
+  ) {
+    val project = entityManager.find(Project::class.java, projectId)
+    if (project.useAiReview == enabled) return
+    project.useAiReview = enabled
+    projectService.save(project)
+    if (enabled) {
+      createDefaultRuleIfNone(projectId, project)
+      return
+    }
+    translationAiReviewRepository.deletePendingByProject(projectId)
+    translationAiReviewRepository.clearReReviewByProject(projectId)
+  }
+
+  private fun createDefaultRuleIfNone(
+    projectId: Long,
+    project: Project,
+  ) {
+    if (aiReviewRuleRepository.findAllWithScopeByProjectId(projectId).isNotEmpty()) return
+    aiReviewRuleRepository.save(AiReviewRule(project = project))
+    aiReviewRuleCache.evict(projectId)
+  }
+
   @Transactional(readOnly = true)
   fun list(projectId: Long): List<AiReviewRule> = aiReviewRuleRepository.findAllWithScopeByProjectId(projectId)
 

@@ -29,6 +29,7 @@ import io.tolgee.openApiDocs.OpenApiOrderExtension
 import io.tolgee.security.ProjectHolder
 import io.tolgee.security.authentication.AuthenticationFacade
 import io.tolgee.security.authorization.RequiresProjectPermissions
+import io.tolgee.service.project.ProjectFeatureGuard
 import jakarta.validation.Valid
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
@@ -68,6 +69,7 @@ class PromptController(
   private val authenticationFacade: AuthenticationFacade,
   private val promptResponseUsageModelAssembler: PromptResponseUsageModelAssembler,
   private val aiReviewPromptService: AiReviewPromptService,
+  private val projectFeatureGuard: ProjectFeatureGuard,
 ) {
   @GetMapping("")
   @RequiresProjectPermissions([Scope.PROMPTS_VIEW])
@@ -261,7 +263,7 @@ class PromptController(
     enabledFeaturesProvider.isFeatureEnabled(projectHolder.project.organizationOwnerId, Feature.AI_REVIEW)
 
   private fun runReviewPrompt(data: PromptRunDto): PromptResponseModel {
-    checkAiReviewEnabled()
+    projectFeatureGuard.checkEnabled(Feature.AI_REVIEW)
     val result =
       aiReviewPromptService.runPlaygroundReview(
         projectHolder.project.organizationOwnerId,

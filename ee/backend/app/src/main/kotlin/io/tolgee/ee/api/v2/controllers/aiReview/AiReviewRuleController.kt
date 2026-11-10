@@ -96,6 +96,19 @@ class AiReviewRuleController(
     request: AiReviewRuleRequest,
   ): AiReviewRuleModel = toModelWithoutCounts(aiReviewRuleService.update(projectHolder.project.id, ruleId, request))
 
+  @PutMapping("/enabled")
+  @Operation(summary = "Enable or disable AI review for the project")
+  @RequestActivity(ActivityType.AI_REVIEW_SETTINGS_UPDATE)
+  @RequiresProjectPermissions([Scope.PROMPTS_EDIT])
+  @AllowApiAccess
+  @RequiresFeatures(Feature.AI_REVIEW)
+  fun setProjectAiReviewEnabled(
+    @RequestBody @Valid
+    request: AiReviewRuleEnabledRequest,
+  ) {
+    aiReviewRuleService.setProjectEnabled(projectHolder.project.id, request.enabled)
+  }
+
   @PutMapping("/{ruleId:[0-9]+}/enabled")
   @Operation(summary = "Enable or disable an AI review rule")
   @RequestActivity(ActivityType.AI_REVIEW_RULE_UPDATE)

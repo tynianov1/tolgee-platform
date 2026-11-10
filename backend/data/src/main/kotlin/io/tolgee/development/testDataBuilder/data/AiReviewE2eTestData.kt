@@ -33,6 +33,7 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
   init {
     user.name = "Test User"
     project.useQaChecks = false
+    project.useAiReview = true
 
     projectBuilder.build {
       german = addGerman().self
@@ -220,6 +221,7 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
       .addProject(userAccountBuilder.defaultOrganizationBuilder.self) { name = "ai_review_empty_project" }
       .build {
         self.translationProtection = TranslationProtection.PROTECT_REVIEWED
+        self.useAiReview = true
         self.baseLanguage = addEnglish().self
         addGerman()
         addKey { name = "plain_key" }.build {
@@ -229,10 +231,22 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
       }
 
     root
+      .addProject(userAccountBuilder.defaultOrganizationBuilder.self) { name = "ai_review_switch_project" }
+      .build {
+        self.baseLanguage = addEnglish().self
+        addGerman()
+        addKey { name = "switch_key" }.build {
+          addTranslation("en", "Switch source")
+          addTranslation("de", "Schalter Text")
+        }
+      }
+
+    root
       .addProject(userAccountBuilder.defaultOrganizationBuilder.self) { name = "ai_review_branching_project" }
       .build {
         self.useBranching = true
         self.useQaChecks = true
+        self.useAiReview = true
         self.baseLanguage = addEnglish().self
         addGerman()
         addFrench()

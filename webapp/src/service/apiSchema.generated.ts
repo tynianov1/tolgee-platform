@@ -469,6 +469,9 @@ export interface paths {
     get: operations["listAiReviewRules"];
     post: operations["createAiReviewRule"];
   };
+  "/v2/projects/{projectId}/ai-review-rules/enabled": {
+    put: operations["setProjectAiReviewEnabled"];
+  };
   "/v2/projects/{projectId}/ai-review-rules/{ruleId}": {
     get: operations["getAiReviewRule"];
     put: operations["updateAiReviewRule"];
@@ -5857,6 +5860,8 @@ export interface components {
        * @enum {string}
        */
       translationProtection: "NONE" | "PROTECT_REVIEWED";
+      /** @description Whether AI review runs in this project */
+      useAiReview: boolean;
       useBranching: boolean;
       useNamespaces: boolean;
       useQaChecks: boolean;
@@ -16075,6 +16080,54 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["AiReviewRuleRequest"];
+      };
+    };
+  };
+  setProjectAiReviewEnabled: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: unknown;
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AiReviewRuleEnabledRequest"];
       };
     };
   };

@@ -122,12 +122,15 @@ declare namespace DataCy {
         "ai-review-popover-rule": true;
         "ai-review-popover-score": true;
         "ai-review-popover-status": true;
+        "ai-review-project-switch": true;
+        "ai-review-project-switch-row": true;
         "ai-review-prompt-delete-warning": true;
         "ai-review-prompt-save-warning": true;
         "ai-review-rule-backlog": true;
         "ai-review-rule-counts-active": true;
         "ai-review-rule-counts-dry-run": true;
         "ai-review-rule-dialog": true;
+        "ai-review-rule-dialog-content": true;
         "ai-review-rule-edit": true;
         "ai-review-rule-form-advanced-toggle": true;
         "ai-review-rule-form-branch-in": true;

@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Typography, useTheme } from '@mui/material';
+import {
+  Box,
+  Button,
+  FormControlLabel,
+  Switch,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import { useTranslate } from '@tolgee/react';
 import { Plus } from '@untitled-ui/icons-react';
 
@@ -8,7 +15,7 @@ import { BoxLoading } from 'tg.component/common/BoxLoading';
 import { ProjectLanguagesProvider } from 'tg.hooks/ProjectLanguagesProvider';
 import { useProject } from 'tg.hooks/useProject';
 import { useProjectPermissions } from 'tg.hooks/useProjectPermissions';
-import { useApiQuery } from 'tg.service/http/useQueryApi';
+import { useApiMutation, useApiQuery } from 'tg.service/http/useQueryApi';
 import { useProjectContext } from 'tg.hooks/ProjectContext';
 import { AiReviewRuleItem } from 'tg.ee.module/aiReview/rules/AiReviewRuleItem';
 import { AiReviewRuleDialog } from 'tg.ee.module/aiReview/rules/dialog/AiReviewRuleDialog';
@@ -34,6 +41,12 @@ export const AiReviewRulesView = () => {
     url: '/v2/projects/{projectId}/ai-review-rules',
     method: 'get',
     path: { projectId: project.id },
+  });
+
+  const enabledMutation = useApiMutation({
+    url: '/v2/projects/{projectId}/ai-review-rules/enabled',
+    method: 'put',
+    invalidatePrefix: '/v2/projects/{projectId}',
   });
 
   const batchOperations = useProjectContext((c) => c.batchOperations);
@@ -76,6 +89,30 @@ export const AiReviewRulesView = () => {
         gap={2.5}
         data-cy="ai-review-rules-view"
       >
+        <Box data-cy="ai-review-project-switch-row">
+          <FormControlLabel
+            control={
+              <Switch
+                checked={project.useAiReview}
+                disabled={!canEdit || enabledMutation.isLoading}
+                onChange={(_, checked) =>
+                  enabledMutation.mutate({
+                    path: { projectId: project.id },
+                    content: { 'application/json': { enabled: checked } },
+                  })
+                }
+                data-cy="ai-review-project-switch"
+              />
+            }
+            label={t('ai_review_project_switch_label', 'Enable AI review')}
+          />
+          <Typography color={theme.palette.text.secondary}>
+            {t(
+              'ai_review_project_switch_hint',
+              'When off, no AI reviews run in this project.'
+            )}
+          </Typography>
+        </Box>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography color={theme.palette.text.secondary}>
             {t(

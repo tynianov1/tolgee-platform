@@ -72,6 +72,15 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `returns no AI review summaries when the project switch is off`() {
+    testData.project.useAiReview = false
+    save()
+    fetch("search=k.approved").andIsOk.andAssertThatJson {
+      node("_embedded.keys[0].translations.de.aiReview").isNull()
+    }
+  }
+
+  @Test
   fun `the summary reports lastFailed and dryRun`() {
     testData.addKeyWithTranslations("k.lastfailed").let {
       it.de.self.state = TranslationState.REVIEWED

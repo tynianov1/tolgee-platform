@@ -115,7 +115,7 @@ export const AiPrompt: React.FC<React.PropsWithChildren<Props>> = ({
   const isAdminAccess = useIsAdminAccess(project.computedPermission);
   const cellSelected = Boolean(keyData && language);
 
-  const aiReviewEnabled = useAiReviewEnabled();
+  const aiReviewEnabled = useAiReviewEnabled() && project.useAiReview;
   const {
     isLoading,
     canBeRenamed,

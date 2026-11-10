@@ -158,13 +158,16 @@ describe('AI review rule dialog', () => {
     gcy('ai-review-rule-form-never').click();
     gcy('ai-review-rule-form-advanced-toggle').click();
     gcy('ai-review-rule-form-override-add').click();
+    gcy('ai-review-rule-form-mode').should('be.visible');
     gcy('ai-review-rule-form-override-instead')
       .scrollIntoView()
       .should('be.visible');
-    gcy('ai-review-rule-form-override-hint')
-      .scrollIntoView()
-      .should('be.visible');
-    gcy('ai-review-rule-form-mode').should('be.visible');
+    // scrollIntoView cannot scroll inside the fixed-position dialog, so when
+    // the content overflows, scroll the dialog content itself.
+    gcy('ai-review-rule-dialog-content').scrollTo('bottom', {
+      ensureScrollable: false,
+    });
+    gcy('ai-review-rule-form-override-hint').should('be.visible');
     gcy('ai-review-rule-form-prompt').should(
       'not.have.attr',
       'aria-disabled',
