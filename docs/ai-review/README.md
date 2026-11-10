@@ -14,8 +14,8 @@ bring back.
 
 **Pieces:**
 
-- **Rule** (`AiReviewRule`): a scope (tags, namespaces, languages, branch patterns), a threshold or
-  Never, a mode (Dry run or Active), a review prompt, and language overrides.
+- **Rule** (`AiReviewRule`): a required name, a scope (tags, namespaces, languages, branch
+  patterns), a threshold or Never, a mode (Score only or Active), and a review prompt.
 - **Review row** (`TranslationAiReview`): one row per translation. It holds the result (status,
   score, issues) and is also the queue (`PENDING`).
 - **Review prompt** (`Prompt` with `type = REVIEW`): asks the model for a list of issues with
@@ -35,6 +35,14 @@ tab, no upsell) and the API returns `FEATURE_NOT_ENABLED`. One exception: the "W
 changes" settings in the Advanced project settings work for every project. Only their "Approved by
 AI" row needs the feature.
 
+On top of the plan feature, each project has its own switch (`Project.useAiReview`, off by
+default). While it is off, the review endpoints (detail, retry, run preview, run, playground
+review) return `FEATURE_NOT_ENABLED_FOR_PROJECT`, but rules and review prompts stay manageable.
+Turning it on creates one default rule ("Default rule": Score only, threshold 85, skip open QA
+issues, all languages) when the project has no rules yet — never a second one. Turning it off
+deletes the `PENDING` queue rows and clears re-review flags; stored results and superseded markers
+stay.
+
 ## 2. How it works
 
 1. A translation's text changes (human edit, MT, auto translation, import).
@@ -45,7 +53,7 @@ AI" row needs the feature.
 4. The job **claims** the row, calls the LLM, and saves the result:
    - Active rule, score at or above the threshold: state becomes **Reviewed**.
    - Active rule, below the threshold: state stays Translated, the issues are shown.
-   - Dry run rule: only a score, the state never changes.
+   - Score only rule: only a score, the state never changes.
    - No usable answer: `FAILED`, nothing changes.
 5. A human decision wins over the AI. When a human reviews or un-reviews a translation that has an
    AI result, the row becomes a `SUPERSEDED` marker that names the user (see 3.3).
@@ -55,33 +63,31 @@ AI" row needs the feature.
 ### 3.1 Rule matching
 
 - **Strictest rule wins.** Never beats any number; otherwise the highest threshold wins; on a tie a
-  Dry run rule wins over an Active one, then the lowest rule id.
+  Score only rule wins over an Active one, then the lowest rule id.
   *Why:* adding a tag can only make auto-review harder, so tagging a key `legal` is a reliable off
   switch.
 - **Never is a blocker, not a mode.** It is checked across all matching rules, in every mode.
-  *Why:* a Dry run rule with Never would otherwise contradict itself ("score it" vs "never look").
-- **A threshold override is an exception to a rule-level Never** ("Legal: Never, but German at 98").
-  *Why:* a separate rule can never beat a Never, so this is the only way to write an exception, and
-  new languages stay protected.
+  *Why:* a Score only rule with Never would otherwise contradict itself ("score it" vs "never
+  look").
 - **Re-reviews of an AI approval use Active rules only.** This includes the re-review of an
   AI-managed review after MT replaced its text under Protect reviewed, where the state stays Reviewed
   whatever the result is. *Why:*
   - The re-review decides whether the text may be "Approved by AI" again. Only an Active rule can
-    approve. A Dry run result would replace the approval.
-  - A Reviewed translation with a Dry run row is not an AI-managed review, so the system would read
-    it as a human review. The AI would stop checking it, and the next MT text would stay Reviewed
-    unseen. Counting Dry run rows as AI-managed is not safe either: a bulk-reviewed text can have a
-    leftover Dry run row.
-  - "Strictest wins" includes Dry run rules. A stricter rule tested in Dry run would take over the
-    approvals after the next source change. Dry run must never change anything live.
-  The cost: these translations get no Dry run scores. If no Active rule wins for such a
+    approve. A Score only result would replace the approval.
+  - A Reviewed translation with a Score only row is not an AI-managed review, so the system would
+    read it as a human review. The AI would stop checking it, and the next MT text would stay
+    Reviewed unseen. Counting Score only rows as AI-managed is not safe either: a bulk-reviewed
+    text can have a leftover Score only row.
+  - "Strictest wins" includes Score only rules. A stricter rule tested in Score only would take
+    over the approvals after the next source change. Score only must never change anything live.
+  The cost: these translations get no Score only scores. If no Active rule wins for such a
   translation, or it can no longer be reviewed (for example it is outdated), its row stays: an
   approval stays `APPROVED`, any other row becomes `FAILED`. It leaves the queue, and the
   translation stays an AI-managed review. This is the same when the job claims the row and when
   the text changes, so the result does not depend on timing.
-- **Demotion compares the stored score with the strictest Active rule.** A matching Dry run rule
-  never blocks a demotion, and an approval whose matching rules are all Dry run stays. *Why:* Dry
-  run must never change anything live.
+- **Demotion compares the stored score with the strictest Active rule.** A matching Score only
+  rule never blocks a demotion, and an approval whose matching rules are all Score only stays.
+  *Why:* Score only must never change anything live.
 - **Deleting a language never widens a rule.** If a rule's language list becomes empty, the rule is
   disabled. *Why:* an empty list means "all languages".
 - **Tags and namespaces match exactly; only branches have `*` patterns.** `""` means "without tags"
@@ -217,7 +223,7 @@ AI" row needs the feature.
 - **Demotion uses the stored score and never promotes.** A stricter rule can take an approval away
   without a new LLM call; a lower threshold never turns an old score into an approval. *Why:* the old
   score is good enough to remove trust, not to give it.
-- **Deleting a rule keeps approval rows** (the rule reference becomes null) but deletes Dry run,
+- **Deleting a rule keeps approval rows** (the rule reference becomes null) but deletes Score only,
   failed and skipped rows, except the rows of AI-managed reviews. *Why:* if approval rows were deleted, their Reviewed translations would
   look like human reviews. Later demotion runs keep these approvals too (also for a disabled rule):
   only a matching rule that is stricter than the stored score, or a Never, removes them. A rule edit
@@ -251,14 +257,14 @@ AI" row needs the feature.
 - **`manual_run_batch_job_id`** records which manual run queued a row, separate from the job that
   claims it. *Why:* cancelling a run must undo only its own rows, while an automatic job may queue
   the same translation after an edit.
-- **A prompt change switches its rules to Dry run**, and an LLM call that was already running with the
-  old prompt is dropped (`Prompt.revision`). *Why:* an approval must never come from a prompt the rule
-  no longer uses.
+- **A prompt change switches its rules to Score only**, and an LLM call that was already running
+  with the old prompt is dropped (`Prompt.revision`). *Why:* an approval must never come from a
+  prompt the rule no longer uses.
 - **Known limit: a change of the LLM model or of the built-in default review prompt does not switch
-  rules to Dry run.** A rule without a prompt uses the built-in prompt, which can change in a Tolgee
-  release. A prompt that uses the organization's default provider gets a new model when an admin
-  changes the provider. Scores depend on the model and the prompt, so after such a change a team
-  should test its thresholds again in Dry run. Tolgee does not detect this yet.
+  rules to Score only.** A rule without a prompt uses the built-in prompt, which can change in a
+  Tolgee release. A prompt that uses the organization's default provider gets a new model when an
+  admin changes the provider. Scores depend on the model and the prompt, so after such a change a
+  team should test its thresholds again in Score only. Tolgee does not detect this yet.
 
 ### 3.6 Activity log
 
@@ -271,5 +277,5 @@ AI" row needs the feature.
 
 ### 3.7 Caching
 
-- Rules are cached per project (`Caches.AI_REVIEW_RULES`). **Every** write to rules, their overrides
-  or their languages must go through `AiReviewRuleService`, which evicts the cache.
+- Rules are cached per project (`Caches.AI_REVIEW_RULES`). **Every** write to rules or their
+  languages must go through `AiReviewRuleService`, which evicts the cache.
