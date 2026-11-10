@@ -15,7 +15,6 @@ class AiReviewColumnDefaultsTest : AbstractSpringTest() {
     columnDefault("prompt", "type").assert.contains("'TRANSLATE'")
     columnDefault("prompt", "revision").assert.isEqualTo("0")
     columnDefault("ai_review_rule", "auto_reviewed_count").assert.isEqualTo("0")
-    columnDefault("ai_review_rule", "rejected_count").assert.isEqualTo("0")
   }
 
   private fun columnDefault(

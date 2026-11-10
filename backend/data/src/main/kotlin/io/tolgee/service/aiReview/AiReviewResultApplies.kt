@@ -25,8 +25,7 @@ object AiReviewResultApplies {
       AiReviewStatus.SCORE_ONLY_PASS,
       AiReviewStatus.SCORE_ONLY_FAIL,
       AiReviewStatus.SKIPPED_QA_ISSUES,
-      AiReviewStatus.CONFIRMED,
-      AiReviewStatus.REJECTED,
+      AiReviewStatus.SUPERSEDED,
       -> true
     }
 
@@ -48,8 +47,7 @@ object AiReviewResultApplies {
       AiReviewStatus.SCORE_ONLY_PASS,
       AiReviewStatus.SCORE_ONLY_FAIL,
       AiReviewStatus.SKIPPED_QA_ISSUES,
-      AiReviewStatus.CONFIRMED,
-      AiReviewStatus.REJECTED,
+      AiReviewStatus.SUPERSEDED,
       -> hasStatus
     }
   }

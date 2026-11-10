@@ -19,7 +19,6 @@ class AiReviewRuleStatsService(
   data class AiReviewRuleCounts(
     val ruleId: Long,
     val autoReviewed: Long = 0,
-    val rejected: Long = 0,
     val failed: Long = 0,
     val scored: Long = 0,
     val wouldBeAutoReviewed: Long = 0,
@@ -36,7 +35,6 @@ class AiReviewRuleStatsService(
             AiReviewRuleCounts(
               ruleId = it.ruleId,
               autoReviewed = it.autoReviewedCount,
-              rejected = it.rejectedCount,
             )
         }.toMutableMap()
 
@@ -90,8 +88,7 @@ class AiReviewRuleStatsService(
       AiReviewStatus.APPROVED,
       AiReviewStatus.BELOW_THRESHOLD,
       AiReviewStatus.SKIPPED_QA_ISSUES,
-      AiReviewStatus.CONFIRMED,
-      AiReviewStatus.REJECTED,
+      AiReviewStatus.SUPERSEDED,
       -> withFailure
     }
   }

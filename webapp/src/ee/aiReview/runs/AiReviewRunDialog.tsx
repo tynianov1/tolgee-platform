@@ -104,8 +104,7 @@ export const AiReviewRunDialog = ({
   const data = preview.data;
   const toReview = data?.toReview ?? 0;
   const scoreOnlyRunCount = data?.scoreOnlyRunCount ?? 0;
-  const confirmedToReReview = data?.confirmedToReReview ?? 0;
-  const rejectedToReReview = data?.rejectedToReReview ?? 0;
+  const supersededToReReview = data?.supersededToReReview ?? 0;
   const skipped = Object.entries(data?.skipped ?? {}).filter(
     ([, count]) => Number(count) > 0
   );
@@ -125,16 +124,10 @@ export const AiReviewRunDialog = ({
           'Already queued: {count}',
           params
         );
-      case 'CONFIRMED_BY_HUMAN':
+      case 'SUPERSEDED':
         return t(
-          'ai_review_run_skip_confirmed_by_human',
-          'Confirmed by a human: {count}',
-          params
-        );
-      case 'REJECTED_BY_HUMAN':
-        return t(
-          'ai_review_run_skip_rejected_by_human',
-          'Rejected by a human: {count}',
+          'ai_review_run_skip_superseded',
+          'Superseded by a human: {count}',
           params
         );
       case 'HUMAN_REVIEWED':
@@ -210,19 +203,16 @@ export const AiReviewRunDialog = ({
             >
               {config.countLine(toReview)}
             </Typography>
-            {confirmedToReReview + rejectedToReReview > 0 && (
+            {supersededToReReview > 0 && (
               <Typography
                 variant="body2"
                 color="textSecondary"
                 data-cy="ai-review-run-includes-resolved"
               >
                 {t(
-                  'ai_review_run_includes_resolved',
-                  'Includes {confirmed, plural, one {# confirmed} other {# confirmed}} and {rejected, plural, one {# rejected} other {# rejected}} by a human.',
-                  {
-                    confirmed: confirmedToReReview,
-                    rejected: rejectedToReReview,
-                  }
+                  'ai_review_run_includes_superseded',
+                  '{count, plural, one {Includes # translation a human superseded.} other {Includes # translations a human superseded.}}',
+                  { count: supersededToReReview }
                 )}
               </Typography>
             )}

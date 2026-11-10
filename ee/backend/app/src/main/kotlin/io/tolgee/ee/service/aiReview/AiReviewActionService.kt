@@ -6,12 +6,9 @@ import io.tolgee.exceptions.BadRequestException
 import io.tolgee.exceptions.NotFoundException
 import io.tolgee.model.UserAccount
 import io.tolgee.model.aiReview.TranslationAiReview
-import io.tolgee.model.enums.TranslationState
 import io.tolgee.model.enums.aiReview.AiReviewStatus
-import io.tolgee.model.translation.Translation
-import io.tolgee.repository.aiReview.AiReviewRuleRepository
 import io.tolgee.repository.aiReview.TranslationAiReviewRepository
-import io.tolgee.service.translation.TranslationService
+import io.tolgee.service.aiReview.AiReviewTextHash
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,26 +16,19 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class AiReviewActionService(
   private val reviewRepository: TranslationAiReviewRepository,
-  private val ruleRepository: AiReviewRuleRepository,
-  private val translationService: TranslationService,
   private val currentDateProvider: CurrentDateProvider,
   private val entityManager: EntityManager,
   private val websocketPublisher: AiReviewWebsocketPublisher,
 ) {
-  @Transactional
-  fun confirm(
-    translation: Translation,
-    userId: Long,
-  ): TranslationAiReview = resolveApproval(translation, userId, TranslationState.REVIEWED, AiReviewStatus.CONFIRMED)
-
-  @Transactional
-  fun reject(
-    translation: Translation,
-    userId: Long,
-  ): TranslationAiReview = resolveApproval(translation, userId, TranslationState.TRANSLATED, AiReviewStatus.REJECTED)
-
   fun get(translationId: Long): TranslationAiReview =
     reviewRepository.findByTranslationId(translationId) ?: throw NotFoundException()
+
+  fun checkRetryAllowed(translationId: Long) {
+    val row = reviewRepository.findByTranslationId(translationId) ?: return
+    if (row.status == AiReviewStatus.SUPERSEDED) {
+      throw BadRequestException(Message.AI_REVIEW_NOTHING_TO_REVIEW)
+    }
+  }
 
   @Transactional
   fun settleHumanUnReview(
@@ -49,25 +39,24 @@ class AiReviewActionService(
     aiReviewOn: Boolean,
   ) {
     val updates = mutableListOf<AiReviewUpdate>()
-    // Sorted: parallel chunks of one bulk job must lock the rule rows in the same order, or they deadlock.
-    val rejectedByRule = sortedMapOf<Long, Long>()
     translationIds.chunked(IN_CLAUSE_CHUNK).forEach { chunk ->
       val rows = reviewRepository.findAllWithTranslationByTranslationIdIn(chunk)
-      val (deletedApprovals, rejectedApprovals) =
+      val (deletedApprovals, supersededApprovals) =
         rows
           .filter { it.status == AiReviewStatus.APPROVED }
           .partition { !aiReviewOn || isMachineOverwrite(it, textChangedIds) }
-      rejectedApprovals.forEach { row ->
-        resolve(row, AiReviewStatus.REJECTED, resolvedById)
+      supersededApprovals.forEach { row ->
+        resolve(row, AiReviewStatus.SUPERSEDED, resolvedById)
         updates += AiReviewUpdate.of(row, scoreOnlyRun = false)
-        row.rule?.id?.let { rejectedByRule.merge(it, 1L, Long::plus) }
       }
       deleteAndCollectRemovals(rows.filter { AiReviewEligibility.isMarker(it) } + deletedApprovals, updates)
     }
     websocketPublisher.publishAfterCommit(projectId, updates)
-    if (rejectedByRule.isEmpty()) return
-    entityManager.flush()
-    rejectedByRule.forEach { (ruleId, count) -> ruleRepository.addToRejectedCount(ruleId, count) }
+  }
+
+  companion object {
+    private val SUPERSEDABLE_RESULTS =
+      setOf(AiReviewStatus.BELOW_THRESHOLD, AiReviewStatus.SCORE_ONLY_PASS, AiReviewStatus.SCORE_ONLY_FAIL)
   }
 
   private fun isMachineOverwrite(
@@ -79,14 +68,24 @@ class AiReviewActionService(
   fun releaseToHumanReview(
     projectId: Long,
     translationIds: Collection<Long>,
+    resolvedById: Long?,
+    aiReviewOn: Boolean,
   ) {
     val updates = mutableListOf<AiReviewUpdate>()
     translationIds.chunked(IN_CLAUSE_CHUNK).forEach { chunk ->
       val rows = reviewRepository.findAllWithTranslationByTranslationIdIn(chunk)
-      deleteAndCollectRemovals(rows.filter { AiReviewEligibility.keepsAiManaged(it) }, updates)
+      val (toSupersede, rest) = rows.partition { aiReviewOn && supersedesOnHumanReview(it) }
+      toSupersede.forEach { row ->
+        resolve(row, AiReviewStatus.SUPERSEDED, resolvedById)
+        updates += AiReviewUpdate.of(row, scoreOnlyRun = false)
+      }
+      deleteAndCollectRemovals(rest.filter { AiReviewEligibility.keepsAiManaged(it) }, updates)
     }
     websocketPublisher.publishAfterCommit(projectId, updates)
   }
+
+  private fun supersedesOnHumanReview(row: TranslationAiReview): Boolean =
+    row.status in SUPERSEDABLE_RESULTS && row.textHash == AiReviewTextHash.of(row.translation)
 
   private fun deleteAndCollectRemovals(
     rows: List<TranslationAiReview>,
@@ -95,30 +94,6 @@ class AiReviewActionService(
     if (rows.isEmpty()) return
     rows.forEach { updates += AiReviewUpdate.removed(it.translation) }
     reviewRepository.deleteAllByIdInBatch(rows.map { it.id })
-  }
-
-  private fun publishRow(row: TranslationAiReview) {
-    websocketPublisher.publishAfterCommit(
-      row.translation.key.project.id,
-      listOf(AiReviewUpdate.of(row, scoreOnlyRun = false)),
-    )
-  }
-
-  private fun resolveApproval(
-    translation: Translation,
-    userId: Long,
-    state: TranslationState,
-    status: AiReviewStatus,
-  ): TranslationAiReview {
-    val row = get(translation.id)
-    if (!AiReviewEligibility.isAiApproval(translation, row)) {
-      throw BadRequestException(Message.AI_REVIEW_NOT_AN_APPROVAL)
-    }
-    translationService.setStateBatch(translation, state)
-    resolve(row, status, userId)
-    if (status == AiReviewStatus.REJECTED) row.rule?.id?.let { ruleRepository.addToRejectedCount(it, 1) }
-    publishRow(row)
-    return row
   }
 
   private fun resolve(
@@ -130,5 +105,8 @@ class AiReviewActionService(
     row.resolvedBy = resolvedById?.let { entityManager.getReference(UserAccount::class.java, it) }
     row.resolvedAt = currentDateProvider.date
     row.reReviewRequested = false
+    // A superseded row must never show Retry, so the stale failure data goes with the decision.
+    row.lastFailureReason = null
+    row.lastFailedAt = null
   }
 }

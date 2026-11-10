@@ -3,7 +3,6 @@ import { alpha, styled } from '@mui/material';
 import {
   AlertCircle,
   AlertTriangle,
-  Check,
   Stars01,
   XClose,
 } from '@untitled-ui/icons-react';
@@ -59,11 +58,11 @@ export const AiReviewBadge = ({ aiReview }: Props) => {
   const { status, score, lastFailed } = aiReview;
 
   const look = clsx({
-    green: status === 'APPROVED' || status === 'CONFIRMED',
+    green: status === 'APPROVED',
     orange: status === 'BELOW_THRESHOLD',
     grey:
       status === 'FAILED' ||
-      status === 'REJECTED' ||
+      status === 'SUPERSEDED' ||
       status === 'SCORE_ONLY_PASS' ||
       status === 'SCORE_ONLY_FAIL',
     scoreOnlyRun: status === 'SCORE_ONLY_PASS' || status === 'SCORE_ONLY_FAIL',
@@ -77,12 +76,8 @@ export const AiReviewBadge = ({ aiReview }: Props) => {
       data-cy-last-failed={String(Boolean(lastFailed))}
     >
       {status === 'FAILED' ? <AlertCircle /> : <Stars01 />}
-      {status === 'CONFIRMED' && <Check />}
-      {status === 'REJECTED' && <XClose />}
-      {status !== 'FAILED' &&
-        status !== 'CONFIRMED' &&
-        status !== 'REJECTED' &&
-        score}
+      {status === 'SUPERSEDED' && <XClose />}
+      {status !== 'FAILED' && status !== 'SUPERSEDED' && score}
       {lastFailed && <AlertTriangle />}
     </StyledPill>
   );

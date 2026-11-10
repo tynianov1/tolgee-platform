@@ -128,28 +128,35 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
     keysFor("filterAiReviewStatus=SCORE_ONLY_PASS").assert.containsExactly("k.drypass")
     keysFor("filterAiReviewStatus=SCORE_ONLY_FAIL").assert.containsExactly("k.dryfail")
     keysFor("filterAiReviewStatus=FAILED").assert.containsExactly("k.failed")
-    keysFor("filterAiReviewStatus=CONFIRMED").assert.containsExactly("k.confirmed")
-    keysFor("filterAiReviewStatus=REJECTED").assert.containsExactly("k.rejected")
   }
 
   @Test
-  fun `the BELOW_THRESHOLD filter lists Reviewed texts whatever auto is and the FAILED filter skips them`() {
-    listOf("k.humanTextBelow" to AiReviewStatus.BELOW_THRESHOLD, "k.reviewedFailed" to AiReviewStatus.FAILED)
-      .forEach { (name, status) ->
-        val key = testData.addKeyWithTranslations(name)
-        key.de.self.state = TranslationState.REVIEWED
-        testData.addReview(key.de, status, 40) { rule = testData.rule }
-      }
+  fun `a human review supersedes a below-threshold row and leaves it out of the filter`() {
+    testData.addKeyWithTranslations("k.reviewedFailed").let {
+      it.de.self.state = TranslationState.REVIEWED
+      testData.addReview(it.de, AiReviewStatus.FAILED, 40) { rule = testData.rule }
+    }
     testData.addKeyWithTranslations("k.aiBelow").let {
       it.de.self.state = TranslationState.REVIEWED
       it.de.self.auto = true
       testData.addReview(it.de, AiReviewStatus.BELOW_THRESHOLD, 40) { rule = testData.rule }
     }
+    val humanBelow = testData.addKeyWithTranslations("k.humanBelow")
+    testData.addReview(humanBelow.de, AiReviewStatus.BELOW_THRESHOLD, 40) { rule = testData.rule }
     save()
+
+    performAuthPut(
+      "$projectUrl/translations/${humanBelow.de.self.id}/set-state/REVIEWED",
+      null,
+    ).andIsOk
+
     keysFor("filterAiReviewStatus=BELOW_THRESHOLD")
       .assert
-      .containsExactlyInAnyOrder("k.below", "k.humanTextBelow", "k.aiBelow")
+      .containsExactlyInAnyOrder("k.below", "k.aiBelow")
     keysFor("filterAiReviewStatus=FAILED").assert.containsExactly("k.failed")
+    fetch("search=k.humanBelow").andIsOk.andAssertThatJson {
+      node("_embedded.keys[0].translations.de.aiReview.status").isEqualTo("SUPERSEDED")
+    }
   }
 
   @Test

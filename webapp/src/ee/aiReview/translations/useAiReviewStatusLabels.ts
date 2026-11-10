@@ -25,10 +25,11 @@ export const useAiReviewStatusLabels = () => {
         );
       case 'FAILED':
         return t('ai_review_popover_status_failed', 'Review failed');
-      case 'CONFIRMED':
-        return t('ai_review_popover_status_confirmed', 'Confirmed by a human');
-      case 'REJECTED':
-        return t('ai_review_popover_status_rejected', 'Rejected by a human');
+      case 'SUPERSEDED':
+        return t(
+          'ai_review_popover_status_superseded',
+          'Superseded by a human'
+        );
       default:
         return status;
     }

@@ -224,22 +224,28 @@ class AiReviewMidFlightChangeTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a human reject during a re-review of an approval keeps the rejection`() {
+  fun `a human un-review settled during a re-review keeps the superseded marker`() {
     approvalQueuedForReReview()
     save()
     stubWithMidFlightChange {
       val translation = entityManager.find(Translation::class.java, testData.deTranslation.id)
-      aiReviewActionService.reject(translation, testData.user.id)
+      translation.state = TranslationState.TRANSLATED
+      aiReviewActionService.settleHumanUnReview(
+        projectId = testData.project.id,
+        translationIds = listOf(translation.id),
+        textChangedIds = emptySet(),
+        resolvedById = testData.user.id,
+        aiReviewOn = true,
+      )
     }
 
     runJob(testData.deTranslation.id)
 
     translation(testData.deTranslation.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
     val row = review(testData.deTranslation.id)!!
-    row.status.assert.isEqualTo(AiReviewStatus.REJECTED)
+    row.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
     row.batchJobId.assert.isNull()
     rule().autoReviewedCount.assert.isEqualTo(0)
-    rule().rejectedCount.assert.isEqualTo(1)
     verify(openaiApiService, times(1)).translate(any(), any(), any())
   }
 
@@ -298,7 +304,7 @@ class AiReviewMidFlightChangeTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `an AI claim after a bulk un-review chunk commits keeps the rejection`() {
+  fun `an AI claim after a bulk un-review chunk commits keeps the superseded marker`() {
     approvalQueuedForReReview()
     save()
     doNothing().whenever(aiReviewActivityListener).onBatchJobFinalized(any<OnBatchJobFinalized>())
@@ -308,8 +314,7 @@ class AiReviewMidFlightChangeTest : AuthorizedControllerTest() {
     runJob(testData.deTranslation.id)
 
     translation(testData.deTranslation.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
-    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.REJECTED)
-    rule().rejectedCount.assert.isEqualTo(1)
+    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
     verify(openaiApiService, never()).translate(any(), any(), any())
   }
 

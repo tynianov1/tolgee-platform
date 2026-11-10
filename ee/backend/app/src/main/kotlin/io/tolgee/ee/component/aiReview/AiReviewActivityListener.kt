@@ -169,7 +169,9 @@ class AiReviewActivityListener(
     // Also while the feature is off: a kept row would make the human review AI-managed again
     // when the feature comes back.
     val reviewedIds = entities.filter { isReview(it) }.map { it.entityId }
-    if (reviewedIds.isNotEmpty()) aiReviewActionService.releaseToHumanReview(projectId, reviewedIds)
+    if (reviewedIds.isNotEmpty()) {
+      aiReviewActionService.releaseToHumanReview(projectId, reviewedIds, authorId, isAiReviewOn(projectId))
+    }
     val unReviews = entities.filter { isUnReview(it) }
     if (unReviews.isEmpty()) return
     aiReviewActionService.settleHumanUnReview(

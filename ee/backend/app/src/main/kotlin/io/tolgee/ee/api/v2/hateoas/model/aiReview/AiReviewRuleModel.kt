@@ -28,7 +28,6 @@ class AiReviewRuleModel(
 
 class AiReviewRuleCountsModel(
   val autoReviewed: Long,
-  val rejected: Long,
   val failed: Long,
   val scored: Long,
   val wouldBeAutoReviewed: Long,

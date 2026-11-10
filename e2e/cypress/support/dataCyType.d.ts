@@ -111,13 +111,11 @@ declare namespace DataCy {
         "ai-review-filter-item": true;
         "ai-review-issue": true;
         "ai-review-popover": true;
-        "ai-review-popover-confirm": true;
         "ai-review-popover-failure-reason": true;
         "ai-review-popover-model": true;
         "ai-review-popover-prompt": true;
         "ai-review-popover-protected-note": true;
         "ai-review-popover-re-review-failed": true;
-        "ai-review-popover-reject": true;
         "ai-review-popover-resolved": true;
         "ai-review-popover-retry": true;
         "ai-review-popover-reviewed": true;

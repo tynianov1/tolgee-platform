@@ -4,13 +4,14 @@ import io.tolgee.batch.BatchJobService
 import io.tolgee.batch.data.BatchJobType
 import io.tolgee.batch.request.SetTranslationsStateStateRequest
 import io.tolgee.constants.Feature
+import io.tolgee.constants.Message
 import io.tolgee.ee.component.PublicEnabledFeaturesProvider
 import io.tolgee.ee.development.AiReviewTestData
 import io.tolgee.ee.service.aiReview.AiReviewDemotionServiceEeImpl
 import io.tolgee.ee.service.aiReview.AiReviewEligibility
 import io.tolgee.fixtures.andAssertThatJson
+import io.tolgee.fixtures.andHasErrorMessage
 import io.tolgee.fixtures.andIsBadRequest
-import io.tolgee.fixtures.andIsForbidden
 import io.tolgee.fixtures.andIsOk
 import io.tolgee.fixtures.waitForNotThrowing
 import io.tolgee.model.Project
@@ -20,6 +21,8 @@ import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.batch.BatchJobStatus
 import io.tolgee.model.enums.Scope
 import io.tolgee.model.enums.TranslationState
+import io.tolgee.model.enums.aiReview.AiReviewFailureReason
+import io.tolgee.model.enums.aiReview.AiReviewRuleMode
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.repository.aiReview.TranslationAiReviewRepository
 import io.tolgee.testing.AuthorizedControllerTest
@@ -96,120 +99,90 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `confirm keeps REVIEWED, clears auto and resolves the row`() {
+  fun `un-review with the set-state endpoint marks SUPERSEDED and resolves the row`() {
     save()
-    performAuthPut("$aiReviewUrl/confirm", null).andIsOk
-
-    val translation = translation(testData.deTranslation.id)
-    translation.state.assert.isEqualTo(TranslationState.REVIEWED)
-    translation.auto.assert.isFalse()
-    val row = review(testData.deTranslation.id)!!
-    row.status.assert.isEqualTo(AiReviewStatus.CONFIRMED)
-    row.resolvedBy!!
-      .id.assert
-      .isEqualTo(testData.user.id)
-    row.resolvedAt.assert.isNotNull()
-  }
-
-  @Test
-  fun `reject sets TRANSLATED, clears auto and resolves the row`() {
-    save()
-    performAuthPut("$aiReviewUrl/reject", null).andIsOk
-
-    val translation = translation(testData.deTranslation.id)
-    translation.state.assert.isEqualTo(TranslationState.TRANSLATED)
-    translation.auto.assert.isFalse()
-    val row = review(testData.deTranslation.id)!!
-    row.status.assert.isEqualTo(AiReviewStatus.REJECTED)
-    row.resolvedBy!!
-      .id.assert
-      .isEqualTo(testData.user.id)
-  }
-
-  @Test
-  fun `confirm and reject on an approval for old text return 400`() {
-    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.APPROVED, 90) {
-      textHash = "stale-hash"
+    executeInNewTransaction(platformTransactionManager) {
+      val row = translationAiReviewRepository.findByTranslationId(testData.deTranslation.id)!!
+      row.lastFailureReason = AiReviewFailureReason.PROVIDER_ERROR
+      row.lastFailedAt = currentDateProvider.date
+      row.reReviewRequested = true
+      translationAiReviewRepository.save(row)
     }
-    save()
-
-    val url = "$projectUrl/translations/${testData.frTranslation.id}/ai-review"
-    performAuthPut("$url/confirm", null).andIsBadRequest
-    performAuthPut("$url/reject", null).andIsBadRequest
-    review(testData.frTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.APPROVED)
-  }
-
-  @Test
-  fun `confirm and reject on a current approval of a Translated text return 400`() {
-    testData.deTranslation.state = TranslationState.TRANSLATED
-    save()
-
-    performAuthPut("$aiReviewUrl/confirm", null).andIsBadRequest
-    performAuthPut("$aiReviewUrl/reject", null).andIsBadRequest
-    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.APPROVED)
-    translation(testData.deTranslation.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
-    rejectedCount().assert.isEqualTo(0)
-  }
-
-  @Test
-  fun `confirm on a BELOW_THRESHOLD row returns 400`() {
-    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.BELOW_THRESHOLD, 50)
-    save()
-    performAuthPut(
-      "$projectUrl/translations/${testData.frTranslation.id}/ai-review/confirm",
-      null,
-    ).andIsBadRequest
-  }
-
-  @Test
-  fun `reject without state-edit permission returns 403`() {
-    save()
-    userAccount = testData.translator
-    performAuthPut("$aiReviewUrl/reject", null).andIsForbidden
-  }
-
-  @Test
-  fun `confirm on a protected branch without branch modify permission returns 403`() {
-    enabledFeaturesProvider.forceEnabled = setOf(Feature.AI_REVIEW, Feature.BRANCHING)
-    testData.project.useBranching = true
-    val branch =
-      testData.projectBuilder
-        .addBranch {
-          name = "protected"
-          isProtected = true
-        }.self
-    val branched = testData.addKeyWithTranslations("branched.key")
-    branched.keyBuilder.self.branch = branch
-    branched.de.self.state = TranslationState.REVIEWED
-    testData.addReview(branched.de, AiReviewStatus.APPROVED, 88)
-    save()
-
-    userAccount = reviewer
-    performAuthPut(
-      "$projectUrl/translations/${branched.de.self.id}/ai-review/confirm",
-      null,
-    ).andIsForbidden
-  }
-
-  @Test
-  fun `un-review with the set-state endpoint marks REJECTED and resolves the row`() {
-    save()
     performAuthPut(
       "$projectUrl/translations/${testData.deTranslation.id}/set-state/TRANSLATED",
       null,
     ).andIsOk
 
     val row = review(testData.deTranslation.id)!!
-    row.status.assert.isEqualTo(AiReviewStatus.REJECTED)
+    row.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
     row.resolvedBy!!
       .id.assert
       .isEqualTo(testData.user.id)
+    row.reReviewRequested.assert.isFalse()
+    row.lastFailureReason.assert.isNull()
+    row.lastFailedAt.assert.isNull()
     translation(testData.deTranslation.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
-    rejectedCount().assert.isEqualTo(1)
   }
 
   @Test
-  fun `un-review without the feature deletes the approval and does not count a rejection`() {
+  fun `reviewing over a below-threshold result supersedes it`() {
+    testData.frTranslation.state = TranslationState.TRANSLATED
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.BELOW_THRESHOLD, 40) {
+      rule = testData.rule
+    }
+    save()
+
+    performAuthPut(
+      "$projectUrl/translations/${testData.frTranslation.id}/set-state/REVIEWED",
+      null,
+    ).andIsOk
+
+    val row = review(testData.frTranslation.id)!!
+    row.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    row.resolvedBy!!
+      .id.assert
+      .isEqualTo(testData.user.id)
+    translation(testData.frTranslation.id).state.assert.isEqualTo(TranslationState.REVIEWED)
+  }
+
+  @Test
+  fun `reviewing over a score-only result supersedes it`() {
+    testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
+    testData.frTranslation.state = TranslationState.TRANSLATED
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.SCORE_ONLY_FAIL, 40) {
+      rule = testData.rule
+    }
+    save()
+
+    performAuthPut(
+      "$projectUrl/translations/${testData.frTranslation.id}/set-state/REVIEWED",
+      null,
+    ).andIsOk
+
+    val row = review(testData.frTranslation.id)!!
+    row.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    row.resolvedBy!!
+      .id.assert
+      .isEqualTo(testData.user.id)
+  }
+
+  @Test
+  fun `retry is rejected for a superseded row`() {
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.SUPERSEDED, 40) {
+      resolvedBy = testData.user
+    }
+    save()
+
+    performAuthPost(
+      "$projectUrl/translations/${testData.frTranslation.id}/ai-review/retry",
+      null,
+    ).andIsBadRequest.andHasErrorMessage(Message.AI_REVIEW_NOTHING_TO_REVIEW)
+
+    review(testData.frTranslation.id)!!.reReviewRequested.assert.isFalse()
+  }
+
+  @Test
+  fun `un-review without the feature deletes the approval and keeps no marker`() {
     save()
     enabledFeaturesProvider.forceEnabled = emptySet()
     performAuthPut(
@@ -218,11 +191,10 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
     ).andIsOk
 
     review(testData.deTranslation.id).assert.isNull()
-    rejectedCount().assert.isEqualTo(0)
   }
 
   @Test
-  fun `un-review with the project switch off deletes the approval and does not count a rejection`() {
+  fun `un-review with the project switch off deletes the approval and keeps no marker`() {
     testData.project.useAiReview = false
     save()
     performAuthPut(
@@ -231,7 +203,6 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
     ).andIsOk
 
     review(testData.deTranslation.id).assert.isNull()
-    rejectedCount().assert.isEqualTo(0)
   }
 
   @Test
@@ -250,7 +221,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `the batch state operation marks REJECTED and keeps flags as today`() {
+  fun `the batch state operation marks SUPERSEDED and keeps flags as today`() {
     save()
     val job =
       executeInNewTransaction(platformTransactionManager) {
@@ -275,20 +246,14 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
     }
 
     waitForNotThrowing(pollTime = 100, timeout = 10_000) {
-      review(testData.deTranslation.id)?.status.assert.isEqualTo(AiReviewStatus.REJECTED)
+      review(testData.deTranslation.id)?.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
     }
     val row = review(testData.deTranslation.id)!!
     row.resolvedBy!!
       .id.assert
       .isEqualTo(testData.user.id)
     translation(testData.deTranslation.id).auto.assert.isTrue()
-    rejectedCount().assert.isEqualTo(1)
   }
-
-  private fun rejectedCount(): Long =
-    executeInNewTransaction(platformTransactionManager) {
-      entityManager.find(AiReviewRule::class.java, testData.rule.id).rejectedCount
-    }
 
   @Test
   fun `a bulk un-review deletes a FAILED marker so the text is not shown as failed`() {
@@ -306,11 +271,21 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a bulk human review of an MT text with an AI row makes it a human review`() {
+  fun `a bulk human review of an MT text with an AI row supersedes the row`() {
     saveFrenchMtTextWithBelowThresholdRow()
     bulkReviewFrench()
 
-    assertFrenchIsHumanReviewed()
+    waitForNotThrowing(pollTime = 100, timeout = 10_000) {
+      review(testData.frTranslation.id)?.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    }
+    executeInNewTransaction(platformTransactionManager) {
+      val translation = translationService.get(testData.frTranslation.id)
+      translation.state.assert.isEqualTo(TranslationState.REVIEWED)
+      AiReviewEligibility
+        .isHumanReviewed(translation, translationAiReviewRepository.findByTranslationId(translation.id))
+        .assert
+        .isTrue()
+    }
   }
 
   @Test
@@ -368,7 +343,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `demotion by the system does not mark REJECTED`() {
+  fun `demotion by the system does not mark SUPERSEDED`() {
     save()
     executeInNewTransaction(platformTransactionManager) {
       entityManager.find(AiReviewRule::class.java, testData.rule.id).threshold = 95

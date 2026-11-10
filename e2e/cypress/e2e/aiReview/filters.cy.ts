@@ -58,21 +58,6 @@ describe('AI review filters', () => {
     view.getTranslationCell('key_approved', 'de').should('not.exist');
   });
 
-  it('filters by the human-resolved outcomes', () => {
-    visit();
-    view.openAiReviewFilter();
-    view.toggleAiReviewOutcome('CONFIRMED');
-    waitForGlobalLoading();
-    view.getTranslationCell('key_confirmed', 'de').should('exist');
-    view.getTranslationCell('key_approved', 'de').should('not.exist');
-
-    view.toggleAiReviewOutcome('CONFIRMED');
-    view.toggleAiReviewOutcome('REJECTED');
-    waitForGlobalLoading();
-    view.getTranslationCell('key_rejected', 'de').should('exist');
-    view.getTranslationCell('key_approved', 'de').should('not.exist');
-  });
-
   it('the score-only option matches passing and failing scores alike', () => {
     visit();
     view.openAiReviewFilter();

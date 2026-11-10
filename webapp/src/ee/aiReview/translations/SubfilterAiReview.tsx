@@ -60,28 +60,6 @@ const OUTCOMES: {
     badgeStatus: 'FAILED',
   },
   {
-    outcomes: ['CONFIRMED'],
-    cyOutcome: 'CONFIRMED',
-    label: (
-      <T
-        keyName="ai_review_filter_confirmed"
-        defaultValue="Confirmed by a human"
-      />
-    ),
-    badgeStatus: 'CONFIRMED',
-  },
-  {
-    outcomes: ['REJECTED'],
-    cyOutcome: 'REJECTED',
-    label: (
-      <T
-        keyName="ai_review_filter_rejected"
-        defaultValue="Rejected by a human"
-      />
-    ),
-    badgeStatus: 'REJECTED',
-  },
-  {
     outcomes: ['NOT_REVIEWED_YET'],
     cyOutcome: 'NOT_REVIEWED_YET',
     label: (

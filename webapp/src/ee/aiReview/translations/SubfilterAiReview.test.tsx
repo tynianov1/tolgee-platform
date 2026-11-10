@@ -10,12 +10,20 @@ const nameKey = (outcome: AiReviewFilterOutcome) =>
 
 describe('AI review filter name', () => {
   it('names every outcome', () => {
-    expect(nameKey('CONFIRMED')).toBe('ai_review_filter_confirmed');
-    expect(nameKey('REJECTED')).toBe('ai_review_filter_rejected');
     expect(nameKey('REVIEWED_BY_AI')).toBe('ai_review_filter_reviewed_by_ai');
     expect(nameKey('NOT_REVIEWED_YET')).toBe(
       'ai_review_filter_not_reviewed_yet'
     );
+  });
+
+  it('has no entry for human decisions', () => {
+    for (const gone of ['SUPERSEDED', 'CONFIRMED', 'REJECTED']) {
+      expect(
+        getAiReviewFiltersName({
+          filterAiReviewOutcomes: [gone as AiReviewFilterOutcome],
+        })
+      ).toBeUndefined();
+    }
   });
 
   it('has no name without a selected outcome', () => {

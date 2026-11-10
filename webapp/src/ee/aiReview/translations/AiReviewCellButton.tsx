@@ -11,7 +11,6 @@ export const AiReviewCellButton = ({
   aiReview,
   translationId,
   state,
-  stateChangeEnabled,
   style,
   className,
 }: AiReviewCellButtonProps) => {
@@ -38,7 +37,6 @@ export const AiReviewCellButton = ({
           translationId={translationId}
           aiReview={aiReview}
           state={state}
-          stateChangeEnabled={stateChangeEnabled}
         />
       )}
     </>

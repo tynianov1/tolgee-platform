@@ -21,7 +21,6 @@ type Props = {
   translationId: number;
   aiReview: AiReviewSummary;
   state?: State;
-  stateChangeEnabled?: boolean;
 };
 
 type RuleRef =
@@ -59,7 +58,6 @@ export const AiReviewPopover = ({
   translationId,
   aiReview,
   state,
-  stateChangeEnabled,
 }: Props) => {
   const { t } = useTranslate();
   const { satisfiesPermission } = useProjectPermissions();
@@ -80,8 +78,8 @@ export const AiReviewPopover = ({
 
   const protectedNoteVisible =
     aiReview.status === 'BELOW_THRESHOLD' && state === 'REVIEWED';
-  const showActions = aiReview.status === 'APPROVED' && stateChangeEnabled;
   const showRetry =
+    aiReview.status !== 'SUPERSEDED' &&
     (aiReview.status === 'FAILED' || Boolean(details?.lastFailureReason)) &&
     canRun;
 
@@ -158,17 +156,11 @@ export const AiReviewPopover = ({
             )}
             {resolvedParams && (
               <Typography variant="body2" data-cy="ai-review-popover-resolved">
-                {aiReview.status === 'REJECTED'
-                  ? t(
-                      'ai_review_popover_rejected_by',
-                      'Rejected by {name} {time}',
-                      resolvedParams
-                    )
-                  : t(
-                      'ai_review_popover_confirmed_by',
-                      'Confirmed by {name} {time}',
-                      resolvedParams
-                    )}
+                {t(
+                  'ai_review_popover_superseded_by',
+                  'Superseded by {name} {time}',
+                  resolvedParams
+                )}
               </Typography>
             )}
             {details.reviewedAt != null && (
@@ -208,7 +200,6 @@ export const AiReviewPopover = ({
           <AiReviewPopoverActions
             translationId={translationId}
             showRetry={showRetry}
-            showActions={Boolean(showActions)}
             onClose={onClose}
           />
         </Box>

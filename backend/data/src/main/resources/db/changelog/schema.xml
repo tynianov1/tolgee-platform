@@ -6377,9 +6377,6 @@
             <column name="auto_reviewed_count" type="BIGINT" defaultValueNumeric="0">
                 <constraints nullable="false"/>
             </column>
-            <column name="rejected_count" type="BIGINT" defaultValueNumeric="0">
-                <constraints nullable="false"/>
-            </column>
         </addColumn>
     </changeSet>
     <changeSet author="bdshadow" id="1792666143000-14">

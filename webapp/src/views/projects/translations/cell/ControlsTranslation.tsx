@@ -249,7 +249,6 @@ export const ControlsTranslation: React.FC<
           aiReview={aiReview!}
           translationId={translationId!}
           state={state}
-          stateChangeEnabled={stateChangeEnabled}
         />
       )}
       {inDomTask && (

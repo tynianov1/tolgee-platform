@@ -46,15 +46,6 @@ export const AiReviewRuleCounts = ({ rule, canRun, onRun }: Props) => {
           '{count, plural, other {# marked as reviewed}}',
           { count: counts.autoReviewed }
         ),
-        ...(counts.rejected > 0
-          ? [
-              t(
-                'ai_review_rule_counts_rejected',
-                '{count, plural, other {# rejected}}',
-                { count: counts.rejected }
-              ),
-            ]
-          : []),
         ...(counts.failed > 0
           ? [
               t(

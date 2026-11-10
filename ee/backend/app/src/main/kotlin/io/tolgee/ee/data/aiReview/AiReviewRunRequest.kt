@@ -3,8 +3,7 @@ package io.tolgee.ee.data.aiReview
 enum class AiReviewSkipReason {
   ALREADY_HAS_RESULT,
   ALREADY_QUEUED,
-  CONFIRMED_BY_HUMAN,
-  REJECTED_BY_HUMAN,
+  SUPERSEDED,
   HUMAN_REVIEWED,
   NO_RULE,
   NEVER,
@@ -27,6 +26,5 @@ data class AiReviewRunPreviewModel(
   val toReview: Long,
   val scoreOnlyRunCount: Long,
   val skipped: Map<AiReviewSkipReason, Long>,
-  val confirmedToReReview: Long,
-  val rejectedToReReview: Long,
+  val supersededToReReview: Long,
 )

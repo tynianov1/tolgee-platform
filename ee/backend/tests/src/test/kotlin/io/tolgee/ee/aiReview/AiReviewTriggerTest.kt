@@ -189,7 +189,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
   @Test
   fun `with no enabled rule a text change deletes even a resolved row`() {
     testData.rule.enabled = false
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.CONFIRMED, 95)
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SUPERSEDED, 95)
     save()
     editTranslation("de", "Gleich zahlen")
 
@@ -200,7 +200,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
   @Test
   fun `a text change deletes the row even when AI review is off`() {
     enabledFeaturesProvider.forceEnabled = emptySet()
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.CONFIRMED, 95)
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SUPERSEDED, 95)
     save()
     editTranslation("de", "Gleich zahlen")
 
@@ -248,7 +248,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)
     testData.addReview(testData.frTranslationBuilder, AiReviewStatus.APPROVED, 90)
     val confirmed = testData.addKeyWithTranslations("confirmed_key")
-    testData.addReview(confirmed.fr, AiReviewStatus.CONFIRMED, 95)
+    testData.addReview(confirmed.fr, AiReviewStatus.SUPERSEDED, 95)
     save()
 
     performAuthPut(
@@ -262,7 +262,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
 
     review(testData.deTranslation.id).assert.isNull()
     review(testData.frTranslation.id).assert.isNull()
-    review(confirmed.fr.self.id)!!.status.assert.isEqualTo(AiReviewStatus.CONFIRMED)
+    review(confirmed.fr.self.id)!!.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
   }
 
   @Test
@@ -299,7 +299,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `bulk MT over an AI approval does not count a rejection`() {
+  fun `bulk MT over an AI approval keeps the approval current`() {
     initMachineTranslationProperties(-1)
     internalProperties.fakeMtProviders = true
     testData.deTranslation.state = TranslationState.REVIEWED
@@ -316,11 +316,10 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
       row?.status.assert.isEqualTo(AiReviewStatus.APPROVED)
       row!!.textHash.assert.isEqualTo(sha256Hex(translation.text!!))
     }
-    rejectedCount().assert.isEqualTo(0)
   }
 
   @Test
-  fun `a human text edit of an AI approval counts a rejection`() {
+  fun `a human text edit of an AI approval drops the old row`() {
     testData.deTranslation.state = TranslationState.REVIEWED
     testData.deTranslation.auto = true
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.APPROVED, 90) { rule = testData.rule }
@@ -328,13 +327,10 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
 
     editTranslation("de", "Gleich zahlen")
 
-    rejectedCount().assert.isEqualTo(1)
-  }
-
-  private fun rejectedCount(): Long =
-    executeInNewTransaction(platformTransactionManager) {
-      entityManager.find(AiReviewRule::class.java, testData.rule.id).rejectedCount
+    waitForNotThrowing(pollTime = 100, timeout = 10_000) {
+      review(testData.deTranslation.id)?.status.assert.isNotEqualTo(AiReviewStatus.APPROVED)
     }
+  }
 
   @Test
   fun `under Protect reviewed with only a Score only rule, MT keeps an AI-managed FAILED row`() {

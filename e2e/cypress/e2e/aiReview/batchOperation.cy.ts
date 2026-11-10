@@ -52,7 +52,7 @@ describe('AI review batch operation', () => {
     }).should('be.visible');
     gcyAdvanced({
       value: 'ai-review-run-skip-reason',
-      reason: 'REJECTED_BY_HUMAN',
+      reason: 'SUPERSEDED',
     }).should('be.visible');
   });
 

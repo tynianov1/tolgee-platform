@@ -56,13 +56,12 @@ describe('AI review rule runs', () => {
       gcy('ai-review-rule-review-now').click();
     });
     runDialog.assertVariant('score').start();
-    gcyAdvanced({ value: 'ai-review-rule-item', name: 'Legal score only' }).within(
-      () => {
-        gcy('ai-review-rule-review-now', { timeout: 60_000 }).should(
-          'not.exist'
-        );
-      }
-    );
+    gcyAdvanced({
+      value: 'ai-review-rule-item',
+      name: 'Legal score only',
+    }).within(() => {
+      gcy('ai-review-rule-review-now', { timeout: 60_000 }).should('not.exist');
+    });
   });
 
   it('Retry failed reviews brings the failed count to 0', () => {

@@ -1139,12 +1139,6 @@ export interface paths {
   "/v2/projects/{projectId}/translations/{translationId}/ai-review": {
     get: operations["getAiReview"];
   };
-  "/v2/projects/{projectId}/translations/{translationId}/ai-review/confirm": {
-    put: operations["confirmAiReview"];
-  };
-  "/v2/projects/{projectId}/translations/{translationId}/ai-review/reject": {
-    put: operations["rejectAiReview"];
-  };
   "/v2/projects/{projectId}/translations/{translationId}/ai-review/retry": {
     post: operations["retryAiReview"];
   };
@@ -1425,8 +1419,6 @@ export interface components {
       /** Format: int64 */
       failed: number;
       /** Format: int64 */
-      rejected: number;
-      /** Format: int64 */
       scored: number;
       /** Format: int64 */
       wouldBeAutoReviewed: number;
@@ -1477,12 +1469,10 @@ export interface components {
     };
     AiReviewRunPreviewModel: {
       /** Format: int64 */
-      confirmedToReReview: number;
-      /** Format: int64 */
-      rejectedToReReview: number;
-      /** Format: int64 */
       scoreOnlyRunCount: number;
       skipped: { [key: string]: number };
+      /** Format: int64 */
+      supersededToReReview: number;
       /** Format: int64 */
       toReview: number;
     };
@@ -7699,8 +7689,7 @@ export interface components {
         | "SCORE_ONLY_FAIL"
         | "FAILED"
         | "SKIPPED_QA_ISSUES"
-        | "CONFIRMED"
-        | "REJECTED";
+        | "SUPERSEDED";
       /** Format: int32 */
       threshold?: number;
     };
@@ -7719,8 +7708,7 @@ export interface components {
         | "SCORE_ONLY_FAIL"
         | "FAILED"
         | "SKIPPED_QA_ISSUES"
-        | "CONFIRMED"
-        | "REJECTED";
+        | "SUPERSEDED";
     };
     TranslationCommentDto: {
       /** @enum {string} */
@@ -20673,8 +20661,6 @@ export interface operations {
           | "SCORE_ONLY_PASS"
           | "SCORE_ONLY_FAIL"
           | "FAILED"
-          | "CONFIRMED"
-          | "REJECTED"
           | "NOT_REVIEWED_YET"
         )[];
         /** Limit the AI review filter to these language tags. */
@@ -20963,8 +20949,6 @@ export interface operations {
           | "SCORE_ONLY_PASS"
           | "SCORE_ONLY_FAIL"
           | "FAILED"
-          | "CONFIRMED"
-          | "REJECTED"
           | "NOT_REVIEWED_YET"
         )[];
         /** Limit the AI review filter to these language tags. */
@@ -21297,8 +21281,6 @@ export interface operations {
           | "SCORE_ONLY_PASS"
           | "SCORE_ONLY_FAIL"
           | "FAILED"
-          | "CONFIRMED"
-          | "REJECTED"
           | "NOT_REVIEWED_YET"
         )[];
         /** Limit the AI review filter to these language tags. */
@@ -27501,8 +27483,6 @@ export interface operations {
           | "SCORE_ONLY_PASS"
           | "SCORE_ONLY_FAIL"
           | "FAILED"
-          | "CONFIRMED"
-          | "REJECTED"
           | "NOT_REVIEWED_YET"
         )[];
         /** Limit the AI review filter to these language tags. */
@@ -28003,8 +27983,6 @@ export interface operations {
           | "SCORE_ONLY_PASS"
           | "SCORE_ONLY_FAIL"
           | "FAILED"
-          | "CONFIRMED"
-          | "REJECTED"
           | "NOT_REVIEWED_YET"
         )[];
         /** Limit the AI review filter to these language tags. */
@@ -28136,102 +28114,6 @@ export interface operations {
     };
   };
   getAiReview: {
-    parameters: {
-      path: {
-        translationId: number;
-        projectId: number;
-      };
-    };
-    responses: {
-      /** OK */
-      200: {
-        content: {
-          "application/json": components["schemas"]["TranslationAiReviewModel"];
-        };
-      };
-      /** Bad Request */
-      400: {
-        content: {
-          "application/json":
-            | components["schemas"]["ErrorResponseTyped"]
-            | components["schemas"]["ErrorResponseBody"];
-        };
-      };
-      /** Unauthorized */
-      401: {
-        content: {
-          "application/json":
-            | components["schemas"]["ErrorResponseTyped"]
-            | components["schemas"]["ErrorResponseBody"];
-        };
-      };
-      /** Forbidden */
-      403: {
-        content: {
-          "application/json":
-            | components["schemas"]["ErrorResponseTyped"]
-            | components["schemas"]["ErrorResponseBody"];
-        };
-      };
-      /** Not Found */
-      404: {
-        content: {
-          "application/json":
-            | components["schemas"]["ErrorResponseTyped"]
-            | components["schemas"]["ErrorResponseBody"];
-        };
-      };
-    };
-  };
-  confirmAiReview: {
-    parameters: {
-      path: {
-        translationId: number;
-        projectId: number;
-      };
-    };
-    responses: {
-      /** OK */
-      200: {
-        content: {
-          "application/json": components["schemas"]["TranslationAiReviewModel"];
-        };
-      };
-      /** Bad Request */
-      400: {
-        content: {
-          "application/json":
-            | components["schemas"]["ErrorResponseTyped"]
-            | components["schemas"]["ErrorResponseBody"];
-        };
-      };
-      /** Unauthorized */
-      401: {
-        content: {
-          "application/json":
-            | components["schemas"]["ErrorResponseTyped"]
-            | components["schemas"]["ErrorResponseBody"];
-        };
-      };
-      /** Forbidden */
-      403: {
-        content: {
-          "application/json":
-            | components["schemas"]["ErrorResponseTyped"]
-            | components["schemas"]["ErrorResponseBody"];
-        };
-      };
-      /** Not Found */
-      404: {
-        content: {
-          "application/json":
-            | components["schemas"]["ErrorResponseTyped"]
-            | components["schemas"]["ErrorResponseBody"];
-        };
-      };
-    };
-  };
-  rejectAiReview: {
     parameters: {
       path: {
         translationId: number;

@@ -453,12 +453,12 @@ class AiReviewJobTest : AbstractSpringTest() {
 
   @Test
   fun `skips non-claimable rows without calling the LLM`() {
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.CONFIRMED, 95)
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SUPERSEDED, 95)
     save()
 
     runJob(testData.deTranslation.id)
 
-    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.CONFIRMED)
+    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
     verify(openaiApiService, never()).translate(any(), any(), any())
   }
 
@@ -648,23 +648,6 @@ class AiReviewJobTest : AbstractSpringTest() {
       .isEqualTo(testData.rule.id)
     row.threshold.assert.isEqualTo(85)
     row.promptName.assert.isEqualTo("Old prompt")
-    rejectedCount(stricter.id).assert.isEqualTo(0)
-  }
-
-  @Test
-  fun `a reject after a kept approval charges the approving rule`() {
-    val stricter = addStricterRuleThatKeepsTheApproval()
-    approvedReviewedTranslation(reReviewRequested = true) { rule = testData.rule }
-    save()
-    stubResponse("broken")
-    runJob(testData.deTranslation.id)
-
-    executeInNewTransaction(platformTransactionManager) {
-      aiReviewActionService.reject(translationService.get(testData.deTranslation.id), testData.user.id)
-    }
-
-    rejectedCount(testData.rule.id).assert.isEqualTo(1)
-    rejectedCount(stricter.id).assert.isEqualTo(0)
   }
 
   @Test
@@ -729,11 +712,6 @@ class AiReviewJobTest : AbstractSpringTest() {
         threshold = APPROVED_SCORE - 2
         tagIn = mutableListOf("ui")
       }.self
-
-  private fun rejectedCount(ruleId: Long): Long =
-    executeInNewTransaction(platformTransactionManager) {
-      entityManager.find(AiReviewRule::class.java, ruleId).rejectedCount
-    }
 
   private fun autoReviewedCount(ruleId: Long): Long =
     executeInNewTransaction(platformTransactionManager) {

@@ -85,7 +85,6 @@ export type AiReviewCellButtonProps = {
   aiReview: components['schemas']['TranslationAiReviewSummaryModel'];
   translationId: number;
   state?: components['schemas']['TranslationViewModel']['state'];
-  stateChangeEnabled?: boolean;
   style?: React.CSSProperties;
   className?: string;
 };

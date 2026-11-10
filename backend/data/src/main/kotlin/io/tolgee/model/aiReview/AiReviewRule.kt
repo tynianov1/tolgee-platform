@@ -115,8 +115,4 @@ class AiReviewRule(
   @ColumnDefault("0")
   @Column(nullable = false, updatable = false)
   var autoReviewedCount: Long = 0
-
-  @ColumnDefault("0")
-  @Column(nullable = false, updatable = false)
-  var rejectedCount: Long = 0
 }

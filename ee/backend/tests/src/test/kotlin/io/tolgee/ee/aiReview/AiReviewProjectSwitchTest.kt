@@ -136,7 +136,7 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
   @Test
   fun `disabling drops pending queue rows and keeps results`() {
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)
-    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.CONFIRMED, 95) {
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.SUPERSEDED, 95) {
       reReviewRequested = true
     }
     val approved = testData.addKeyWithTranslations("keep.key").de
@@ -153,7 +153,7 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
     }
     review(testData.deTranslation.id).assert.isNull()
     val confirmed = review(testData.frTranslation.id)!!
-    confirmed.status.assert.isEqualTo(AiReviewStatus.CONFIRMED)
+    confirmed.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
     confirmed.reReviewRequested.assert.isFalse()
     review(approved.self.id)!!.status.assert.isEqualTo(AiReviewStatus.APPROVED)
   }
@@ -200,8 +200,6 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
     val runBody = mapOf("ruleId" to testData.rule.id, "languageIds" to emptyList<Long>())
     listOf(
       { performAuthGet(translationUrl) },
-      { performAuthPut("$translationUrl/confirm", null) },
-      { performAuthPut("$translationUrl/reject", null) },
       { performAuthPost("$translationUrl/retry", null) },
       { performAuthPost("$projectUrl/ai-review/run/preview", runBody) },
       { performAuthPost("$projectUrl/ai-review/run", runBody) },

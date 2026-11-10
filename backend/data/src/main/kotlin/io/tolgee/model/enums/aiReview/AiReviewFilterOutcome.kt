@@ -6,7 +6,5 @@ enum class AiReviewFilterOutcome {
   SCORE_ONLY_PASS,
   SCORE_ONLY_FAIL,
   FAILED,
-  CONFIRMED,
-  REJECTED,
   NOT_REVIEWED_YET,
 }

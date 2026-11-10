@@ -34,7 +34,6 @@ class AiReviewRuleModelAssembler {
   private fun AiReviewRuleCounts.toModel() =
     AiReviewRuleCountsModel(
       autoReviewed = autoReviewed,
-      rejected = rejected,
       failed = failed,
       scored = scored,
       wouldBeAutoReviewed = wouldBeAutoReviewed,

@@ -307,14 +307,14 @@ class AiReviewRunTest : AuthorizedControllerTest() {
     val outdated = testData.addKeyWithTranslations("k.outdated")
     outdated.de.self.outdated = true
     val empty = testData.addKeyWithTranslations("k.empty", deText = "")
-    val confirmed = testData.addKeyWithTranslations("k.confirmed")
-    testData.addReview(confirmed.de, AiReviewStatus.CONFIRMED, 95)
-    val rejected = testData.addKeyWithTranslations("k.rejected")
-    testData.addReview(rejected.de, AiReviewStatus.REJECTED, 95)
+    val superseded = testData.addKeyWithTranslations("k.superseded")
+    testData.addReview(superseded.de, AiReviewStatus.SUPERSEDED, 95)
+    val superseded2 = testData.addKeyWithTranslations("k.superseded2")
+    testData.addReview(superseded2.de, AiReviewStatus.SUPERSEDED, 95)
     save()
 
     val keyIds =
-      listOf(withResult, queued, humanReviewed, noRule, never, outdated, empty, confirmed, rejected)
+      listOf(withResult, queued, humanReviewed, noRule, never, outdated, empty, superseded, superseded2)
         .map { it.key.id } + testData.key.id
 
     performAuthPost(
@@ -330,8 +330,7 @@ class AiReviewRunTest : AuthorizedControllerTest() {
       node("skipped.NEVER").isEqualTo(1)
       node("skipped.OUTDATED").isEqualTo(1)
       node("skipped.EMPTY").isEqualTo(1)
-      node("skipped.CONFIRMED_BY_HUMAN").isEqualTo(1)
-      node("skipped.REJECTED_BY_HUMAN").isEqualTo(1)
+      node("skipped.SUPERSEDED").isEqualTo(2)
     }
   }
 
@@ -424,7 +423,7 @@ class AiReviewRunTest : AuthorizedControllerTest() {
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.APPROVED, 90) {
       rule = testData.rule
     }
-    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.CONFIRMED, 95) {
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.SUPERSEDED, 95) {
       rule = testData.rule
     }
     save()
@@ -444,7 +443,7 @@ class AiReviewRunTest : AuthorizedControllerTest() {
       de.score.assert.isEqualTo(90)
       de.lastFailureReason.assert.isEqualTo(AiReviewFailureReason.NO_PROVIDER)
       val fr = review(testData.frTranslation.id)!!
-      fr.status.assert.isEqualTo(AiReviewStatus.CONFIRMED)
+      fr.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
       fr.score.assert.isEqualTo(95)
       fr.reReviewRequested.assert.isFalse()
       fr.lastFailureReason.assert.isEqualTo(AiReviewFailureReason.NO_PROVIDER)
@@ -454,12 +453,12 @@ class AiReviewRunTest : AuthorizedControllerTest() {
   @Test
   fun `reReview replaces human-resolved results and clears who resolved them`() {
     testData.deTranslation.state = TranslationState.REVIEWED
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.CONFIRMED, 60) {
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SUPERSEDED, 60) {
       rule = testData.rule
       resolvedBy = testData.user
       resolvedAt = Date()
     }
-    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.REJECTED, 95) {
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.SUPERSEDED, 95) {
       rule = testData.rule
       resolvedBy = testData.user
       resolvedAt = Date()
@@ -475,8 +474,7 @@ class AiReviewRunTest : AuthorizedControllerTest() {
       ),
     ).andIsOk.andAssertThatJson {
       node("toReview").isEqualTo(2)
-      node("confirmedToReReview").isEqualTo(1)
-      node("rejectedToReReview").isEqualTo(1)
+      node("supersededToReReview").isEqualTo(2)
     }
 
     performAuthPost(

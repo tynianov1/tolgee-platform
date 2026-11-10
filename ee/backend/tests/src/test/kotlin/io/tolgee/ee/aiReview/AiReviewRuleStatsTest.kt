@@ -74,7 +74,6 @@ class AiReviewRuleStatsTest : AuthorizedControllerTest() {
   @Test
   fun `counts follow the statuses and the rule counters`() {
     testData.rule.autoReviewedCount = 4
-    testData.rule.rejectedCount = 1
     review("k.approved1", AiReviewStatus.APPROVED, reviewed = true)
     review("k.failed", AiReviewStatus.FAILED) { failureReason = AiReviewFailureReason.PROVIDER_ERROR }
     review("k.dryPass", AiReviewStatus.SCORE_ONLY_PASS)
@@ -83,7 +82,6 @@ class AiReviewRuleStatsTest : AuthorizedControllerTest() {
 
     performAuthGet(rulesUrl).andIsOk.andAssertThatJson {
       node("_embedded.aiReviewRules[0].counts.autoReviewed").isEqualTo(4)
-      node("_embedded.aiReviewRules[0].counts.rejected").isEqualTo(1)
       node("_embedded.aiReviewRules[0].counts.failed").isEqualTo(1)
       node("_embedded.aiReviewRules[0].counts.scored").isEqualTo(2)
       node("_embedded.aiReviewRules[0].counts.wouldBeAutoReviewed").isEqualTo(1)
@@ -126,23 +124,6 @@ class AiReviewRuleStatsTest : AuthorizedControllerTest() {
 
     performAuthGet(rulesUrl).andIsOk.andAssertThatJson {
       node("_embedded.aiReviewRules[0].counts.failed").isEqualTo(0)
-    }
-  }
-
-  @Test
-  fun `a rejection still counts after the text is edited`() {
-    val de = review("k.approved", AiReviewStatus.APPROVED, reviewed = true)
-    de.self.auto = true
-    save()
-
-    performAuthPut("/v2/projects/${testData.project.id}/translations/${de.self.id}/ai-review/reject", null).andIsOk
-    performAuthPut(
-      "/v2/projects/${testData.project.id}/translations",
-      mapOf("key" to "k.approved", "translations" to mapOf("de" to "Korrigierter Text")),
-    ).andIsOk
-
-    performAuthGet(rulesUrl).andIsOk.andAssertThatJson {
-      node("_embedded.aiReviewRules[0].counts.rejected").isEqualTo(1)
     }
   }
 

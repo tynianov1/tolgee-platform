@@ -32,8 +32,6 @@ internal class AiReviewFilterBuilder(
         AiReviewFilterOutcome.SCORE_ONLY_PASS to AiReviewStatus.SCORE_ONLY_PASS,
         AiReviewFilterOutcome.SCORE_ONLY_FAIL to AiReviewStatus.SCORE_ONLY_FAIL,
         AiReviewFilterOutcome.FAILED to AiReviewStatus.FAILED,
-        AiReviewFilterOutcome.CONFIRMED to AiReviewStatus.CONFIRMED,
-        AiReviewFilterOutcome.REJECTED to AiReviewStatus.REJECTED,
       )
 
     private val QUEUED_STATUSES = listOf(AiReviewStatus.PENDING, AiReviewStatus.SKIPPED_QA_ISSUES)

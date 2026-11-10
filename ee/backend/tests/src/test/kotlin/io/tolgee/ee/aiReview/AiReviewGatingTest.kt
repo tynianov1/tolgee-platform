@@ -100,8 +100,6 @@ class AiReviewGatingTest : AuthorizedControllerTest() {
       { performAuthPut("$ruleUrl/enabled", mapOf("enabled" to false)) },
       { performAuthDelete(ruleUrl) },
       { performAuthGet(translationUrl) },
-      { performAuthPut("$translationUrl/confirm", null) },
-      { performAuthPut("$translationUrl/reject", null) },
       { performAuthPost("$translationUrl/retry", null) },
       { performAuthPost("$projectUrl/ai-review/run/preview", runBody) },
       { performAuthPost("$projectUrl/ai-review/run", runBody) },

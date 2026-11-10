@@ -47,7 +47,8 @@ AI" row needs the feature.
    - Active rule, below the threshold: state stays Translated, the issues are shown.
    - Dry run rule: only a score, the state never changes.
    - No usable answer: `FAILED`, nothing changes.
-5. A human can **Confirm** the AI approval (it becomes a human review) or **Reject** it.
+5. A human decision wins over the AI. When a human reviews or un-reviews a translation that has an
+   AI result, the row becomes a `SUPERSEDED` marker that names the user (see 3.3).
 
 ## 3. Decisions
 
@@ -122,30 +123,32 @@ AI" row needs the feature.
   it, Keep is not offered for AI approvals). *Why:* otherwise auto translation would still replace
   the text, and "Keep" would not keep it. Open point: after this the text is still machine
   translated, so the missing mark is not true. A better way is not decided yet.
-- **Any human un-review of an AI approval counts as a rejection.** That includes the popover's Reject,
-  the normal state button and the batch "Mark as translated". The flags follow what that path does
-  today (Reject and the state button clear `auto`, the batch path does not). *Why:* the "rejected"
-  count is the success metric of the pilot, so every way of saying "the AI was wrong" must count.
-  A human text edit that un-reviews the text also counts. A machine overwrite does not: when the
-  same change writes new text with `auto` (bulk "Machine translate", "Pre-translate by TM"), the
-  approval is deleted and not counted. *Why:* MT that replaces the text does not say the AI was
-  wrong.
-  While the feature is off, a human un-review deletes the approval instead. It is not counted and
-  not marked `REJECTED`. *Why:* a kept approval on a Translated text is still counted and blocks
-  later runs.
-- **The "auto-reviewed" and "rejected" counts are counters on the rule** (`auto_reviewed_count`,
-  `rejected_count`). They grow when the AI approves a text and when a human rejects an approval. A
-  later text change deletes the row but does not lower the counts. *Why:* a translator who fixes the
-  AI's mistake must not remove the rejection from the metric. A rejection counts on the rule that
-  approved the text (the row's rule, see 3.4).
+- **Any human un-review of an AI approval marks the row `SUPERSEDED`.** That includes the normal
+  state button and the batch "Mark as translated". The flags follow what that path does today (the
+  state button clears `auto`, the batch path does not). The marker keeps who resolved it and when,
+  and the badge shows a quiet chip on hover. *Why:* the AI must never undo a human decision, and
+  the marker tells the next reader that the AI result was overruled, by whom.
+  Retry is hidden for a superseded row, and the retry endpoint refuses it. Only a manual run with
+  the re-review option reviews it again.
+  A human text edit that un-reviews the text drops the old row (the hash no longer matches). A
+  machine overwrite also drops it: when the same change writes new text with `auto` (bulk "Machine
+  translate", "Pre-translate by TM"), the approval is deleted. *Why:* MT that replaces the text
+  does not say the AI was wrong.
+  While the feature or the project switch is off, a human un-review deletes the approval instead.
+  *Why:* a kept marker on a project that opted out blocks later runs for no reason.
+- **A human review over a bad AI result also marks the row `SUPERSEDED`.** When a human sets
+  Reviewed on a text with a current `BELOW_THRESHOLD`, `SCORE_ONLY_PASS` or `SCORE_ONLY_FAIL` row
+  (and AI review is on for the project), the row converts instead of being deleted. *Why:* the
+  human overruled the AI here too, and the marker keeps that visible.
+- **The "auto-reviewed" count is a counter on the rule** (`auto_reviewed_count`). It grows when the
+  AI approves a text. A later text change deletes the row but does not lower the count.
 - **Only the rule list returns the counts.** Create, update and enable responses have
   `counts = null`, and the webapp reads the counts from the reloaded list. *Why:* the backlog scans
   the whole project, and the list is reloaded after every change anyway.
-- **Confirm turns the AI approval into a normal human review** (flags cleared, row `CONFIRMED`).
 - **Protect reviewed keeps the Reviewed state, also for AI approvals.** Under protection the AI never
   sets a Reviewed translation to Translated: not when the source text changes, not after a failed
   re-review, not on demotion. *Why:* the team rule is that a protected Reviewed translation stays
-  Reviewed no matter what. Human actions (Reject, the state button) still work as today.
+  Reviewed no matter what. Human actions (the state button) still work as today.
 - **Under protection an AI-approved machine translation is translated again like in main.** It keeps
   `auto`, so MT writes new text when the source changes, and the state stays Reviewed. The setting
   "Approved by AI" is locked to "Translate again". The old row is replaced by a `PENDING` row, and
@@ -156,19 +159,19 @@ AI" row needs the feature.
   not seen.
 - **"AI-managed review"** (`AiReviewManaged`): a Reviewed translation with an AI approval or a
   below-threshold result for the current text, or with `auto` and an AI row that is not
-  `CONFIRMED`, `REJECTED` or Dry run. It is not human-reviewed, so the AI may review it again.
+  `SUPERSEDED` or Score only. It is not human-reviewed, so the AI may review it again.
   *Why:* after MT replaced an approval, or after a demotion or a failed re-review under protection,
   the row is no longer an approval, but the state is still the AI's. This also holds for
   human-written text (no `auto`) that the AI approved. When a human sets Reviewed, the activity
-  listener deletes every AI row that would keep the translation AI-managed, so a human review never
-  matches. The bulk "Change state" keeps `auto` (as in main), so the listener is needed also for
-  `auto` texts. *Why:* otherwise a later re-review could set a human review back to Translated. For
-  a batch job, the listener handles human state changes in each chunk's own transaction, not when
-  the job ends. *Why:* a job that claims the row after a chunk commits would see an AI-managed
-  review. The listener's delete or `REJECTED` commits together with the human change, so a job that
-  claimed the row before finds no row or a human decision and drops its result. In the same way, a
-  re-review of an AI approval drops its result when a human rejects or un-reviews the approval during
-  the LLM call.
+  listener converts or deletes every AI row that would keep the translation AI-managed, so a human
+  review never matches. The bulk "Change state" keeps `auto` (as in main), so the listener is
+  needed also for `auto` texts. *Why:* otherwise a later re-review could set a human review back to
+  Translated. For a batch job, the listener handles human state changes in each chunk's own
+  transaction, not when the job ends. *Why:* a job that claims the row after a chunk commits would
+  see an AI-managed review. The listener's delete or `SUPERSEDED` commits together with the human
+  change, so a job that claimed the row before finds no row or a human decision and drops its
+  result. In the same way, a re-review of an AI approval drops its result when a human un-reviews
+  the approval during the LLM call.
   *Why:* the AI must never undo a human decision.
 - **The server decides if a result still applies to the state** (`AiReviewResultApplies`): an
   approval only while Reviewed, below threshold while Translated or Reviewed, failed only while
@@ -219,7 +222,7 @@ AI" row needs the feature.
   look like human reviews. Later demotion runs keep these approvals too (also for a disabled rule):
   only a matching rule that is stricter than the stored score, or a Never, removes them. A rule edit
   that changes only the name starts no demotion.
-- **A base language change deletes all rows except human decisions** (`CONFIRMED`, `REJECTED`).
+- **A base language change deletes all rows except human decisions** (`SUPERSEDED`).
   *Why:* every stored score was measured against the old base language. The cost: a Reviewed
   translation that the AI approved keeps its state and `auto` but loses its row, so it counts as a
   human review and "Approved by AI" is no longer shown.

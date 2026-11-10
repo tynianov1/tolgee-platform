@@ -64,7 +64,7 @@ interface AiReviewRuleRepository : JpaRepository<AiReviewRule, Long> {
 
   @Query(
     """
-    select r.id as ruleId, r.autoReviewedCount as autoReviewedCount, r.rejectedCount as rejectedCount
+    select r.id as ruleId, r.autoReviewedCount as autoReviewedCount
     from AiReviewRule r
     where r.project.id = :projectId
     order by r.id
@@ -82,19 +82,8 @@ interface AiReviewRuleRepository : JpaRepository<AiReviewRule, Long> {
     count: Long,
   ): Int
 
-  @Modifying
-  @Query(
-    nativeQuery = true,
-    value = "update ai_review_rule set rejected_count = rejected_count + :count where id = :ruleId",
-  )
-  fun addToRejectedCount(
-    ruleId: Long,
-    count: Long,
-  ): Int
-
   interface RuleDecisionCountView {
     val ruleId: Long
     val autoReviewedCount: Long
-    val rejectedCount: Long
   }
 }

@@ -8,8 +8,7 @@ export const getAiReviewCellVisibility = (
   aiReview: AiReviewSummary | undefined
 ): AiReviewCellVisibility => {
   switch (aiReview?.status) {
-    case 'CONFIRMED':
-    case 'REJECTED':
+    case 'SUPERSEDED':
       return 'hover';
     case 'APPROVED':
     case 'SCORE_ONLY_PASS':
