@@ -20,13 +20,13 @@ export const RuleModeSelect = () => {
         data-cy="ai-review-rule-form-mode"
       >
         <FormControlLabel
-          value="DRY_RUN"
+          value="SCORE_ONLY"
           sx={{ justifySelf: 'start' }}
           control={
             <Radio
               size="small"
               sx={{ py: 0.25 }}
-              data-cy="ai-review-rule-form-mode-dry-run"
+              data-cy="ai-review-rule-form-mode-score-only"
             />
           }
           label={t('ai_review_rule_mode_score_only', 'AI score only')}

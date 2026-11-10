@@ -33,6 +33,6 @@ class TranslationAiReviewModelAssembler(
       lastFailedAt = entity.lastFailedAt?.time,
       resolvedBy = entity.resolvedBy?.let { simpleUserAccountModelAssembler.toModel(it) },
       resolvedAt = entity.resolvedAt?.time,
-      dryRun = entity.ruleMode == AiReviewRuleMode.DRY_RUN,
+      scoreOnlyRun = entity.ruleMode == AiReviewRuleMode.SCORE_ONLY,
     )
 }

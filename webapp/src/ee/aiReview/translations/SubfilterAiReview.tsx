@@ -46,10 +46,12 @@ const OUTCOMES: {
     badgeStatus: 'BELOW_THRESHOLD',
   },
   {
-    outcomes: ['DRY_RUN_PASS', 'DRY_RUN_FAIL'],
-    cyOutcome: 'DRY_RUN',
-    label: <T keyName="ai_review_filter_dry_run" defaultValue="Dry run" />,
-    badgeStatus: 'DRY_RUN_PASS',
+    outcomes: ['SCORE_ONLY_PASS', 'SCORE_ONLY_FAIL'],
+    cyOutcome: 'SCORE_ONLY',
+    label: (
+      <T keyName="ai_review_filter_score_only" defaultValue="Score only" />
+    ),
+    badgeStatus: 'SCORE_ONLY_PASS',
   },
   {
     outcomes: ['FAILED'],
@@ -171,7 +173,7 @@ export const SubfilterAiReview = ({
                     <AiReviewBadge
                       aiReview={{
                         status: badgeStatus,
-                        dryRun: badgeStatus.startsWith('DRY_RUN'),
+                        scoreOnlyRun: badgeStatus.startsWith('SCORE_ONLY'),
                         lastFailed: false,
                       }}
                     />

@@ -77,8 +77,8 @@ class AiReviewRuleStatsTest : AuthorizedControllerTest() {
     testData.rule.rejectedCount = 1
     review("k.approved1", AiReviewStatus.APPROVED, reviewed = true)
     review("k.failed", AiReviewStatus.FAILED) { failureReason = AiReviewFailureReason.PROVIDER_ERROR }
-    review("k.dryPass", AiReviewStatus.DRY_RUN_PASS)
-    review("k.dryFail", AiReviewStatus.DRY_RUN_FAIL)
+    review("k.dryPass", AiReviewStatus.SCORE_ONLY_PASS)
+    review("k.dryFail", AiReviewStatus.SCORE_ONLY_FAIL)
     save()
 
     performAuthGet(rulesUrl).andIsOk.andAssertThatJson {

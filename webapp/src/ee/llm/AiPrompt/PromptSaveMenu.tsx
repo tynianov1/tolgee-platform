@@ -92,7 +92,7 @@ export const PromptSaveMenu = ({
                   <span data-cy="ai-review-prompt-save-warning">
                     <T
                       keyName="ai_review_prompt_save_warning"
-                      defaultValue="{count, plural, one {# active rule uses this prompt and will switch to Dry run.} other {# active rules use this prompt and will switch to Dry run.}}"
+                      defaultValue="{count, plural, one {# active rule uses this prompt and will switch to Score only.} other {# active rules use this prompt and will switch to Score only.}}"
                       params={{ count: activeRuleCount }}
                     />
                   </span>

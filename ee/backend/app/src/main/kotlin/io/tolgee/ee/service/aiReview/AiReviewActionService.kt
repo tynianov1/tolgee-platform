@@ -59,7 +59,7 @@ class AiReviewActionService(
           .partition { !aiReviewOn || isMachineOverwrite(it, textChangedIds) }
       rejectedApprovals.forEach { row ->
         resolve(row, AiReviewStatus.REJECTED, resolvedById)
-        updates += AiReviewUpdate.of(row, dryRun = false)
+        updates += AiReviewUpdate.of(row, scoreOnlyRun = false)
         row.rule?.id?.let { rejectedByRule.merge(it, 1L, Long::plus) }
       }
       deleteAndCollectRemovals(rows.filter { AiReviewEligibility.isMarker(it) } + deletedApprovals, updates)
@@ -100,7 +100,7 @@ class AiReviewActionService(
   private fun publishRow(row: TranslationAiReview) {
     websocketPublisher.publishAfterCommit(
       row.translation.key.project.id,
-      listOf(AiReviewUpdate.of(row, dryRun = false)),
+      listOf(AiReviewUpdate.of(row, scoreOnlyRun = false)),
     )
   }
 

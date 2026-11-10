@@ -70,11 +70,11 @@ class AiReviewRuleEvaluatorTest : AbstractSpringTest() {
   }
 
   @Test
-  fun `evaluate with activeOnly skips Dry run rules`() {
+  fun `evaluate with activeOnly skips Score only rules`() {
     testData.addRule {
       tagIn = mutableListOf("ui")
       threshold = 95
-      mode = AiReviewRuleMode.DRY_RUN
+      mode = AiReviewRuleMode.SCORE_ONLY
     }
     testDataService.saveTestData(testData.root)
 
@@ -111,11 +111,11 @@ class AiReviewRuleEvaluatorTest : AbstractSpringTest() {
         it.self.state = TranslationState.REVIEWED
         it.self.auto = true
       }
-    val bulkReviewedAfterDryRun =
+    val bulkReviewedAfterScoreOnlyRun =
       testData.addKeyWithTranslations("k.bulk.dry").de.also {
         it.self.state = TranslationState.REVIEWED
         it.self.auto = true
-        testData.addReview(it, AiReviewStatus.DRY_RUN_PASS, 90)
+        testData.addReview(it, AiReviewStatus.SCORE_ONLY_PASS, 90)
       }
     testDataService.saveTestData(testData.root)
 
@@ -129,7 +129,7 @@ class AiReviewRuleEvaluatorTest : AbstractSpringTest() {
       confirmed,
       staleApproval,
       bulkReviewedMachineTranslation,
-      bulkReviewedAfterDryRun,
+      bulkReviewedAfterScoreOnlyRun,
     ).forEach {
       isEligible(it.self.id).assert.describedAs(it.self.text).isFalse()
     }

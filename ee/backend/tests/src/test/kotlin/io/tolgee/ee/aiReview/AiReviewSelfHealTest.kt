@@ -177,7 +177,7 @@ class AiReviewSelfHealTest : AuthorizedControllerTest() {
   @Test
   fun `an AI-managed PENDING row with no Active winner leaves the queue and stays AI-managed`() {
     testData.project.translationProtection = TranslationProtection.PROTECT_REVIEWED
-    testData.rule.mode = AiReviewRuleMode.DRY_RUN
+    testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
     testData.deTranslation.state = TranslationState.REVIEWED
     testData.deTranslation.auto = true
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)

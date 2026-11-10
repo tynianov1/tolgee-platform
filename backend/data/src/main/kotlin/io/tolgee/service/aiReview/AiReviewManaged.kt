@@ -16,12 +16,12 @@ object AiReviewManaged {
       " or (t.auto = true and r.status not in (" +
       "io.tolgee.model.enums.aiReview.AiReviewStatus.CONFIRMED," +
       " io.tolgee.model.enums.aiReview.AiReviewStatus.REJECTED," +
-      " io.tolgee.model.enums.aiReview.AiReviewStatus.DRY_RUN_PASS," +
-      " io.tolgee.model.enums.aiReview.AiReviewStatus.DRY_RUN_FAIL))))"
+      " io.tolgee.model.enums.aiReview.AiReviewStatus.SCORE_ONLY_PASS," +
+      " io.tolgee.model.enums.aiReview.AiReviewStatus.SCORE_ONLY_FAIL))))"
 
   val HUMAN_DECISIONS = setOf(AiReviewStatus.CONFIRMED, AiReviewStatus.REJECTED)
 
-  private val NOT_AI_MANAGED = HUMAN_DECISIONS + setOf(AiReviewStatus.DRY_RUN_PASS, AiReviewStatus.DRY_RUN_FAIL)
+  private val NOT_AI_MANAGED = HUMAN_DECISIONS + setOf(AiReviewStatus.SCORE_ONLY_PASS, AiReviewStatus.SCORE_ONLY_FAIL)
 
   fun of(
     translation: Translation,

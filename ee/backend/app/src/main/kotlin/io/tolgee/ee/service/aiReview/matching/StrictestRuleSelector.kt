@@ -27,7 +27,7 @@ object StrictestRuleSelector {
 
   private fun tieOrder(mode: AiReviewRuleMode): Int =
     when (mode) {
-      AiReviewRuleMode.DRY_RUN -> 0
+      AiReviewRuleMode.SCORE_ONLY -> 0
       AiReviewRuleMode.ACTIVE -> 1
     }
 }

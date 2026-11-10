@@ -46,7 +46,7 @@ class AiReviewRunService(
 ) {
   private data class Classified(
     val toReview: List<ToReview>,
-    val dryRunOnly: Long,
+    val scoreOnlyRunCount: Long,
     val skipped: Map<AiReviewSkipReason, Long>,
     val confirmedToReReview: Long,
     val rejectedToReReview: Long,
@@ -65,7 +65,7 @@ class AiReviewRunService(
     val classified = classifyAndClearContext(projectId, request)
     return AiReviewRunPreviewModel(
       toReview = classified.toReview.size.toLong(),
-      dryRunOnly = classified.dryRunOnly,
+      scoreOnlyRunCount = classified.scoreOnlyRunCount,
       skipped = classified.skipped,
       confirmedToReReview = classified.confirmedToReReview,
       rejectedToReReview = classified.rejectedToReReview,
@@ -127,7 +127,7 @@ class AiReviewRunService(
       )
 
     val toReview = mutableListOf<ToReview>()
-    var dryRunOnly = 0L
+    var scoreOnlyRunCount = 0L
     val skipped = mutableMapOf<AiReviewSkipReason, Long>()
     var confirmedToReReview = 0L
     var rejectedToReReview = 0L
@@ -139,7 +139,7 @@ class AiReviewRunService(
         when (val result = classifier.decide(translation, rows[translation.id], openQaIssueIds)) {
           is CandidateResult.Skipped -> skipped.merge(result.reason, 1L, Long::plus)
           is CandidateResult.Review -> {
-            if (result.dryRun) dryRunOnly++
+            if (result.scoreOnlyRun) scoreOnlyRunCount++
             when (rows[translation.id]?.status) {
               AiReviewStatus.CONFIRMED -> confirmedToReReview++
               AiReviewStatus.REJECTED -> rejectedToReReview++
@@ -152,7 +152,7 @@ class AiReviewRunService(
       }
       entityManager.clear()
     }
-    return Classified(toReview, dryRunOnly, skipped, confirmedToReReview, rejectedToReReview)
+    return Classified(toReview, scoreOnlyRunCount, skipped, confirmedToReReview, rejectedToReReview)
   }
 
   private fun openQaIssueIds(
@@ -169,7 +169,7 @@ class AiReviewRunService(
     ) : CandidateResult
 
     data class Review(
-      val dryRun: Boolean,
+      val scoreOnlyRun: Boolean,
       val hasRow: Boolean,
     ) : CandidateResult
 
@@ -208,7 +208,7 @@ class AiReviewRunService(
       if (reason != null) return CandidateResult.Skipped(reason)
 
       return CandidateResult.Review(
-        dryRun = decision.rule.mode == AiReviewRuleMode.DRY_RUN,
+        scoreOnlyRun = decision.rule.mode == AiReviewRuleMode.SCORE_ONLY,
         hasRow = row != null,
       )
     }
@@ -298,8 +298,8 @@ class AiReviewRunService(
       setOf(
         AiReviewStatus.APPROVED,
         AiReviewStatus.BELOW_THRESHOLD,
-        AiReviewStatus.DRY_RUN_PASS,
-        AiReviewStatus.DRY_RUN_FAIL,
+        AiReviewStatus.SCORE_ONLY_PASS,
+        AiReviewStatus.SCORE_ONLY_FAIL,
       )
 
     private const val CHUNK = 1_000

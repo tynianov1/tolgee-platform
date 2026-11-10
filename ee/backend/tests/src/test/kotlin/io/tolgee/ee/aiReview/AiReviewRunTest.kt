@@ -322,7 +322,7 @@ class AiReviewRunTest : AuthorizedControllerTest() {
       runBody(keyIds = keyIds, languageIds = listOf(testData.german.id)),
     ).andIsOk.andAssertThatJson {
       node("toReview").isEqualTo(1)
-      node("dryRunOnly").isEqualTo(0)
+      node("scoreOnlyRunCount").isEqualTo(0)
       node("skipped.ALREADY_HAS_RESULT").isEqualTo(1)
       node("skipped.ALREADY_QUEUED").isEqualTo(1)
       node("skipped.HUMAN_REVIEWED").isEqualTo(1)
@@ -336,10 +336,10 @@ class AiReviewRunTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a Dry run winner needs no state edit, an Active winner without it is skipped`() {
+  fun `a Score only winner needs no state edit, an Active winner without it is skipped`() {
     testData.addRule {
       name = "Dry french"
-      mode = AiReviewRuleMode.DRY_RUN
+      mode = AiReviewRuleMode.SCORE_ONLY
       threshold = 85
       tagIn = mutableListOf("dry")
     }
@@ -371,7 +371,7 @@ class AiReviewRunTest : AuthorizedControllerTest() {
       ),
     ).andIsOk.andAssertThatJson {
       node("toReview").isEqualTo(1)
-      node("dryRunOnly").isEqualTo(1)
+      node("scoreOnlyRunCount").isEqualTo(1)
       node("skipped.NO_PERMISSION").isEqualTo(1)
     }
   }

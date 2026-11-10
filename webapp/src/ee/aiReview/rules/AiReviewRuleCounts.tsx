@@ -27,14 +27,14 @@ type Props = {
 
 export const AiReviewRuleCounts = ({ rule, canRun, onRun }: Props) => {
   const { t } = useTranslate();
-  const isDryRun = rule.mode === 'DRY_RUN';
+  const isScoreOnlyRun = rule.mode === 'SCORE_ONLY';
   const counts = rule.counts;
 
   if (!counts) {
     return null;
   }
 
-  const parts: string[] = isDryRun
+  const parts: string[] = isScoreOnlyRun
     ? [
         t('ai_review_rule_counts_scored', '{count, plural, other {# scored}}', {
           count: counts.scored,
@@ -69,7 +69,7 @@ export const AiReviewRuleCounts = ({ rule, canRun, onRun }: Props) => {
   return (
     <StyledInfoLine
       data-cy="ai-review-rule-counts"
-      data-cy-mode={isDryRun ? 'DRY_RUN' : 'ACTIVE'}
+      data-cy-mode={isScoreOnlyRun ? 'SCORE_ONLY' : 'ACTIVE'}
       data-cy-failed={String(counts.failed)}
       onClick={(e) => e.stopPropagation()}
     >
@@ -78,7 +78,7 @@ export const AiReviewRuleCounts = ({ rule, canRun, onRun }: Props) => {
           {index > 0 && <Dot />} {part}
         </span>
       ))}
-      {canRun && !isDryRun && counts.failed > 0 && (
+      {canRun && !isScoreOnlyRun && counts.failed > 0 && (
         <>
           <Dot />
           <MuiLink
@@ -98,7 +98,7 @@ export const AiReviewRuleCounts = ({ rule, canRun, onRun }: Props) => {
             onClick={() => onRun(runVariantForMode(rule.mode))}
             data-cy="ai-review-rule-review-now"
           >
-            {isDryRun
+            {isScoreOnlyRun
               ? t(
                   'ai_review_rule_score_waiting',
                   '{count, plural, other {Score # waiting}}',

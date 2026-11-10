@@ -8,8 +8,8 @@ class AiReviewTranslationsViewTestData : AiReviewTestData() {
   init {
     keyWithRow("k.approved", AiReviewStatus.APPROVED, 90)
     keyWithRow("k.below", AiReviewStatus.BELOW_THRESHOLD, 40)
-    keyWithRow("k.drypass", AiReviewStatus.DRY_RUN_PASS, 90)
-    keyWithRow("k.dryfail", AiReviewStatus.DRY_RUN_FAIL, 30)
+    keyWithRow("k.drypass", AiReviewStatus.SCORE_ONLY_PASS, 90)
+    keyWithRow("k.dryfail", AiReviewStatus.SCORE_ONLY_FAIL, 30)
     keyWithRow("k.failed", AiReviewStatus.FAILED, null)
     keyWithRow("k.pending", AiReviewStatus.PENDING, null)
     keyWithRow("k.skipped", AiReviewStatus.SKIPPED_QA_ISSUES, null)

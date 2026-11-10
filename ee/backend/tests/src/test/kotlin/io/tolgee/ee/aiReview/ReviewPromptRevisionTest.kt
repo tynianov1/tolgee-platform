@@ -35,7 +35,7 @@ class ReviewPromptRevisionTest : AuthorizedControllerTest() {
   private lateinit var translationAiReviewRepository: TranslationAiReviewRepository
 
   lateinit var testData: AiReviewTestData
-  lateinit var dryRunRule: AiReviewRule
+  lateinit var scoreOnlyRunRule: AiReviewRule
   lateinit var otherPrompt: Prompt
   lateinit var otherPromptRule: AiReviewRule
 
@@ -46,10 +46,10 @@ class ReviewPromptRevisionTest : AuthorizedControllerTest() {
     enabledFeaturesProvider.forceEnabled = setOf(Feature.AI_REVIEW, Feature.AI_PROMPT_CUSTOMIZATION)
     testData = AiReviewTestData()
     testData.rule.prompt = testData.reviewPrompt
-    dryRunRule =
+    scoreOnlyRunRule =
       testData
         .addRule {
-          mode = AiReviewRuleMode.DRY_RUN
+          mode = AiReviewRuleMode.SCORE_ONLY
           prompt = testData.reviewPrompt
         }.self
     otherPrompt =
@@ -102,34 +102,34 @@ class ReviewPromptRevisionTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `template change increases revision and switches its Active rules to Dry run`() {
+  fun `template change increases revision and switches its Active rules to Score only`() {
     save()
     performAuthPut(promptUrl, body(template = "{{fragment.reviewJson}}")).andIsOk.andAssertThatJson {
       node("revision").isEqualTo(1)
     }
-    mode(testData.rule.id).assert.isEqualTo(AiReviewRuleMode.DRY_RUN)
-    mode(dryRunRule.id).assert.isEqualTo(AiReviewRuleMode.DRY_RUN)
+    mode(testData.rule.id).assert.isEqualTo(AiReviewRuleMode.SCORE_ONLY)
+    mode(scoreOnlyRunRule.id).assert.isEqualTo(AiReviewRuleMode.SCORE_ONLY)
     mode(otherPromptRule.id).assert.isEqualTo(AiReviewRuleMode.ACTIVE)
   }
 
   @Test
-  fun `criteria change switches rules to Dry run`() {
+  fun `criteria change switches rules to Score only`() {
     save()
     performAuthPut(promptUrl, body(reviewCriteria = "Use formal German.")).andIsOk.andAssertThatJson {
       node("revision").isEqualTo(1)
     }
-    mode(testData.rule.id).assert.isEqualTo(AiReviewRuleMode.DRY_RUN)
+    mode(testData.rule.id).assert.isEqualTo(AiReviewRuleMode.SCORE_ONLY)
   }
 
   @Test
-  fun `provider change switches rules to Dry run`() {
+  fun `provider change switches rules to Score only`() {
     save()
     performAuthPut(promptUrl, body(providerName = "other-provider")).andIsOk
-    mode(testData.rule.id).assert.isEqualTo(AiReviewRuleMode.DRY_RUN)
+    mode(testData.rule.id).assert.isEqualTo(AiReviewRuleMode.SCORE_ONLY)
   }
 
   @Test
-  fun `deleting a review prompt sets rules to the default prompt and Active ones to Dry run`() {
+  fun `deleting a review prompt sets rules to the default prompt and Active ones to Score only`() {
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.APPROVED, 90) {
       promptName = testData.reviewPrompt.name
     }
@@ -145,9 +145,9 @@ class ReviewPromptRevisionTest : AuthorizedControllerTest() {
     executeInNewTransaction(platformTransactionManager) {
       val rule = aiReviewRuleRepository.findById(testData.rule.id).get()
       rule.prompt.assert.isNull()
-      rule.mode.assert.isEqualTo(AiReviewRuleMode.DRY_RUN)
+      rule.mode.assert.isEqualTo(AiReviewRuleMode.SCORE_ONLY)
       aiReviewRuleRepository
-        .findById(dryRunRule.id)
+        .findById(scoreOnlyRunRule.id)
         .get()
         .prompt.assert
         .isNull()

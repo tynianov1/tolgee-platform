@@ -147,7 +147,7 @@ class AiReviewQueueService(
   private fun rowUpdate(
     translation: Translation,
     status: AiReviewStatus?,
-  ) = AiReviewUpdate.of(translation, status, score = null, dryRun = false, lastFailed = false)
+  ) = AiReviewUpdate.of(translation, status, score = null, scoreOnlyRun = false, lastFailed = false)
 
   @Transactional
   fun onSourceChanged(
@@ -357,8 +357,8 @@ class AiReviewQueueService(
     private val STALE_ON_SOURCE_CHANGE =
       setOf(
         AiReviewStatus.PENDING,
-        AiReviewStatus.DRY_RUN_PASS,
-        AiReviewStatus.DRY_RUN_FAIL,
+        AiReviewStatus.SCORE_ONLY_PASS,
+        AiReviewStatus.SCORE_ONLY_FAIL,
         AiReviewStatus.BELOW_THRESHOLD,
         AiReviewStatus.FAILED,
         AiReviewStatus.SKIPPED_QA_ISSUES,

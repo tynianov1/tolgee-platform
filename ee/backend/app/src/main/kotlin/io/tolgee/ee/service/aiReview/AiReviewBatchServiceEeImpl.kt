@@ -286,7 +286,7 @@ class AiReviewBatchServiceEeImpl(
 
         markActivityAsAiReviewer(job, assignment, chunkExecutionId)
         recordOutcome(translation, row, outcome, decision, assignment)
-        AiReviewUpdate.of(row, dryRun = decision.rule.mode == AiReviewRuleMode.DRY_RUN)
+        AiReviewUpdate.of(row, scoreOnlyRun = decision.rule.mode == AiReviewRuleMode.SCORE_ONLY)
       } ?: return
     websocketPublisher.publishAfterCommit(assignment.projectId, listOf(update))
   }

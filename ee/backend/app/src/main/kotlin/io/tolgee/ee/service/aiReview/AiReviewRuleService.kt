@@ -117,24 +117,24 @@ class AiReviewRuleService(
   }
 
   @Transactional
-  fun switchRulesUsingPromptToDryRun(
+  fun switchRulesUsingPromptToScoreOnlyRun(
     projectId: Long,
     promptId: Long,
   ) {
     val rules = aiReviewRuleRepository.findAllByProjectIdAndPromptId(projectId, promptId)
-    rules.forEach { it.mode = AiReviewRuleMode.DRY_RUN }
+    rules.forEach { it.mode = AiReviewRuleMode.SCORE_ONLY }
     saveAllAndEvict(projectId, rules)
   }
 
   @Transactional
-  fun detachPromptAndSwitchToDryRun(
+  fun detachPromptAndSwitchToScoreOnlyRun(
     projectId: Long,
     promptId: Long,
   ) {
     val rules = aiReviewRuleRepository.findAllByProjectIdAndPromptId(projectId, promptId)
     rules.forEach {
       it.prompt = null
-      it.mode = AiReviewRuleMode.DRY_RUN
+      it.mode = AiReviewRuleMode.SCORE_ONLY
     }
     saveAllAndEvict(projectId, rules)
   }
@@ -246,8 +246,8 @@ class AiReviewRuleService(
   companion object {
     private val TRANSIENT_STATUSES =
       setOf(
-        AiReviewStatus.DRY_RUN_PASS,
-        AiReviewStatus.DRY_RUN_FAIL,
+        AiReviewStatus.SCORE_ONLY_PASS,
+        AiReviewStatus.SCORE_ONLY_FAIL,
         AiReviewStatus.FAILED,
         AiReviewStatus.SKIPPED_QA_ISSUES,
       )

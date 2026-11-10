@@ -39,7 +39,7 @@ class TranslationViewModelAssembler(
           TranslationAiReviewSummaryModel(
             status = it,
             score = view.aiReviewScore,
-            dryRun = view.aiReviewDryRun,
+            scoreOnlyRun = view.aiReviewScoreOnlyRun,
             lastFailed = view.aiReviewLastFailed,
           )
         },

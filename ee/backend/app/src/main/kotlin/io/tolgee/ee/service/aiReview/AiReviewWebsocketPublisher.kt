@@ -19,20 +19,20 @@ data class AiReviewUpdate(
   /** Null means the review row was removed or no longer applies (AiReviewResultApplies). */
   val status: AiReviewStatus?,
   val score: Int?,
-  val dryRun: Boolean,
+  val scoreOnlyRun: Boolean,
   val lastFailed: Boolean,
 ) {
   companion object {
     fun of(
       row: TranslationAiReview,
-      dryRun: Boolean,
-    ) = of(row.translation, row.status, row.score, dryRun, lastFailed = row.lastFailureReason != null)
+      scoreOnlyRun: Boolean,
+    ) = of(row.translation, row.status, row.score, scoreOnlyRun, lastFailed = row.lastFailureReason != null)
 
     fun of(
       translation: Translation,
       status: AiReviewStatus?,
       score: Int?,
-      dryRun: Boolean,
+      scoreOnlyRun: Boolean,
       lastFailed: Boolean,
     ): AiReviewUpdate {
       if (status == null) return removed(translation)
@@ -43,7 +43,7 @@ data class AiReviewUpdate(
         languageTag = translation.language.tag,
         status = status,
         score = score,
-        dryRun = dryRun,
+        scoreOnlyRun = scoreOnlyRun,
         lastFailed = lastFailed,
       )
     }
@@ -55,7 +55,7 @@ data class AiReviewUpdate(
         languageTag = translation.language.tag,
         status = null,
         score = null,
-        dryRun = false,
+        scoreOnlyRun = false,
         lastFailed = false,
       )
   }

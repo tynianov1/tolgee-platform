@@ -17,9 +17,12 @@ export const useAiReviewStatusLabels = () => {
         return t('ai_review_popover_status_approved', 'Reviewed by AI');
       case 'BELOW_THRESHOLD':
         return t('ai_review_popover_status_below', 'Below threshold');
-      case 'DRY_RUN_PASS':
-      case 'DRY_RUN_FAIL':
-        return t('ai_review_popover_status_dry_run', 'Dry run: scored by AI');
+      case 'SCORE_ONLY_PASS':
+      case 'SCORE_ONLY_FAIL':
+        return t(
+          'ai_review_popover_status_score_only',
+          'Scored by AI (score only)'
+        );
       case 'FAILED':
         return t('ai_review_popover_status_failed', 'Review failed');
       case 'CONFIRMED':

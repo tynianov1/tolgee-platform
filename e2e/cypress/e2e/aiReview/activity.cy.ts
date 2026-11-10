@@ -47,7 +47,7 @@ describe('AI reviewer in activity', () => {
     createDialog.save();
     runDialog.cancel();
 
-    const editDialog = rulesView.openEditDialog('Legal dry run');
+    const editDialog = rulesView.openEditDialog('Legal score only');
     gcy('ai-review-rule-form-name').type(' 2');
     editDialog.save();
     runDialog.cancel();

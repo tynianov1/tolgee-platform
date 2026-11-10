@@ -61,7 +61,7 @@ class AiReviewRuleControllerTest : AuthorizedControllerTest() {
       node("tagIn").isArray.containsExactly("checkout")
       node("threshold").isEqualTo(85)
       node("never").isEqualTo(false)
-      node("mode").isEqualTo("DRY_RUN")
+      node("mode").isEqualTo("SCORE_ONLY")
       node("skipOpenQaIssues").isEqualTo(true)
       node("promptId").isNull()
       node("languageIds").isArray.isEmpty()

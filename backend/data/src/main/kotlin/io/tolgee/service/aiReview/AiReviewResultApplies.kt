@@ -22,8 +22,8 @@ object AiReviewResultApplies {
       AiReviewStatus.BELOW_THRESHOLD -> state == TranslationState.TRANSLATED || state == TranslationState.REVIEWED
       AiReviewStatus.FAILED -> state == TranslationState.TRANSLATED
       AiReviewStatus.PENDING,
-      AiReviewStatus.DRY_RUN_PASS,
-      AiReviewStatus.DRY_RUN_FAIL,
+      AiReviewStatus.SCORE_ONLY_PASS,
+      AiReviewStatus.SCORE_ONLY_FAIL,
       AiReviewStatus.SKIPPED_QA_ISSUES,
       AiReviewStatus.CONFIRMED,
       AiReviewStatus.REJECTED,
@@ -45,8 +45,8 @@ object AiReviewResultApplies {
       AiReviewStatus.BELOW_THRESHOLD -> cb.and(hasStatus, cb.or(translated, reviewed))
       AiReviewStatus.FAILED -> cb.and(hasStatus, translated)
       AiReviewStatus.PENDING,
-      AiReviewStatus.DRY_RUN_PASS,
-      AiReviewStatus.DRY_RUN_FAIL,
+      AiReviewStatus.SCORE_ONLY_PASS,
+      AiReviewStatus.SCORE_ONLY_FAIL,
       AiReviewStatus.SKIPPED_QA_ISSUES,
       AiReviewStatus.CONFIRMED,
       AiReviewStatus.REJECTED,

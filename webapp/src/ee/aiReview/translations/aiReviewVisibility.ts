@@ -12,8 +12,8 @@ export const getAiReviewCellVisibility = (
     case 'REJECTED':
       return 'hover';
     case 'APPROVED':
-    case 'DRY_RUN_PASS':
-    case 'DRY_RUN_FAIL':
+    case 'SCORE_ONLY_PASS':
+    case 'SCORE_ONLY_FAIL':
     case 'BELOW_THRESHOLD':
     case 'FAILED':
       return 'badge';

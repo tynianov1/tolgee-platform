@@ -73,13 +73,13 @@ describe('AI review filters', () => {
     view.getTranslationCell('key_approved', 'de').should('not.exist');
   });
 
-  it('the dry run option matches passing and failing scores alike', () => {
+  it('the score-only option matches passing and failing scores alike', () => {
     visit();
     view.openAiReviewFilter();
-    view.toggleAiReviewOutcome('DRY_RUN');
+    view.toggleAiReviewOutcome('SCORE_ONLY');
     waitForGlobalLoading();
-    view.getTranslationCell('key_dry_run_pass', 'de').should('exist');
-    view.getTranslationCell('key_dry_run_fail', 'de').should('exist');
+    view.getTranslationCell('key_score_only_pass', 'de').should('exist');
+    view.getTranslationCell('key_score_only_fail', 'de').should('exist');
     view.getTranslationCell('key_approved', 'de').should('not.exist');
   });
 
@@ -101,10 +101,10 @@ describe('AI review filters', () => {
   it('two outcomes combine with OR', () => {
     visit();
     view.openAiReviewFilter();
-    view.toggleAiReviewOutcome('DRY_RUN');
+    view.toggleAiReviewOutcome('SCORE_ONLY');
     view.toggleAiReviewOutcome('FAILED');
     waitForGlobalLoading();
-    view.getTranslationCell('key_dry_run_pass', 'de').should('exist');
+    view.getTranslationCell('key_score_only_pass', 'de').should('exist');
     view.getTranslationCell('key_failed', 'de').should('exist');
     view.getTranslationCell('key_approved', 'de').should('not.exist');
   });

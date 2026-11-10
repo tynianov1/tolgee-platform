@@ -22,20 +22,24 @@ describe('AI review filter name', () => {
     expect(getAiReviewFiltersName({})).toBeUndefined();
   });
 
-  it('names both dry-run outcomes with the single dry-run label', () => {
-    expect(nameKey('DRY_RUN_PASS')).toBe('ai_review_filter_dry_run');
-    expect(nameKey('DRY_RUN_FAIL')).toBe('ai_review_filter_dry_run');
+  it('names both score-only outcomes with the single score-only label', () => {
+    expect(nameKey('SCORE_ONLY_PASS')).toBe('ai_review_filter_score_only');
+    expect(nameKey('SCORE_ONLY_FAIL')).toBe('ai_review_filter_score_only');
   });
 
-  it('counts the merged dry-run selection as one filter', () => {
+  it('counts the merged score-only selection as one filter', () => {
     expect(
       getAiReviewFiltersLength({
-        filterAiReviewOutcomes: ['DRY_RUN_PASS', 'DRY_RUN_FAIL'],
+        filterAiReviewOutcomes: ['SCORE_ONLY_PASS', 'SCORE_ONLY_FAIL'],
       })
     ).toBe(1);
     expect(
       getAiReviewFiltersLength({
-        filterAiReviewOutcomes: ['DRY_RUN_PASS', 'DRY_RUN_FAIL', 'FAILED'],
+        filterAiReviewOutcomes: [
+          'SCORE_ONLY_PASS',
+          'SCORE_ONLY_FAIL',
+          'FAILED',
+        ],
       })
     ).toBe(2);
   });

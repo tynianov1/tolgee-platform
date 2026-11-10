@@ -1443,7 +1443,7 @@ export interface components {
       id: number;
       languageIds: number[];
       /** @enum {string} */
-      mode: "DRY_RUN" | "ACTIVE";
+      mode: "SCORE_ONLY" | "ACTIVE";
       name: string;
       namespaceIn: string[];
       namespaceNotIn: string[];
@@ -1462,7 +1462,7 @@ export interface components {
       enabled: boolean;
       languageIds: number[];
       /** @enum {string} */
-      mode: "DRY_RUN" | "ACTIVE";
+      mode: "SCORE_ONLY" | "ACTIVE";
       name: string;
       namespaceIn: string[];
       namespaceNotIn: string[];
@@ -1479,9 +1479,9 @@ export interface components {
       /** Format: int64 */
       confirmedToReReview: number;
       /** Format: int64 */
-      dryRunOnly: number;
-      /** Format: int64 */
       rejectedToReReview: number;
+      /** Format: int64 */
+      scoreOnlyRunCount: number;
       skipped: { [key: string]: number };
       /** Format: int64 */
       toReview: number;
@@ -2984,13 +2984,6 @@ export interface components {
     DomainRequest: {
       domain: string;
       state: string;
-    };
-    DryRunMergeBranchRequest: {
-      /**
-       * Format: int64
-       * @description Source branch id
-       */
-      sourceBranchId: number;
     };
     EditKeyDto: {
       /** @description The branch of the key. (When empty or null default branch will be used) */
@@ -6587,6 +6580,13 @@ export interface components {
       publicRead: boolean;
       signingRegion: string;
     };
+    DryRunMergeBranchRequest: {
+      /**
+       * Format: int64
+       * @description Source branch id
+       */
+      sourceBranchId: number;
+    };
     ScreenshotInfoDto: {
       location?: string;
       positions?: components["schemas"]["KeyInScreenshotPositionDto"][];
@@ -7659,7 +7659,6 @@ export interface components {
       url?: string;
     };
     TranslationAiReviewModel: {
-      dryRun: boolean;
       /** @enum {string} */
       failureReason?:
         | "NO_PROVIDER"
@@ -7690,13 +7689,14 @@ export interface components {
       ruleName?: string;
       /** Format: int32 */
       score?: number;
+      scoreOnlyRun: boolean;
       /** @enum {string} */
       status:
         | "PENDING"
         | "APPROVED"
         | "BELOW_THRESHOLD"
-        | "DRY_RUN_PASS"
-        | "DRY_RUN_FAIL"
+        | "SCORE_ONLY_PASS"
+        | "SCORE_ONLY_FAIL"
         | "FAILED"
         | "SKIPPED_QA_ISSUES"
         | "CONFIRMED"
@@ -7706,17 +7706,17 @@ export interface components {
     };
     /** @description AI review result for the current text. Null without a current result or the feature. */
     TranslationAiReviewSummaryModel: {
-      dryRun: boolean;
       lastFailed: boolean;
       /** Format: int32 */
       score?: number;
+      scoreOnlyRun: boolean;
       /** @enum {string} */
       status:
         | "PENDING"
         | "APPROVED"
         | "BELOW_THRESHOLD"
-        | "DRY_RUN_PASS"
-        | "DRY_RUN_FAIL"
+        | "SCORE_ONLY_PASS"
+        | "SCORE_ONLY_FAIL"
         | "FAILED"
         | "SKIPPED_QA_ISSUES"
         | "CONFIRMED"
@@ -20670,8 +20670,8 @@ export interface operations {
         filterAiReviewStatus?: (
           | "REVIEWED_BY_AI"
           | "BELOW_THRESHOLD"
-          | "DRY_RUN_PASS"
-          | "DRY_RUN_FAIL"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
           | "FAILED"
           | "CONFIRMED"
           | "REJECTED"
@@ -20960,8 +20960,8 @@ export interface operations {
         filterAiReviewStatus?: (
           | "REVIEWED_BY_AI"
           | "BELOW_THRESHOLD"
-          | "DRY_RUN_PASS"
-          | "DRY_RUN_FAIL"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
           | "FAILED"
           | "CONFIRMED"
           | "REJECTED"
@@ -21294,8 +21294,8 @@ export interface operations {
         filterAiReviewStatus?: (
           | "REVIEWED_BY_AI"
           | "BELOW_THRESHOLD"
-          | "DRY_RUN_PASS"
-          | "DRY_RUN_FAIL"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
           | "FAILED"
           | "CONFIRMED"
           | "REJECTED"
@@ -27498,8 +27498,8 @@ export interface operations {
         filterAiReviewStatus?: (
           | "REVIEWED_BY_AI"
           | "BELOW_THRESHOLD"
-          | "DRY_RUN_PASS"
-          | "DRY_RUN_FAIL"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
           | "FAILED"
           | "CONFIRMED"
           | "REJECTED"
@@ -28000,8 +28000,8 @@ export interface operations {
         filterAiReviewStatus?: (
           | "REVIEWED_BY_AI"
           | "BELOW_THRESHOLD"
-          | "DRY_RUN_PASS"
-          | "DRY_RUN_FAIL"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
           | "FAILED"
           | "CONFIRMED"
           | "REJECTED"

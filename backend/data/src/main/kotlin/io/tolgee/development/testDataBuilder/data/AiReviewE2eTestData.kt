@@ -27,7 +27,7 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
   lateinit var promptsViewer: UserAccount
   lateinit var reviewPrompt: Prompt
   lateinit var activeRule: AiReviewRule
-  lateinit var dryRunRule: AiReviewRule
+  lateinit var scoreOnlyRunRule: AiReviewRule
   lateinit var approvedTranslation: TranslationBuilder
 
   init {
@@ -108,10 +108,10 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
           tagIn = mutableListOf("ui")
           prompt = reviewPrompt
         }.self
-      dryRunRule =
+      scoreOnlyRunRule =
         addAiReviewRule {
-          name = "Legal dry run"
-          mode = AiReviewRuleMode.DRY_RUN
+          name = "Legal score only"
+          mode = AiReviewRuleMode.SCORE_ONLY
           threshold = 90
           tagIn = mutableListOf("legal")
         }.self
@@ -128,15 +128,15 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
         rule = activeRule
         threshold = 85
       }
-      addReviewedKey("key_dry_run_pass", AiReviewStatus.DRY_RUN_PASS, 90, reviewed = false, tag = "legal") {
-        rule = dryRunRule
+      addReviewedKey("key_score_only_pass", AiReviewStatus.SCORE_ONLY_PASS, 90, reviewed = false, tag = "legal") {
+        rule = scoreOnlyRunRule
         threshold = 90
-        ruleMode = AiReviewRuleMode.DRY_RUN
+        ruleMode = AiReviewRuleMode.SCORE_ONLY
       }
-      addReviewedKey("key_dry_run_fail", AiReviewStatus.DRY_RUN_FAIL, 30, reviewed = false, tag = "legal") {
-        rule = dryRunRule
+      addReviewedKey("key_score_only_fail", AiReviewStatus.SCORE_ONLY_FAIL, 30, reviewed = false, tag = "legal") {
+        rule = scoreOnlyRunRule
         threshold = 90
-        ruleMode = AiReviewRuleMode.DRY_RUN
+        ruleMode = AiReviewRuleMode.SCORE_ONLY
       }
       addReviewedKey("key_failed", AiReviewStatus.FAILED, null, reviewed = false) {
         rule = activeRule
@@ -173,8 +173,8 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
         threshold = 85
       }
       addReviewedKey("key_human_failed", AiReviewStatus.FAILED, null, auto = false) {
-        rule = dryRunRule
-        ruleMode = AiReviewRuleMode.DRY_RUN
+        rule = scoreOnlyRunRule
+        ruleMode = AiReviewRuleMode.SCORE_ONLY
         failureReason = AiReviewFailureReason.PROVIDER_ERROR
       }
       addReviewedKey("key_with_issues", AiReviewStatus.BELOW_THRESHOLD, 55, reviewed = false) {

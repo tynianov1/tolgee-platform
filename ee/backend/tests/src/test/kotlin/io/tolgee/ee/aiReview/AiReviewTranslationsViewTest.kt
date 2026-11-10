@@ -63,7 +63,7 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
     fetch("search=k.approved").andIsOk.andAssertThatJson {
       node("_embedded.keys[0].translations.de.aiReview.status").isEqualTo("APPROVED")
       node("_embedded.keys[0].translations.de.aiReview.score").isEqualTo(90)
-      node("_embedded.keys[0].translations.de.aiReview.dryRun").isEqualTo(false)
+      node("_embedded.keys[0].translations.de.aiReview.scoreOnlyRun").isEqualTo(false)
       node("_embedded.keys[0].translations.de.aiReview.lastFailed").isEqualTo(false)
     }
     fetch("search=k.none").andIsOk.andAssertThatJson {
@@ -81,7 +81,7 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `the summary reports lastFailed and dryRun`() {
+  fun `the summary reports lastFailed and scoreOnlyRun`() {
     testData.addKeyWithTranslations("k.lastfailed").let {
       it.de.self.state = TranslationState.REVIEWED
       testData.addReview(it.de, AiReviewStatus.APPROVED, 88) {
@@ -93,8 +93,8 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
       node("_embedded.keys[0].translations.de.aiReview.lastFailed").isEqualTo(true)
     }
     fetch("search=k.drypass").andIsOk.andAssertThatJson {
-      node("_embedded.keys[0].translations.de.aiReview.dryRun").isEqualTo(true)
-      node("_embedded.keys[0].translations.de.aiReview.status").isEqualTo("DRY_RUN_PASS")
+      node("_embedded.keys[0].translations.de.aiReview.scoreOnlyRun").isEqualTo(true)
+      node("_embedded.keys[0].translations.de.aiReview.status").isEqualTo("SCORE_ONLY_PASS")
     }
   }
 
@@ -125,8 +125,8 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
     save()
     keysFor("filterAiReviewStatus=REVIEWED_BY_AI").assert.containsExactly("k.approved")
     keysFor("filterAiReviewStatus=BELOW_THRESHOLD").assert.containsExactly("k.below")
-    keysFor("filterAiReviewStatus=DRY_RUN_PASS").assert.containsExactly("k.drypass")
-    keysFor("filterAiReviewStatus=DRY_RUN_FAIL").assert.containsExactly("k.dryfail")
+    keysFor("filterAiReviewStatus=SCORE_ONLY_PASS").assert.containsExactly("k.drypass")
+    keysFor("filterAiReviewStatus=SCORE_ONLY_FAIL").assert.containsExactly("k.dryfail")
     keysFor("filterAiReviewStatus=FAILED").assert.containsExactly("k.failed")
     keysFor("filterAiReviewStatus=CONFIRMED").assert.containsExactly("k.confirmed")
     keysFor("filterAiReviewStatus=REJECTED").assert.containsExactly("k.rejected")

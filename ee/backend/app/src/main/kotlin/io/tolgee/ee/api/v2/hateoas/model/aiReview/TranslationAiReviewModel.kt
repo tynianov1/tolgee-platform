@@ -23,5 +23,5 @@ open class TranslationAiReviewModel(
   val lastFailedAt: Long?,
   val resolvedBy: SimpleUserAccountModel?,
   val resolvedAt: Long?,
-  val dryRun: Boolean,
+  val scoreOnlyRun: Boolean,
 ) : RepresentationModel<TranslationAiReviewModel>()

@@ -184,7 +184,7 @@ class AiReviewRuleCacheTest : AbstractSpringTest() {
     rules()
       .single()
       .mode.assert
-      .isEqualTo(AiReviewRuleMode.DRY_RUN)
+      .isEqualTo(AiReviewRuleMode.SCORE_ONLY)
 
     promptService.deletePrompt(projectId, testData.reviewPrompt.id)
     rules()

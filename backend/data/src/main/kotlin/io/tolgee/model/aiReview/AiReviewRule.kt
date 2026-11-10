@@ -99,7 +99,7 @@ class AiReviewRule(
   @ActivityLoggedProp
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  var mode: AiReviewRuleMode = AiReviewRuleMode.DRY_RUN
+  var mode: AiReviewRuleMode = AiReviewRuleMode.SCORE_ONLY
 
   @ActivityLoggedProp
   @ManyToOne(fetch = FetchType.LAZY)

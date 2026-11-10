@@ -100,7 +100,7 @@ describe('AI review rule dialog', () => {
     gcy('ai-review-rule-form-threshold-slider').should('not.exist');
     gcy('ai-review-rule-form-mode-active').click();
     gcy('ai-review-rule-form-threshold-slider').should('be.visible');
-    gcy('ai-review-rule-form-mode-dry-run').click();
+    gcy('ai-review-rule-form-mode-score-only').click();
     gcy('ai-review-rule-form-threshold-slider').should('not.exist');
   });
 

@@ -394,7 +394,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
       node("promptName").isEqualTo("Default review prompt")
       node("providerName").isEqualTo("server-provider")
       node("model").isEqualTo("gpt-test")
-      node("dryRun").isEqualTo(false)
+      node("scoreOnlyRun").isEqualTo(false)
       node("resolvedBy").isNull()
     }
 

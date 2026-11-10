@@ -209,7 +209,7 @@ export type AiReviewUpdate = {
     | components['schemas']['TranslationAiReviewSummaryModel']['status']
     | null;
   score: number | null;
-  dryRun: boolean;
+  scoreOnlyRun: boolean;
   lastFailed: boolean;
 };
 export type AiReviewUpdatedData = WebsocketEvent<AiReviewUpdate[]>;

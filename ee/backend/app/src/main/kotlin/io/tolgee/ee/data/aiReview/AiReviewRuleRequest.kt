@@ -21,7 +21,7 @@ data class AiReviewRuleRequest(
   @field:Max(100)
   val threshold: Int = 85,
   val never: Boolean = false,
-  val mode: AiReviewRuleMode = AiReviewRuleMode.DRY_RUN,
+  val mode: AiReviewRuleMode = AiReviewRuleMode.SCORE_ONLY,
   val promptId: Long? = null,
   val skipOpenQaIssues: Boolean = true,
 )

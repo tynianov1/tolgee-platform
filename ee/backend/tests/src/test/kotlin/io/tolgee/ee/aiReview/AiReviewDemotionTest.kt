@@ -146,10 +146,10 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `an Active rule raised next to a stricter Dry run rule demotes`() {
+  fun `an Active rule raised next to a stricter Score only rule demotes`() {
     testData.addRule {
-      name = "Stricter dry run"
-      mode = AiReviewRuleMode.DRY_RUN
+      name = "Stricter score only"
+      mode = AiReviewRuleMode.SCORE_ONLY
       threshold = 95
       tagIn = mutableListOf("ui")
     }
@@ -190,9 +190,9 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a Dry run winner keeps the approval`() {
+  fun `a Score only winner keeps the approval`() {
     save()
-    updateRule(threshold = 95, mode = AiReviewRuleMode.DRY_RUN)
+    updateRule(threshold = 95, mode = AiReviewRuleMode.SCORE_ONLY)
 
     waitForDemotionJobs()
     review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.APPROVED)
@@ -314,14 +314,14 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
     val confirmed = testData.addKeyWithTranslations("k1")
     val rejected = testData.addKeyWithTranslations("k2")
     val belowThreshold = testData.addKeyWithTranslations("k3")
-    val dryRun = testData.addKeyWithTranslations("k4")
+    val scoreOnlyRun = testData.addKeyWithTranslations("k4")
     val failed = testData.addKeyWithTranslations("k5")
     val skipped = testData.addKeyWithTranslations("k6")
     val pending = testData.addKeyWithTranslations("k7")
     row(confirmed.de, AiReviewStatus.CONFIRMED, 95)
     row(rejected.de, AiReviewStatus.REJECTED, 40)
     row(belowThreshold.de, AiReviewStatus.BELOW_THRESHOLD, 50)
-    row(dryRun.de, AiReviewStatus.DRY_RUN_PASS, 90)
+    row(scoreOnlyRun.de, AiReviewStatus.SCORE_ONLY_PASS, 90)
     row(failed.de, AiReviewStatus.FAILED, null)
     row(skipped.de, AiReviewStatus.SKIPPED_QA_ISSUES, null)
     row(pending.de, AiReviewStatus.PENDING, null)
@@ -336,7 +336,7 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
     review(confirmed.de.self.id)!!.rule.assert.isNull()
     review(rejected.de.self.id)!!.rule.assert.isNull()
     review(belowThreshold.de.self.id)!!.rule.assert.isNull()
-    review(dryRun.de.self.id).assert.isNull()
+    review(scoreOnlyRun.de.self.id).assert.isNull()
     review(failed.de.self.id).assert.isNull()
     review(skipped.de.self.id).assert.isNull()
     review(pending.de.self.id)!!.status.assert.isEqualTo(AiReviewStatus.PENDING)

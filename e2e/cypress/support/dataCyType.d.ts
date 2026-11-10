@@ -142,7 +142,7 @@ declare namespace DataCy {
         "ai-review-rule-form-languages-select": true;
         "ai-review-rule-form-mode": true;
         "ai-review-rule-form-mode-active": true;
-        "ai-review-rule-form-mode-dry-run": true;
+        "ai-review-rule-form-mode-score-only": true;
         "ai-review-rule-form-name": true;
         "ai-review-rule-form-never": true;
         "ai-review-rule-form-never-info": true;
@@ -171,8 +171,8 @@ declare namespace DataCy {
         "ai-review-rules-view": true;
         "ai-review-run-cancel": true;
         "ai-review-run-dialog": true;
-        "ai-review-run-dry-run-only": true;
         "ai-review-run-includes-resolved": true;
+        "ai-review-run-score-only-count": true;
         "ai-review-run-skip-reason": true;
         "ai-review-run-start": true;
         "ai-review-run-to-review": true;

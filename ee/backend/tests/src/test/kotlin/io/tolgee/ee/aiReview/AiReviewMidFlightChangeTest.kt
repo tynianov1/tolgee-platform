@@ -137,16 +137,16 @@ class AiReviewMidFlightChangeTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a switch to Dry run during the call drops the result and the re-review stays dry`() {
+  fun `a switch to Score only during the call drops the result and the re-review stays dry`() {
     save()
     stubWithMidFlightChange {
       val rule = entityManager.find(AiReviewRule::class.java, testData.rule.id)
-      rule.mode = AiReviewRuleMode.DRY_RUN
+      rule.mode = AiReviewRuleMode.SCORE_ONLY
     }
 
     runJob(testData.deTranslation.id)
 
-    waitForStatus(AiReviewStatus.DRY_RUN_PASS)
+    waitForStatus(AiReviewStatus.SCORE_ONLY_PASS)
     translation(testData.deTranslation.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
     verify(openaiApiService, times(2)).translate(any(), any(), any())
   }

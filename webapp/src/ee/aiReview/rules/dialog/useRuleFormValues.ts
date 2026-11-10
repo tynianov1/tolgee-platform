@@ -35,7 +35,7 @@ export const getRuleInitialValues = (
   branchNotIn: rule?.branchNotIn ?? [],
   threshold: rule?.threshold ?? 85,
   never: rule?.never ?? false,
-  mode: rule?.mode ?? 'DRY_RUN',
+  mode: rule?.mode ?? 'SCORE_ONLY',
   promptId: rule?.promptId ?? '',
   skipOpenQaIssues: rule?.skipOpenQaIssues ?? true,
 });

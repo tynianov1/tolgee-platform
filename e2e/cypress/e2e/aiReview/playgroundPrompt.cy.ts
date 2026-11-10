@@ -93,7 +93,7 @@ describe('AI review prompts in the playground', () => {
     });
   });
 
-  it('saving a changed prompt switches the active rule to Dry run', () => {
+  it('saving a changed prompt switches the active rule to Score only', () => {
     openPlayground(projectId, 'key_untagged');
     loadPrompt('Brand review');
     gcy('ai-prompt-review-criteria').find('textarea').first().type(' More.');
@@ -103,9 +103,10 @@ describe('AI review prompts in the playground', () => {
     new E2AiReviewRulesView().visit(projectId);
     gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule' }).within(
       () => {
-        gcyAdvanced({ value: 'ai-review-rule-mode', mode: 'DRY_RUN' }).should(
-          'exist'
-        );
+        gcyAdvanced({
+          value: 'ai-review-rule-mode',
+          mode: 'SCORE_ONLY',
+        }).should('exist');
       }
     );
   });

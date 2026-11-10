@@ -25,7 +25,7 @@ export type AiReviewRunVariant = 'review' | 'score' | 'retry';
 
 export const runVariantForMode = (
   mode: components['schemas']['AiReviewRuleModel']['mode']
-): AiReviewRunVariant => (mode === 'DRY_RUN' ? 'score' : 'review');
+): AiReviewRunVariant => (mode === 'SCORE_ONLY' ? 'score' : 'review');
 
 type Props = {
   variant: AiReviewRunVariant;
@@ -48,7 +48,7 @@ export const AiReviewRunDialog = ({
   const variantConfig = {
     review: {
       failedOnly: false,
-      showsDryRunLine: true,
+      showsScoreOnlyRunLine: true,
       title: () =>
         t('ai_review_run_title_review', 'Review existing translations'),
       countLine: (count: number) =>
@@ -61,7 +61,7 @@ export const AiReviewRunDialog = ({
     },
     score: {
       failedOnly: false,
-      showsDryRunLine: false,
+      showsScoreOnlyRunLine: false,
       title: () =>
         t('ai_review_run_title_score', 'Score existing translations'),
       countLine: (count: number) =>
@@ -74,7 +74,7 @@ export const AiReviewRunDialog = ({
     },
     retry: {
       failedOnly: true,
-      showsDryRunLine: true,
+      showsScoreOnlyRunLine: true,
       title: () => t('ai_review_run_title_retry', 'Retry failed reviews'),
       countLine: (count: number) =>
         t(
@@ -103,7 +103,7 @@ export const AiReviewRunDialog = ({
 
   const data = preview.data;
   const toReview = data?.toReview ?? 0;
-  const dryRunOnly = data?.dryRunOnly ?? 0;
+  const scoreOnlyRunCount = data?.scoreOnlyRunCount ?? 0;
   const confirmedToReReview = data?.confirmedToReReview ?? 0;
   const rejectedToReReview = data?.rejectedToReReview ?? 0;
   const skipped = Object.entries(data?.skipped ?? {}).filter(
@@ -226,12 +226,12 @@ export const AiReviewRunDialog = ({
                 )}
               </Typography>
             )}
-            {config.showsDryRunLine && dryRunOnly > 0 && (
-              <Typography data-cy="ai-review-run-dry-run-only">
+            {config.showsScoreOnlyRunLine && scoreOnlyRunCount > 0 && (
+              <Typography data-cy="ai-review-run-score-only-count">
                 {t(
-                  'ai_review_run_dry_run_only_count',
+                  'ai_review_run_score_only_count',
                   '{count, plural, one {# of them will only be scored} other {# of them will only be scored}}',
-                  { count: dryRunOnly }
+                  { count: scoreOnlyRunCount }
                 )}
               </Typography>
             )}

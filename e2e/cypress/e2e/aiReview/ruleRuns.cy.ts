@@ -47,16 +47,16 @@ describe('AI review rule runs', () => {
     );
   });
 
-  it('Score now on a Dry run rule', () => {
+  it('Score now on a Score only rule', () => {
     rulesView.visit(projectId);
     gcyAdvanced({
       value: 'ai-review-rule-item',
-      name: 'Legal dry run',
+      name: 'Legal score only',
     }).within(() => {
       gcy('ai-review-rule-review-now').click();
     });
     runDialog.assertVariant('score').start();
-    gcyAdvanced({ value: 'ai-review-rule-item', name: 'Legal dry run' }).within(
+    gcyAdvanced({ value: 'ai-review-rule-item', name: 'Legal score only' }).within(
       () => {
         gcy('ai-review-rule-review-now', { timeout: 60_000 }).should(
           'not.exist'
@@ -87,9 +87,9 @@ describe('AI review rule runs', () => {
     gcy('ai-review-run-dialog').should('not.exist');
   });
 
-  it('after save on a dry run rule opens the run dialog with score wording', () => {
+  it('after save on a score-only rule opens the run dialog with score wording', () => {
     rulesView.visit(projectId);
-    rulesView.openEditDialog('Legal dry run').save();
+    rulesView.openEditDialog('Legal score only').save();
     runDialog.assertVariant('score');
   });
 

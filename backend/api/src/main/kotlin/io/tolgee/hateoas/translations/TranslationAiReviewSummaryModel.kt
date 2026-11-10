@@ -5,6 +5,6 @@ import io.tolgee.model.enums.aiReview.AiReviewStatus
 data class TranslationAiReviewSummaryModel(
   val status: AiReviewStatus,
   val score: Int?,
-  val dryRun: Boolean,
+  val scoreOnlyRun: Boolean,
   val lastFailed: Boolean,
 )

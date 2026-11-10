@@ -77,12 +77,13 @@ describe('AI review rules page', () => {
     );
     gcyAdvanced({
       value: 'ai-review-rule-item',
-      name: 'Legal dry run',
+      name: 'Legal score only',
     }).within(() => {
-      gcyAdvanced({ value: 'ai-review-rule-counts', mode: 'DRY_RUN' }).should(
-        'exist'
-      );
-      gcyAdvanced({ value: 'ai-review-rule-mode', mode: 'DRY_RUN' }).should(
+      gcyAdvanced({
+        value: 'ai-review-rule-counts',
+        mode: 'SCORE_ONLY',
+      }).should('exist');
+      gcyAdvanced({ value: 'ai-review-rule-mode', mode: 'SCORE_ONLY' }).should(
         'exist'
       );
     });

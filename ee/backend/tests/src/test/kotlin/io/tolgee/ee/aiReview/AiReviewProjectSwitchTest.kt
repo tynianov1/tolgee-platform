@@ -79,7 +79,7 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
         rules.assert.hasSize(1)
         val rule = rules[0]
         rule.enabled.assert.isTrue()
-        rule.mode.assert.isEqualTo(AiReviewRuleMode.DRY_RUN)
+        rule.mode.assert.isEqualTo(AiReviewRuleMode.SCORE_ONLY)
         rule.threshold.assert.isEqualTo(85)
         rule.never.assert.isFalse()
         rule.name.assert.isEqualTo("Default rule")

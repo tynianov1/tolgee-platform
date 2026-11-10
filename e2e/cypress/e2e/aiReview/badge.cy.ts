@@ -37,8 +37,8 @@ describe('AI review badge', () => {
     const badges: [string, string][] = [
       ['key_approved', 'APPROVED'],
       ['key_below_threshold', 'BELOW_THRESHOLD'],
-      ['key_dry_run_pass', 'DRY_RUN_PASS'],
-      ['key_dry_run_fail', 'DRY_RUN_FAIL'],
+      ['key_score_only_pass', 'SCORE_ONLY_PASS'],
+      ['key_score_only_fail', 'SCORE_ONLY_FAIL'],
       ['key_failed', 'FAILED'],
     ];
     badges.forEach(([key, status]) => {

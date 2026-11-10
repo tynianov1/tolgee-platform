@@ -145,7 +145,7 @@ class PromptServiceEeImpl(
     if (outputChanges) prompt.revision += 1
     promptRepository.save(prompt)
     if (outputChanges && prompt.type == PromptType.REVIEW) {
-      aiReviewRuleService.switchRulesUsingPromptToDryRun(projectId, prompt.id)
+      aiReviewRuleService.switchRulesUsingPromptToScoreOnlyRun(projectId, prompt.id)
     }
     return withResolvedProviderName(prompt)
   }
@@ -157,7 +157,7 @@ class PromptServiceEeImpl(
     val prompt = this.findPrompt(projectId, promptId)
     val project = projectService.get(projectId)
     mtServiceConfigService.removePrompt(project, prompt.id)
-    if (prompt.type == PromptType.REVIEW) aiReviewRuleService.detachPromptAndSwitchToDryRun(projectId, prompt.id)
+    if (prompt.type == PromptType.REVIEW) aiReviewRuleService.detachPromptAndSwitchToScoreOnlyRun(projectId, prompt.id)
     promptRepository.delete(prompt)
   }
 

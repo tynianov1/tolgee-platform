@@ -83,9 +83,9 @@ class AiReviewRuleStatsService(
       }
     return when (status) {
       AiReviewStatus.FAILED -> withFailure.copy(failed = failed + count)
-      AiReviewStatus.DRY_RUN_PASS ->
+      AiReviewStatus.SCORE_ONLY_PASS ->
         withFailure.copy(scored = scored + count, wouldBeAutoReviewed = wouldBeAutoReviewed + count)
-      AiReviewStatus.DRY_RUN_FAIL -> withFailure.copy(scored = scored + count)
+      AiReviewStatus.SCORE_ONLY_FAIL -> withFailure.copy(scored = scored + count)
       AiReviewStatus.PENDING,
       AiReviewStatus.APPROVED,
       AiReviewStatus.BELOW_THRESHOLD,

@@ -60,7 +60,7 @@ describe('AI review batch operation', () => {
     visit();
     cy.intercept('POST', '**/ai-review/run/preview', {
       statusCode: 200,
-      body: { toReview: 1500, dryRunOnly: 0, skipped: {} },
+      body: { toReview: 1500, scoreOnlyRunCount: 0, skipped: {} },
     });
     view.openAiReviewRunDialog().assertVariant('review');
     gcy('ai-review-run-warning').should('be.visible');

@@ -35,11 +35,11 @@ class StrictestRuleSelectorTest {
   }
 
   @Test
-  fun `on a tie Dry run wins over Active`() {
+  fun `on a tie Score only wins over Active`() {
     val decision =
       decide(
         rule(id = 1, threshold = 90, mode = AiReviewRuleMode.ACTIVE),
-        rule(id = 2, threshold = 90, mode = AiReviewRuleMode.DRY_RUN),
+        rule(id = 2, threshold = 90, mode = AiReviewRuleMode.SCORE_ONLY),
       )
     decision
       .review()
@@ -64,11 +64,11 @@ class StrictestRuleSelectorTest {
   }
 
   @Test
-  fun `activeOnly ignores a stricter Dry run rule`() {
+  fun `activeOnly ignores a stricter Score only rule`() {
     val decision =
       decide(
         rule(id = 1, threshold = 85, mode = AiReviewRuleMode.ACTIVE),
-        rule(id = 2, threshold = 95, mode = AiReviewRuleMode.DRY_RUN),
+        rule(id = 2, threshold = 95, mode = AiReviewRuleMode.SCORE_ONLY),
         activeOnly = true,
       )
     decision
@@ -78,16 +78,16 @@ class StrictestRuleSelectorTest {
   }
 
   @Test
-  fun `activeOnly with only Dry run rules gives NoRule`() {
-    decide(rule(mode = AiReviewRuleMode.DRY_RUN), activeOnly = true).assert.isEqualTo(RuleDecision.NoRule)
+  fun `activeOnly with only Score only rules gives NoRule`() {
+    decide(rule(mode = AiReviewRuleMode.SCORE_ONLY), activeOnly = true).assert.isEqualTo(RuleDecision.NoRule)
   }
 
   @Test
-  fun `Never of a Dry run rule blocks even with activeOnly`() {
+  fun `Never of a Score only rule blocks even with activeOnly`() {
     val decision =
       decide(
         rule(id = 1, threshold = 85, mode = AiReviewRuleMode.ACTIVE),
-        rule(id = 2, never = true, mode = AiReviewRuleMode.DRY_RUN),
+        rule(id = 2, never = true, mode = AiReviewRuleMode.SCORE_ONLY),
         activeOnly = true,
       )
     decision.assert.isEqualTo(RuleDecision.Never)

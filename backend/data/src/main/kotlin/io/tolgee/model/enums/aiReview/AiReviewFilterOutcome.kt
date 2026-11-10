@@ -3,8 +3,8 @@ package io.tolgee.model.enums.aiReview
 enum class AiReviewFilterOutcome {
   REVIEWED_BY_AI,
   BELOW_THRESHOLD,
-  DRY_RUN_PASS,
-  DRY_RUN_FAIL,
+  SCORE_ONLY_PASS,
+  SCORE_ONLY_FAIL,
   FAILED,
   CONFIRMED,
   REJECTED,

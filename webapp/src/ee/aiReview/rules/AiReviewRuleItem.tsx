@@ -122,7 +122,7 @@ export const AiReviewRuleItem = ({ rule, promptNames }: Props) => {
     invalidatePrefix: '/v2/projects/{projectId}/ai-review-rules',
   });
 
-  const isDryRun = rule.mode === 'DRY_RUN';
+  const isScoreOnlyRun = rule.mode === 'SCORE_ONLY';
   const customPromptName =
     rule.promptId != null ? promptNames[rule.promptId] : undefined;
 
@@ -130,7 +130,7 @@ export const AiReviewRuleItem = ({ rule, promptNames }: Props) => {
     if (rule.never) {
       return t('ai_review_rule_mode_no_review', 'No AI review');
     }
-    return isDryRun
+    return isScoreOnlyRun
       ? t('ai_review_rule_mode_score_only', 'AI score only')
       : t(
           'ai_review_rule_mode_auto_mark_threshold',
@@ -146,7 +146,7 @@ export const AiReviewRuleItem = ({ rule, promptNames }: Props) => {
         'AI never scores or reviews these keys and languages, even if another rule matches them.'
       );
     }
-    return isDryRun
+    return isScoreOnlyRun
       ? t(
           'ai_review_rule_mode_score_only_hint',
           'AI scores translations and lists issues. Nothing else changes.'
@@ -217,7 +217,7 @@ export const AiReviewRuleItem = ({ rule, promptNames }: Props) => {
                 data-cy-mode={rule.mode}
                 label={modeLabel()}
                 icon={
-                  !rule.never && !isDryRun ? (
+                  !rule.never && !isScoreOnlyRun ? (
                     <CheckCircleBroken width={16} height={16} />
                   ) : undefined
                 }
@@ -226,10 +226,10 @@ export const AiReviewRuleItem = ({ rule, promptNames }: Props) => {
                     ? undefined
                     : (theme) => ({
                         '& .MuiChip-icon': { color: 'inherit' },
-                        color: isDryRun
+                        color: isScoreOnlyRun
                           ? theme.palette.tokens.secondary.contrast
                           : theme.palette.tokens.success.contrast,
-                        backgroundColor: isDryRun
+                        backgroundColor: isScoreOnlyRun
                           ? theme.palette.tokens.secondary.main
                           : theme.palette.tokens.success.main,
                       })

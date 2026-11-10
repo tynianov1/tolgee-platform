@@ -93,7 +93,7 @@ export const AiPromptItem = ({ prompt }: Props) => {
             <div data-cy="ai-review-prompt-delete-warning">
               <T
                 keyName="ai_review_prompt_delete_warning"
-                defaultValue="{count, plural, one {# active rule uses this prompt. It will switch to Dry run with the default review prompt.} other {# active rules use this prompt. They will switch to Dry run with the default review prompt.}}"
+                defaultValue="{count, plural, one {# active rule uses this prompt. It will switch to Score only with the default review prompt.} other {# active rules use this prompt. They will switch to Score only with the default review prompt.}}"
                 params={{ count: prompt.activeRuleCount }}
               />
             </div>

@@ -395,10 +395,10 @@ class TranslationViewDataProvider(
         if (!AiReviewResultApplies.stillApplies(status, state)) return@forEach
         view.aiReviewStatus = status
         view.aiReviewScore = (row[2] as Number?)?.toInt()
-        view.aiReviewDryRun =
-          row[3] == AiReviewRuleMode.DRY_RUN.name ||
-          status == AiReviewStatus.DRY_RUN_PASS ||
-          status == AiReviewStatus.DRY_RUN_FAIL
+        view.aiReviewScoreOnlyRun =
+          row[3] == AiReviewRuleMode.SCORE_ONLY.name ||
+          status == AiReviewStatus.SCORE_ONLY_PASS ||
+          status == AiReviewStatus.SCORE_ONLY_FAIL
         view.aiReviewLastFailed = row[4] as Boolean
       }
     }

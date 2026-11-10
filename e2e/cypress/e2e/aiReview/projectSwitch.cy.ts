@@ -34,7 +34,7 @@ describe('AI review project switch', () => {
     aiReviewTestData.clean();
   });
 
-  it('turning it on creates the default dry-run rule', () => {
+  it('turning it on creates the default score-only rule', () => {
     login('test_username');
     rulesView.visit(switchProjectId);
     gcy('ai-review-empty-state').should('be.visible');
@@ -48,7 +48,7 @@ describe('AI review project switch', () => {
     gcyAdvanced({ value: 'ai-review-rule-item', name: 'Default rule' }).should(
       'exist'
     );
-    gcyAdvanced({ value: 'ai-review-rule-mode', mode: 'DRY_RUN' }).should(
+    gcyAdvanced({ value: 'ai-review-rule-mode', mode: 'SCORE_ONLY' }).should(
       'exist'
     );
   });

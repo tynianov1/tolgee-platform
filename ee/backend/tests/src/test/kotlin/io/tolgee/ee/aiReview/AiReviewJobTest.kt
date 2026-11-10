@@ -156,8 +156,8 @@ class AiReviewJobTest : AbstractSpringTest() {
   }
 
   @Test
-  fun `Dry run pass never changes state`() {
-    testData.rule.mode = AiReviewRuleMode.DRY_RUN
+  fun `Score only pass never changes state`() {
+    testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)
     save()
     stubPass()
@@ -165,12 +165,12 @@ class AiReviewJobTest : AbstractSpringTest() {
     runJob(testData.deTranslation.id)
 
     translation(testData.deTranslation.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
-    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.DRY_RUN_PASS)
+    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.SCORE_ONLY_PASS)
   }
 
   @Test
-  fun `Dry run fail never changes state`() {
-    testData.rule.mode = AiReviewRuleMode.DRY_RUN
+  fun `Score only fail never changes state`() {
+    testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)
     save()
     stubFail()
@@ -178,7 +178,7 @@ class AiReviewJobTest : AbstractSpringTest() {
     runJob(testData.deTranslation.id)
 
     translation(testData.deTranslation.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
-    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.DRY_RUN_FAIL)
+    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.SCORE_ONLY_FAIL)
   }
 
   @Test
@@ -324,11 +324,11 @@ class AiReviewJobTest : AbstractSpringTest() {
   }
 
   @Test
-  fun `re-review of an approval with a stricter Dry run rule keeps the approval`() {
+  fun `re-review of an approval with a stricter Score only rule keeps the approval`() {
     approvedReviewedTranslation(reReviewRequested = true)
     testData.addRule {
-      name = "Strict dry run"
-      mode = AiReviewRuleMode.DRY_RUN
+      name = "Strict score only"
+      mode = AiReviewRuleMode.SCORE_ONLY
       threshold = 100
       tagIn = mutableListOf("ui")
     }
@@ -346,7 +346,7 @@ class AiReviewJobTest : AbstractSpringTest() {
 
   @Test
   fun `re-review of an approval with no Active rule is skipped and clears the request`() {
-    testData.rule.mode = AiReviewRuleMode.DRY_RUN
+    testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
     approvedReviewedTranslation(reReviewRequested = true)
     save()
 
@@ -361,7 +361,7 @@ class AiReviewJobTest : AbstractSpringTest() {
 
   @Test
   fun `an AI-managed PENDING row with no Active rule becomes FAILED and leaves the queue`() {
-    testData.rule.mode = AiReviewRuleMode.DRY_RUN
+    testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
     testData.deTranslation.state = TranslationState.REVIEWED
     testData.deTranslation.auto = true
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING, null)
@@ -701,7 +701,7 @@ class AiReviewJobTest : AbstractSpringTest() {
     updates[0].translationId.assert.isEqualTo(testData.deTranslation.id)
     updates[0].status.assert.isEqualTo(AiReviewStatus.APPROVED)
     updates[0].score.assert.isEqualTo(100)
-    updates[0].dryRun.assert.isEqualTo(false)
+    updates[0].scoreOnlyRun.assert.isEqualTo(false)
   }
 
   private fun save() {

@@ -20,8 +20,8 @@ object AiReviewScoring {
     return when {
       active && passes -> AiReviewStatus.APPROVED
       active -> AiReviewStatus.BELOW_THRESHOLD
-      passes -> AiReviewStatus.DRY_RUN_PASS
-      else -> AiReviewStatus.DRY_RUN_FAIL
+      passes -> AiReviewStatus.SCORE_ONLY_PASS
+      else -> AiReviewStatus.SCORE_ONLY_FAIL
     }
   }
 }

@@ -29,8 +29,8 @@ internal class AiReviewFilterBuilder(
       mapOf(
         AiReviewFilterOutcome.REVIEWED_BY_AI to AiReviewStatus.APPROVED,
         AiReviewFilterOutcome.BELOW_THRESHOLD to AiReviewStatus.BELOW_THRESHOLD,
-        AiReviewFilterOutcome.DRY_RUN_PASS to AiReviewStatus.DRY_RUN_PASS,
-        AiReviewFilterOutcome.DRY_RUN_FAIL to AiReviewStatus.DRY_RUN_FAIL,
+        AiReviewFilterOutcome.SCORE_ONLY_PASS to AiReviewStatus.SCORE_ONLY_PASS,
+        AiReviewFilterOutcome.SCORE_ONLY_FAIL to AiReviewStatus.SCORE_ONLY_FAIL,
         AiReviewFilterOutcome.FAILED to AiReviewStatus.FAILED,
         AiReviewFilterOutcome.CONFIRMED to AiReviewStatus.CONFIRMED,
         AiReviewFilterOutcome.REJECTED to AiReviewStatus.REJECTED,

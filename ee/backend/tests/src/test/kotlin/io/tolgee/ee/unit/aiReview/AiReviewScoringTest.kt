@@ -34,12 +34,12 @@ class AiReviewScoringTest {
   @Test
   fun `score 0 is never approved`() {
     AiReviewScoring.outcome(AiReviewRuleMode.ACTIVE, 0, 0).assert.isEqualTo(AiReviewStatus.BELOW_THRESHOLD)
-    AiReviewScoring.outcome(AiReviewRuleMode.DRY_RUN, 0, 0).assert.isEqualTo(AiReviewStatus.DRY_RUN_FAIL)
+    AiReviewScoring.outcome(AiReviewRuleMode.SCORE_ONLY, 0, 0).assert.isEqualTo(AiReviewStatus.SCORE_ONLY_FAIL)
   }
 
   @Test
-  fun `dry run outcomes`() {
-    AiReviewScoring.outcome(AiReviewRuleMode.DRY_RUN, 90, 85).assert.isEqualTo(AiReviewStatus.DRY_RUN_PASS)
-    AiReviewScoring.outcome(AiReviewRuleMode.DRY_RUN, 80, 85).assert.isEqualTo(AiReviewStatus.DRY_RUN_FAIL)
+  fun `score-only outcomes`() {
+    AiReviewScoring.outcome(AiReviewRuleMode.SCORE_ONLY, 90, 85).assert.isEqualTo(AiReviewStatus.SCORE_ONLY_PASS)
+    AiReviewScoring.outcome(AiReviewRuleMode.SCORE_ONLY, 80, 85).assert.isEqualTo(AiReviewStatus.SCORE_ONLY_FAIL)
   }
 }

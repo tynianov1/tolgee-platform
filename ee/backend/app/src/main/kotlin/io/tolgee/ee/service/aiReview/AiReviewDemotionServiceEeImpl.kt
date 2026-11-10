@@ -98,12 +98,12 @@ class AiReviewDemotionServiceEeImpl(
     if (!protected) {
       translation.state = TranslationState.TRANSLATED
     }
-    return AiReviewUpdate.of(row, dryRun = false)
+    return AiReviewUpdate.of(row, scoreOnlyRun = false)
   }
 
   /**
    * README 3.4: approvals of a deleted or disabled rule stay until a matching stricter rule removes
-   * them. A rule that only matches in Dry run must not change anything live (README 3.1).
+   * them. A rule that only matches in Score only must not change anything live (README 3.1).
    */
   private fun keepsWithoutActiveRule(
     row: TranslationAiReview,

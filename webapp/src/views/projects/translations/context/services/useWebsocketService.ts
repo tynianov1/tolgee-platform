@@ -88,7 +88,7 @@ export const useWebsocketService = (
                 : {
                     status: update.status,
                     score: update.score ?? undefined,
-                    dryRun: update.dryRun,
+                    scoreOnlyRun: update.scoreOnlyRun,
                     lastFailed: update.lastFailed,
                   },
           },

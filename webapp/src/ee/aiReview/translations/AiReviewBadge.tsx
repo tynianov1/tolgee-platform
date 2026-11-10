@@ -45,7 +45,7 @@ const StyledPill = styled('span')`
     background: ${({ theme }) => alpha(theme.palette.text.secondary, 0.12)};
     color: ${({ theme }) => theme.palette.text.secondary};
   }
-  &.dryRun {
+  &.scoreOnlyRun {
     background: transparent;
     border: 1px solid;
   }
@@ -64,9 +64,9 @@ export const AiReviewBadge = ({ aiReview }: Props) => {
     grey:
       status === 'FAILED' ||
       status === 'REJECTED' ||
-      status === 'DRY_RUN_PASS' ||
-      status === 'DRY_RUN_FAIL',
-    dryRun: status === 'DRY_RUN_PASS' || status === 'DRY_RUN_FAIL',
+      status === 'SCORE_ONLY_PASS' ||
+      status === 'SCORE_ONLY_FAIL',
+    scoreOnlyRun: status === 'SCORE_ONLY_PASS' || status === 'SCORE_ONLY_FAIL',
   });
 
   return (

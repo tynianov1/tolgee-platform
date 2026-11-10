@@ -210,7 +210,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
 
   @Test
   fun `a source change deletes stale sibling rows`() {
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.DRY_RUN_PASS, 90)
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SCORE_ONLY_PASS, 90)
     testData.addReview(testData.frTranslationBuilder, AiReviewStatus.BELOW_THRESHOLD, 40)
     save()
     editTranslation("en", "Pay immediately")
@@ -221,7 +221,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
 
   @Test
   fun `a source change publishes the removal of stale sibling rows`() {
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.DRY_RUN_PASS, 90)
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SCORE_ONLY_PASS, 90)
     testData.addReview(testData.frTranslationBuilder, AiReviewStatus.BELOW_THRESHOLD, 40)
     save()
     editTranslation("en", "Pay immediately")
@@ -337,8 +337,8 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
     }
 
   @Test
-  fun `under Protect reviewed with only a Dry run rule, MT keeps an AI-managed FAILED row`() {
-    testData.rule.mode = AiReviewRuleMode.DRY_RUN
+  fun `under Protect reviewed with only a Score only rule, MT keeps an AI-managed FAILED row`() {
+    testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
     assertMtKeepsAiManagedRow()
   }
 
@@ -367,7 +367,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
   @Test
   fun `with the project switch off, a source change deletes stale rows and queues nothing`() {
     testData.project.useAiReview = false
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.DRY_RUN_PASS, 90)
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SCORE_ONLY_PASS, 90)
     testData.addReview(testData.frTranslationBuilder, AiReviewStatus.BELOW_THRESHOLD, 40)
     save()
     editTranslation("en", "Pay immediately")
