@@ -43,6 +43,7 @@ class AiReviewRule(
 ) : StandardAuditModel() {
   @ActivityLoggedProp
   @ActivityDescribingProp
+  @Column(nullable = false)
   var name: String = ""
 
   @ActivityLoggedProp

@@ -64,7 +64,7 @@ class Prompt(
   @Column(nullable = false, updatable = false)
   @ActivityLoggedProp
   var type: PromptType = PromptType.TRANSLATE,
-  @Column(columnDefinition = "text")
+  @Column(nullable = false)
   @ActivityLoggedProp
   @ColumnDefault("0")
   var revision: Int = 0,
