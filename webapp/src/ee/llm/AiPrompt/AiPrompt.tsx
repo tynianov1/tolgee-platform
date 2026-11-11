@@ -124,8 +124,6 @@ export const AiPrompt: React.FC<React.PropsWithChildren<Props>> = ({
     promptType,
     setPromptType,
     typeLocked,
-    effectiveReviewCriteria,
-    setReviewCriteria,
     setAiPlayground,
     errors,
     confirmUnsaved,
@@ -254,14 +252,7 @@ export const AiPrompt: React.FC<React.PropsWithChildren<Props>> = ({
             />
           )
         ) : (
-          <TabBasic
-            value={options}
-            onChange={setOptions}
-            reviewCriteria={effectiveReviewCriteria}
-            onReviewCriteriaChange={
-              promptType === 'REVIEW' ? setReviewCriteria : undefined
-            }
-          />
+          <TabBasic value={options} onChange={setOptions} />
         )}
         {featureEnabled && (
           <Box sx={{ margin: '20px', display: 'grid', gap: 1.5 }}>
@@ -294,7 +285,6 @@ export const AiPrompt: React.FC<React.PropsWithChildren<Props>> = ({
           options={tab === 'basic' ? options : undefined}
           providerName={provider}
           promptType={promptType}
-          reviewCriteria={effectiveReviewCriteria}
           onBatchFinished={() => {
             refetchTranslations();
           }}
@@ -309,7 +299,6 @@ export const AiPrompt: React.FC<React.PropsWithChildren<Props>> = ({
             template: tab === 'advanced' ? value : undefined,
             basicPromptOptions: tab === 'basic' ? options : undefined,
             type: promptType,
-            reviewCriteria: effectiveReviewCriteria,
           }}
           existingPrompt={openPromptData}
           unsavedChanges={unsavedChanges}

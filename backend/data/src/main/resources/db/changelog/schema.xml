@@ -6313,11 +6313,6 @@
             </column>
         </addColumn>
     </changeSet>
-    <changeSet author="bdshadow" id="1792666143000-2">
-        <addColumn tableName="prompt">
-            <column name="review_criteria" type="TEXT"/>
-        </addColumn>
-    </changeSet>
     <changeSet author="bdshadow" id="1792666143000-3">
         <addColumn tableName="prompt">
             <column name="revision" type="INTEGER" defaultValueNumeric="0">

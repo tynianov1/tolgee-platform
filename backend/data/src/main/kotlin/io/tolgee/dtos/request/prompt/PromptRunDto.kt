@@ -10,5 +10,4 @@ data class PromptRunDto(
   var provider: String,
   var basicPromptOptions: List<BasicPromptOption>?,
   val type: PromptType = PromptType.TRANSLATE,
-  val reviewCriteria: String? = null,
 )

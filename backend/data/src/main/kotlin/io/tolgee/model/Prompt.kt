@@ -66,7 +66,6 @@ class Prompt(
   var type: PromptType = PromptType.TRANSLATE,
   @Column(columnDefinition = "text")
   @ActivityLoggedProp
-  var reviewCriteria: String? = null,
   @ColumnDefault("0")
   var revision: Int = 0,
 ) : AuditModel(),

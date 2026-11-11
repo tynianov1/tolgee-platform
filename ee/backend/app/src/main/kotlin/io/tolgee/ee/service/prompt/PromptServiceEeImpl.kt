@@ -81,7 +81,6 @@ class PromptServiceEeImpl(
         providerName = dto.providerName,
         basicPromptOptions = dto.basicPromptOptions?.toTypedArray(),
         type = dto.type,
-        reviewCriteria = dto.reviewCriteria.takeIf { dto.type == PromptType.REVIEW },
       )
     promptRepository.save(prompt)
     return withResolvedProviderName(prompt)
@@ -99,7 +98,6 @@ class PromptServiceEeImpl(
         providerName = prompt.providerName,
         basicPromptOptions = prompt.basicPromptOptions?.toList(),
         type = prompt.type,
-        reviewCriteria = prompt.reviewCriteria,
       )
     } else {
       return getDefaultPrompt()
@@ -131,13 +129,11 @@ class PromptServiceEeImpl(
   ): Prompt {
     val prompt = findPrompt(projectId, promptId)
     if (dto.type != prompt.type) throw BadRequestException(Message.PROMPT_TYPE_CANNOT_BE_CHANGED)
-    val reviewCriteria = dto.reviewCriteria.takeIf { prompt.type == PromptType.REVIEW }
-    val outputChanges = changesOutput(prompt, dto, reviewCriteria)
+    val outputChanges = changesOutput(prompt, dto)
     prompt.name = dto.name
     prompt.template = dto.template
     prompt.providerName = dto.providerName
     prompt.basicPromptOptions = dto.basicPromptOptions?.toTypedArray()
-    prompt.reviewCriteria = reviewCriteria
     if (outputChanges) prompt.revision += 1
     promptRepository.save(prompt)
     if (outputChanges && prompt.type == PromptType.REVIEW) {
@@ -149,12 +145,10 @@ class PromptServiceEeImpl(
   private fun changesOutput(
     prompt: Prompt,
     dto: PromptDto,
-    reviewCriteria: String?,
   ): Boolean =
     prompt.template != dto.template ||
       prompt.providerName != dto.providerName ||
-      prompt.basicPromptOptions?.toList() != dto.basicPromptOptions ||
-      prompt.reviewCriteria != reviewCriteria
+      prompt.basicPromptOptions?.toList() != dto.basicPromptOptions
 
   fun deletePrompt(
     projectId: Long,
@@ -174,10 +168,9 @@ class PromptServiceEeImpl(
     keyId: Long?,
     targetLanguageId: Long,
     options: List<BasicPromptOption>?,
-    reviewCriteria: String? = null,
   ): String {
     try {
-      val params = promptVariablesHelper.getVariables(projectId, keyId, targetLanguageId, reviewCriteria)
+      val params = promptVariablesHelper.getVariables(projectId, keyId, targetLanguageId)
 
       val handlebars = PromptHandlebarsHelper.register(Handlebars())
 

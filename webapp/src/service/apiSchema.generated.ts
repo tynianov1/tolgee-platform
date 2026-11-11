@@ -5931,7 +5931,6 @@ export interface components {
       )[];
       name: string;
       providerName: string;
-      reviewCriteria?: string;
       template?: string;
       /** @enum {string} */
       type: "TRANSLATE" | "REVIEW";
@@ -5955,7 +5954,6 @@ export interface components {
       /** Format: int64 */
       projectId: number;
       providerName: string;
-      reviewCriteria?: string;
       /** Format: int32 */
       revision: number;
       template?: string;
@@ -5995,7 +5993,6 @@ export interface components {
       /** Format: int64 */
       keyId: number;
       provider: string;
-      reviewCriteria?: string;
       /** Format: int64 */
       targetLanguageId: number;
       template?: string;

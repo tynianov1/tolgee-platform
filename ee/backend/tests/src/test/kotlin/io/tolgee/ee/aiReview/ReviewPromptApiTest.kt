@@ -49,17 +49,15 @@ class ReviewPromptApiTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `creates a REVIEW prompt with criteria`() {
+  fun `creates a REVIEW prompt`() {
     val body =
       mapOf(
         "name" to "Legal review",
         "providerName" to "default",
         "type" to "REVIEW",
-        "reviewCriteria" to "Legal terms must stay exact.",
       )
     performAuthPost("$projectUrl/prompts", body).andIsOk.andAssertThatJson {
       node("type").isEqualTo("REVIEW")
-      node("reviewCriteria").isEqualTo("Legal terms must stay exact.")
       node("revision").isEqualTo(0)
     }
   }
@@ -93,20 +91,6 @@ class ReviewPromptApiTest : AuthorizedControllerTest() {
     performAuthPut("$projectUrl/prompts/${testData.reviewPrompt.id}", body)
       .andIsBadRequest
       .andHasErrorMessage(Message.PROMPT_TYPE_CANNOT_BE_CHANGED)
-  }
-
-  @Test
-  fun `updating keeps the review criteria`() {
-    val body =
-      mapOf(
-        "name" to "Brand voice review",
-        "providerName" to "default",
-        "type" to "REVIEW",
-        "reviewCriteria" to "Use informal French.",
-      )
-    performAuthPut("$projectUrl/prompts/${testData.reviewPrompt.id}", body).andIsOk.andAssertThatJson {
-      node("reviewCriteria").isEqualTo("Use informal French.")
-    }
   }
 
   @Test

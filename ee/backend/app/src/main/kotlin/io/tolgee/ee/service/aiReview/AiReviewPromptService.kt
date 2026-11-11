@@ -31,7 +31,6 @@ class AiReviewPromptService(
         template = data.template,
         providerName = data.provider,
         basicPromptOptions = data.basicPromptOptions,
-        reviewCriteria = data.reviewCriteria,
       )
     return reviewWithPrompt(
       organizationId,
@@ -98,7 +97,6 @@ class AiReviewPromptService(
       translation.key.id,
       translation.language.id,
       prompt.basicPromptOptions,
-      prompt.reviewCriteria,
     )
 
   private fun Prompt.toDto(): PromptDto =
@@ -108,7 +106,6 @@ class AiReviewPromptService(
       template = template,
       basicPromptOptions = basicPromptOptions?.toList(),
       type = type,
-      reviewCriteria = reviewCriteria,
     )
 
   private fun LlmParams.withSchema(): LlmParams =

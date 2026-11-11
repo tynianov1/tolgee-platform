@@ -67,7 +67,6 @@ open class AiReviewTestData : BaseTestData() {
           name = "Brand voice review"
           providerName = "default"
           type = PromptType.REVIEW
-          reviewCriteria = "Use informal German."
         }.self
       translator =
         root

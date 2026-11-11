@@ -127,7 +127,6 @@ class ReviewPlaygroundPreviewTest : AuthorizedControllerTest() {
           "name" to "Review preview",
           "providerName" to "default",
           "type" to "REVIEW",
-          "reviewCriteria" to "Use informal German.",
         ),
     ),
   )

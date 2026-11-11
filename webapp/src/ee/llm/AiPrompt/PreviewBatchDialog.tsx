@@ -34,7 +34,6 @@ type Props = {
   projectId: number;
   numberOfKeys: number;
   promptType: PromptType;
-  reviewCriteria?: string;
 };
 
 export const PreviewBatchDialog = ({
@@ -46,7 +45,6 @@ export const PreviewBatchDialog = ({
   projectId,
   numberOfKeys,
   promptType,
-  reviewCriteria,
 }: Props) => {
   const { getAllIds } = useTranslationsActions();
   const { t } = useTranslate();
@@ -82,7 +80,6 @@ export const PreviewBatchDialog = ({
               basicPromptOptions: options,
               providerName,
               type: promptType,
-              reviewCriteria,
             },
           },
         },

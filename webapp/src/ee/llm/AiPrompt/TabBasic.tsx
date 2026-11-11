@@ -4,7 +4,6 @@ import {
   FormControlLabel,
   IconButton,
   Switch,
-  TextField,
   Tooltip,
   useTheme,
 } from '@mui/material';
@@ -36,16 +35,9 @@ type PromptItem = {
 type Props = {
   value: BasicPromptOption[];
   onChange: (value: BasicPromptOption[]) => void;
-  reviewCriteria?: string;
-  onReviewCriteriaChange?: (value: string) => void;
 };
 
-export const TabBasic = ({
-  value,
-  onChange,
-  reviewCriteria,
-  onReviewCriteriaChange,
-}: Props) => {
+export const TabBasic = ({ value, onChange }: Props) => {
   const { t } = useTranslate();
   const project = useProject();
   const [projectDescription, setProjectDescription] = useState(false);
@@ -197,19 +189,6 @@ export const TabBasic = ({
           );
         })}
       </Box>
-      {onReviewCriteriaChange && (
-        <TextField
-          multiline
-          minRows={3}
-          fullWidth
-          label={t('ai_prompt_review_criteria_label', 'Review criteria')}
-          value={reviewCriteria ?? ''}
-          onChange={(e) => onReviewCriteriaChange(e.target.value)}
-          sx={{ marginTop: 2 }}
-          data-cy="ai-prompt-review-criteria"
-          inputProps={{ 'data-cy': 'ai-prompt-review-criteria-input' }}
-        />
-      )}
       {projectDescription && descriptionLoadable.isSuccess && (
         <AiProjectDescriptionDialog
           onClose={() => setProjectDescription(false)}

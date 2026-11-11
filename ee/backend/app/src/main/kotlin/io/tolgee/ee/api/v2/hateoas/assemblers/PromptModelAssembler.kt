@@ -24,7 +24,6 @@ class PromptModelAssembler(
       providerName = entity.providerName,
       basicPromptOptions = entity.basicPromptOptions?.toList(),
       type = entity.type,
-      reviewCriteria = entity.reviewCriteria,
       revision = entity.revision,
       activeRuleCount = activeRuleCount(entity),
     )

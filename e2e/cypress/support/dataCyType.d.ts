@@ -84,8 +84,6 @@ declare namespace DataCy {
         "ai-prompt-result-review": true;
         "ai-prompt-result-translation": true;
         "ai-prompt-review-chip": true;
-        "ai-prompt-review-criteria": true;
-        "ai-prompt-review-criteria-input": true;
         "ai-prompt-save-as-field-name": true;
         "ai-prompt-save-as-field-use-as-default": true;
         "ai-prompt-save-as-new-button": true;

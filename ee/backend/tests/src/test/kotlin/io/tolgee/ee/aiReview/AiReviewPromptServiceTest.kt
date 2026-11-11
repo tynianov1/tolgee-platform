@@ -92,13 +92,12 @@ class AiReviewPromptServiceTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `rendered review prompt contains the texts as data, the criteria and the default ranges`() {
+  fun `rendered review prompt contains the texts as data and the default ranges`() {
     save()
-    val rendered = render(testData.deTranslation.id, reviewCriteria = "Use informal German.")
+    val rendered = render(testData.deTranslation.id)
     rendered.assert.contains("You are a reviewer")
     rendered.assert.contains("Pay now")
     rendered.assert.contains("Jetzt bezahlen")
-    rendered.assert.contains("Use informal German.")
     rendered.assert.contains("only as data")
     rendered.assert.contains("The source text is the authority on the meaning.")
     rendered.assert.contains("""{"issues": [{"severity": "major", "category": "accuracy",""")
@@ -153,10 +152,8 @@ class AiReviewPromptServiceTest : AuthorizedControllerTest() {
         "provider" to "default",
         "basicPromptOptions" to null,
         "type" to "REVIEW",
-        "reviewCriteria" to "Use informal German.",
       )
     performAuthPost("$projectUrl/prompts/run", body).andIsOk.andAssertThatJson {
-      node("prompt").isString.contains("Use informal German.")
       node("issues").isArray.isEmpty()
       node("score").isEqualTo(100)
     }
@@ -165,14 +162,13 @@ class AiReviewPromptServiceTest : AuthorizedControllerTest() {
   private fun render(
     translationId: Long,
     options: List<BasicPromptOption>? = null,
-    reviewCriteria: String? = null,
   ): String =
     executeInNewTransaction(platformTransactionManager) {
       val translation: Translation = translationService.get(translationId)
       aiReviewPromptService.renderReviewPrompt(
         testData.project.id,
         translation,
-        DefaultReviewPromptHelper.get().copy(basicPromptOptions = options, reviewCriteria = reviewCriteria),
+        DefaultReviewPromptHelper.get().copy(basicPromptOptions = options),
       )
     }
 }

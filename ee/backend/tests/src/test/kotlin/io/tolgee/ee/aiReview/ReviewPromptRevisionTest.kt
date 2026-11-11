@@ -83,13 +83,11 @@ class ReviewPromptRevisionTest : AuthorizedControllerTest() {
     name: String = "Brand voice review",
     template: String? = null,
     providerName: String = "default",
-    reviewCriteria: String? = "Use informal German.",
   ) = mapOf(
     "name" to name,
     "template" to template,
     "providerName" to providerName,
     "type" to "REVIEW",
-    "reviewCriteria" to reviewCriteria,
   )
 
   @Test
@@ -110,15 +108,6 @@ class ReviewPromptRevisionTest : AuthorizedControllerTest() {
     mode(testData.rule.id).assert.isEqualTo(AiReviewRuleMode.SCORE_ONLY)
     mode(scoreOnlyRunRule.id).assert.isEqualTo(AiReviewRuleMode.SCORE_ONLY)
     mode(otherPromptRule.id).assert.isEqualTo(AiReviewRuleMode.ACTIVE)
-  }
-
-  @Test
-  fun `criteria change switches rules to Score only`() {
-    save()
-    performAuthPut(promptUrl, body(reviewCriteria = "Use formal German.")).andIsOk.andAssertThatJson {
-      node("revision").isEqualTo(1)
-    }
-    mode(testData.rule.id).assert.isEqualTo(AiReviewRuleMode.SCORE_ONLY)
   }
 
   @Test

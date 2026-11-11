@@ -171,9 +171,9 @@ class AiReviewRuleCacheTest : AbstractSpringTest() {
       testData.reviewPrompt.id,
       PromptDto(
         name = "Brand voice review",
+        template = "{{fragment.reviewJson}}",
         providerName = "default",
         type = PromptType.REVIEW,
-        reviewCriteria = "New",
       ),
     )
     rules()

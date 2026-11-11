@@ -227,7 +227,6 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
             "name" to "Review preview",
             "providerName" to "default",
             "type" to "REVIEW",
-            "reviewCriteria" to "Use informal German.",
           ),
       ),
     ).andIsBadRequest.andHasErrorMessage(Message.FEATURE_NOT_ENABLED_FOR_PROJECT)
@@ -241,7 +240,6 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
         "provider" to "default",
         "basicPromptOptions" to null,
         "type" to "REVIEW",
-        "reviewCriteria" to "Use informal German.",
       ),
     ).andIsBadRequest.andHasErrorMessage(Message.FEATURE_NOT_ENABLED_FOR_PROJECT)
   }

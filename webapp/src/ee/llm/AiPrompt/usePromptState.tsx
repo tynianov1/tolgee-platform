@@ -63,9 +63,6 @@ export const usePromptState = ({ language, keyData }: Props) => {
   const [promptType, setPromptType] = useState<PromptType>(
     openPromptType ?? 'TRANSLATE'
   );
-  const [reviewCriteria, setReviewCriteria] = useState('');
-  const effectiveReviewCriteria =
-    promptType === 'REVIEW' ? reviewCriteria : undefined;
 
   const runLoadable = useApiMutation({
     url: '/v2/projects/{projectId}/prompts/run',
@@ -98,12 +95,6 @@ export const usePromptState = ({ language, keyData }: Props) => {
       if ((openPromptData.type ?? 'TRANSLATE') !== promptType) {
         return true;
       }
-      if (
-        promptType === 'REVIEW' &&
-        (openPromptData.reviewCriteria ?? '') !== reviewCriteria
-      ) {
-        return true;
-      }
       const type = getPromptType(openPromptData);
       if (type !== tab) {
         return true;
@@ -123,15 +114,7 @@ export const usePromptState = ({ language, keyData }: Props) => {
       return false;
     }
     return undefined;
-  }, [
-    openPromptData,
-    value,
-    options,
-    provider,
-    tab,
-    promptType,
-    reviewCriteria,
-  ]);
+  }, [openPromptData, value, options, provider, tab, promptType]);
 
   const preventLeave = unsavedChanges === true;
 
@@ -165,7 +148,6 @@ export const usePromptState = ({ language, keyData }: Props) => {
     setValue(item.template || openPromptLoadable.defaultTemplate || '');
     setOptions(storedBasicOptions(item));
     setPromptType(item.type ?? 'TRANSLATE');
-    setReviewCriteria(item.reviewCriteria ?? '');
     if (!tab || overrideTab) {
       if (item.id === undefined) {
         setTab('basic');
@@ -222,7 +204,6 @@ export const usePromptState = ({ language, keyData }: Props) => {
             provider,
             basicPromptOptions: tab === 'basic' ? options : undefined,
             type: promptType,
-            reviewCriteria: effectiveReviewCriteria,
           },
         },
       },
@@ -253,8 +234,6 @@ export const usePromptState = ({ language, keyData }: Props) => {
     promptType,
     setPromptType,
     typeLocked,
-    effectiveReviewCriteria,
-    setReviewCriteria,
     variables: promptVariables.data,
     providers: providersLoadable.data,
     handleTestPrompt,

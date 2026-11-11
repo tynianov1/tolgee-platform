@@ -9,5 +9,4 @@ data class PromptDto(
   val template: String? = null,
   var basicPromptOptions: List<BasicPromptOption>? = null,
   val type: PromptType = PromptType.TRANSLATE,
-  val reviewCriteria: String? = null,
 )

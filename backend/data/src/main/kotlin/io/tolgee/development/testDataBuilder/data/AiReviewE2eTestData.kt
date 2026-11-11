@@ -90,7 +90,6 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
           name = "Brand review"
           providerName = "default"
           type = PromptType.REVIEW
-          reviewCriteria = "Use informal language."
         }.self
       addPrompt {
         name = "Plain translate"
