@@ -2,12 +2,11 @@ import { Autocomplete, Box, Chip, TextField } from '@mui/material';
 
 import { FieldLabel } from 'tg.component/FormField';
 
-type ScopeFieldProps = {
+type ScopeAutocompleteProps = {
   label: string;
   value: string[];
   options: string[];
   dataCy: string;
-  emptyValueLabel?: string;
   helperText?: string;
   onChange: (next: string[]) => void;
 };
@@ -17,12 +16,9 @@ export const ScopeAutocomplete = ({
   value,
   options,
   dataCy,
-  emptyValueLabel,
   helperText,
   onChange,
-}: ScopeFieldProps) => {
-  const optionLabel = (option: string) =>
-    option === '' && emptyValueLabel ? emptyValueLabel : option;
+}: ScopeAutocompleteProps) => {
   return (
     <Box display="grid">
       <FieldLabel>{label}</FieldLabel>
@@ -32,7 +28,6 @@ export const ScopeAutocomplete = ({
         size="small"
         options={options}
         value={value}
-        getOptionLabel={optionLabel}
         onChange={(_, next) => onChange(next as string[])}
         renderOption={(props, option) => (
           <li
@@ -41,17 +36,13 @@ export const ScopeAutocomplete = ({
             data-cy="ai-review-rule-form-scope-option"
             data-cy-option={option}
           >
-            {optionLabel(option)}
+            {option}
           </li>
         )}
         renderTags={(items, getTagProps) =>
           items.map((item, index) => (
             // eslint-disable-next-line react/jsx-key
-            <Chip
-              size="small"
-              label={optionLabel(item)}
-              {...getTagProps({ index })}
-            />
+            <Chip size="small" label={item} {...getTagProps({ index })} />
           ))
         }
         renderInput={(params) => (

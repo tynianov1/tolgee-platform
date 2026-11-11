@@ -304,7 +304,7 @@ interface TranslationAiReviewRepository : JpaRepository<TranslationAiReview, Lon
     and r.status not in :keptStatuses
     """,
   )
-  fun deleteByProject(
+  fun deleteByProjectExceptStatuses(
     projectId: Long,
     keptStatuses: Collection<AiReviewStatus>,
   ): Int

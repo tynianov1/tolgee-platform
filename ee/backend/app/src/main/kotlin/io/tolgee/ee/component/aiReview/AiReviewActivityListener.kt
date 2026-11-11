@@ -151,7 +151,6 @@ class AiReviewActivityListener(
     startDemotionForKeyScopeChanges(projectId, entities)
     val textChanged = textChangedTranslations(entities)
     if (textChanged.isEmpty()) return
-    // README 3.4: a text change deletes rows even while the feature is off.
     if (!isAiReviewOn(projectId) && !hasRowsOnKeysOf(textChanged)) return
 
     val baseLanguageId = languageService.getProjectBaseLanguage(projectId).id
@@ -168,9 +167,10 @@ class AiReviewActivityListener(
     if (systemActor != null) return
     // Also while the feature is off: a kept row would make the human review AI-managed again
     // when the feature comes back.
+    val aiReviewOn by lazy { isAiReviewOn(projectId) }
     val reviewedIds = entities.filter { isReview(it) }.map { it.entityId }
     if (reviewedIds.isNotEmpty()) {
-      aiReviewActionService.releaseToHumanReview(projectId, reviewedIds, authorId, isAiReviewOn(projectId))
+      aiReviewActionService.releaseToHumanReview(projectId, reviewedIds, authorId, aiReviewOn)
     }
     val unReviews = entities.filter { isUnReview(it) }
     if (unReviews.isEmpty()) return
@@ -179,7 +179,7 @@ class AiReviewActivityListener(
       unReviews.map { it.entityId },
       unReviews.filter { it.modifications.containsKey("text") }.map { it.entityId }.toSet(),
       authorId,
-      isAiReviewOn(projectId),
+      aiReviewOn,
     )
   }
 
@@ -205,20 +205,8 @@ class AiReviewActivityListener(
     projectId: Long,
     entities: List<ActivityModifiedEntity>,
   ) {
-    val namespaceChangedKeyIds =
-      entities
-        .filter {
-          it.entityClass == Key::class.simpleName &&
-            it.revisionType == RevisionType.MOD &&
-            it.modifications.containsKey("namespace")
-        }.map { it.entityId }
-    val tagsChangedKeyMetaIds =
-      entities
-        .filter {
-          it.entityClass == KeyMeta::class.simpleName &&
-            it.revisionType != RevisionType.DEL &&
-            it.modifications.containsKey("tags")
-        }.map { it.entityId }
+    val namespaceChangedKeyIds = namespaceChangedKeyIds(entities)
+    val tagsChangedKeyMetaIds = tagsChangedKeyMetaIds(entities)
     if (namespaceChangedKeyIds.isEmpty() && tagsChangedKeyMetaIds.isEmpty()) return
     if (!isAiReviewOn(projectId)) return
     val keyIds =
@@ -228,11 +216,24 @@ class AiReviewActivityListener(
     aiReviewQueueService.startDemotionJob(projectId, keyIds.distinct())
   }
 
-  /**
-   * The id comes from the modification itself: this event runs in beforeTransactionCompletion,
-   * where a languageService lookup can write (handleMissingBaseLanguage) or fail during project
-   * creation and deletion.
-   */
+  private fun namespaceChangedKeyIds(entities: List<ActivityModifiedEntity>): List<Long> =
+    entities
+      .filter {
+        it.entityClass == Key::class.simpleName &&
+          it.revisionType == RevisionType.MOD &&
+          it.modifications.containsKey("namespace")
+      }.map { it.entityId }
+
+  private fun tagsChangedKeyMetaIds(entities: List<ActivityModifiedEntity>): List<Long> =
+    entities
+      .filter {
+        it.entityClass == KeyMeta::class.simpleName &&
+          it.revisionType != RevisionType.DEL &&
+          it.modifications.containsKey("tags")
+      }.map { it.entityId }
+
+  // Runs in beforeTransactionCompletion, where a languageService lookup can write or fail, so the
+  // id comes from the modification itself.
   private fun handleBaseLanguageChanged(
     event: OnProjectActivityEvent,
     projectId: Long,

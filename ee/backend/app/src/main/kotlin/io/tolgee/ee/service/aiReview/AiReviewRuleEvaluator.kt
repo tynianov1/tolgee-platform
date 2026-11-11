@@ -20,6 +20,33 @@ class AiReviewRuleEvaluator(
   private val projectService: ProjectService,
   private val projectFeatureGuard: ProjectFeatureGuard,
 ) {
+  @Transactional(readOnly = true)
+  fun evaluate(
+    translation: Translation,
+    activeOnly: Boolean = false,
+  ): RuleDecision =
+    forProject(
+      translation.key.project.id,
+    ).evaluate(translation, activeOnly)
+
+  @Transactional(readOnly = true)
+  fun forProject(projectId: Long): ProjectRules =
+    ProjectRules(loadRules(projectId), isBranchingEnabled(projectId), defaultBranchName(projectId))
+
+  fun decider(projectId: Long): (KeyScope, Long) -> RuleDecision {
+    val rules = loadRules(projectId)
+    val branchingEnabled = isBranchingEnabled(projectId)
+    return { scope, languageId -> StrictestRuleSelector.decide(rules, scope, languageId, branchingEnabled) }
+  }
+
+  fun loadRules(projectId: Long): List<RuleSnapshot> = aiReviewRuleCache.get(projectId)
+
+  fun defaultBranchName(projectId: Long): String =
+    branchService.getDefaultBranch(projectId)?.name ?: Branch.DEFAULT_BRANCH_NAME
+
+  private fun isBranchingEnabled(projectId: Long): Boolean =
+    projectFeatureGuard.isFeatureEnabled(Feature.BRANCHING, projectService.getDto(projectId))
+
   class ProjectRules(
     val rules: List<RuleSnapshot>,
     private val branchingEnabled: Boolean,
@@ -50,31 +77,4 @@ class AiReviewRuleEvaluator(
       )
     }
   }
-
-  @Transactional(readOnly = true)
-  fun evaluate(
-    translation: Translation,
-    activeOnly: Boolean = false,
-  ): RuleDecision =
-    forProject(
-      translation.key.project.id,
-    ).evaluate(translation, activeOnly)
-
-  @Transactional(readOnly = true)
-  fun forProject(projectId: Long): ProjectRules =
-    ProjectRules(loadRules(projectId), isBranchingEnabled(projectId), defaultBranchName(projectId))
-
-  fun decider(projectId: Long): (KeyScope, Long) -> RuleDecision {
-    val rules = loadRules(projectId)
-    val branchingEnabled = isBranchingEnabled(projectId)
-    return { scope, languageId -> StrictestRuleSelector.decide(rules, scope, languageId, branchingEnabled) }
-  }
-
-  fun loadRules(projectId: Long): List<RuleSnapshot> = aiReviewRuleCache.get(projectId)
-
-  fun defaultBranchName(projectId: Long): String =
-    branchService.getDefaultBranch(projectId)?.name ?: Branch.DEFAULT_BRANCH_NAME
-
-  private fun isBranchingEnabled(projectId: Long): Boolean =
-    projectFeatureGuard.isFeatureEnabled(Feature.BRANCHING, projectService.getDto(projectId))
 }

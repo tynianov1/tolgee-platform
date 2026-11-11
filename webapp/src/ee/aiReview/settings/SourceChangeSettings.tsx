@@ -6,7 +6,7 @@ import { useApiMutation, useApiQuery } from 'tg.service/http/useQueryApi';
 import { useProject } from 'tg.hooks/useProject';
 import { useProjectPermissions } from 'tg.hooks/useProjectPermissions';
 import { useAiReviewActive } from 'tg.ee.module/aiReview/hooks/useAiReviewActive';
-import { useAiReviewEnabled } from 'tg.ee.module/aiReview/hooks/useAiReviewEnabled';
+import { useAiReviewFeatureEnabled } from 'tg.ee.module/aiReview/hooks/useAiReviewFeatureEnabled';
 
 type SourceChangeSettingsModel =
   components['schemas']['SourceChangeSettingsModel'];
@@ -39,8 +39,8 @@ export const SourceChangeSettings = () => {
   const project = useProject();
   const { satisfiesPermission } = useProjectPermissions();
   const canEdit = satisfiesPermission('project.edit');
-  const aiReviewFeature = useAiReviewEnabled();
-  const aiReviewEnabled = useAiReviewActive();
+  const aiReviewFeature = useAiReviewFeatureEnabled();
+  const aiReviewActive = useAiReviewActive();
 
   const settingsLoadable = useApiQuery({
     url: '/v2/projects/{projectId}/source-change-settings',
@@ -59,10 +59,7 @@ export const SourceChangeSettings = () => {
     return null;
   }
 
-  function handleChange(field: Field, action: SourceChangeAction) {
-    if (!settings) {
-      return;
-    }
+  const handleChange = (field: Field, action: SourceChangeAction) =>
     updateMutation.mutate({
       path: { projectId: project.id },
       content: {
@@ -74,7 +71,6 @@ export const SourceChangeSettings = () => {
         },
       },
     });
-  }
 
   type Row = {
     field: Field;
@@ -83,7 +79,7 @@ export const SourceChangeSettings = () => {
     locked: boolean;
   };
 
-  const aiApprovedRow: Row[] = aiReviewEnabled
+  const aiApprovedRow: Row[] = aiReviewActive
     ? [
         {
           field: 'aiApproved',

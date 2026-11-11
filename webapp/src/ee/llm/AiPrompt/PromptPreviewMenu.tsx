@@ -17,7 +17,7 @@ import { useTranslationsSelector } from 'tg.views/projects/translations/context/
 
 import { PreviewBatchDialog } from './PreviewBatchDialog';
 import { BasicPromptOption } from './TabBasic';
-import { PromptType } from './PromptTypeToggle';
+import { PromptType } from 'tg.ee.module/llm/AiPrompt/PromptTypeToggle';
 import { PreviewDatasetDialog } from './PreviewDatasetDialog';
 
 const StyledArrowButton = styled(Button)`

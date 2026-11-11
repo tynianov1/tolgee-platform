@@ -4,6 +4,9 @@ type AiReviewSummary = components['schemas']['TranslationAiReviewSummaryModel'];
 
 export type AiReviewCellVisibility = 'badge' | 'hover' | 'none';
 
+export const isScoreOnlyStatus = (status?: AiReviewSummary['status']) =>
+  status === 'SCORE_ONLY_PASS' || status === 'SCORE_ONLY_FAIL';
+
 export const getAiReviewCellVisibility = (
   aiReview: AiReviewSummary | undefined
 ): AiReviewCellVisibility => {

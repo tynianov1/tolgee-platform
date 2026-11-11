@@ -16,7 +16,10 @@ import { messageService } from 'tg.service/MessageService';
 import { confirmation } from 'tg.hooks/confirmation';
 
 import { PromptItem } from './PromptLoadMenu';
-import { PromptSaveData, PromptSaveDialog } from './PromptSaveDialog';
+import {
+  PromptSaveData,
+  PromptSaveDialog,
+} from 'tg.ee.module/llm/AiPrompt/PromptSaveDialog';
 
 const StyledArrowButton = styled(Button)`
   padding-left: 6px;

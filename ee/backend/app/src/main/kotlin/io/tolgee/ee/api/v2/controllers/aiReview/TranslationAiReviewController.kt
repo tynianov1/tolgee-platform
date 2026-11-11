@@ -53,6 +53,7 @@ class TranslationAiReviewController(
   fun getAiReview(
     @PathVariable translationId: Long,
   ): TranslationAiReviewModel {
+    projectFeatureGuard.checkEnabled(Feature.AI_REVIEW)
     val translation = loadTranslation(translationId)
     securityService.checkLanguageViewPermission(projectHolder.project.id, listOf(translation.language.id))
     return translationAiReviewModelAssembler.toModel(aiReviewActionService.get(translationId))
@@ -66,6 +67,7 @@ class TranslationAiReviewController(
   fun retryAiReview(
     @PathVariable translationId: Long,
   ): BatchJobModel {
+    projectFeatureGuard.checkEnabled(Feature.AI_REVIEW)
     val translation = loadTranslation(translationId)
     securityService.checkBranchModify(translation)
     aiReviewActionService.checkRetryAllowed(translationId)
@@ -78,8 +80,6 @@ class TranslationAiReviewController(
     return batchJobModelAssembler.toModel(BatchJobView(job, 0, null))
   }
 
-  private fun loadTranslation(translationId: Long): Translation {
-    projectFeatureGuard.checkEnabled(Feature.AI_REVIEW)
-    return translationService.get(projectHolder.project.id, translationId)
-  }
+  private fun loadTranslation(translationId: Long): Translation =
+    translationService.get(projectHolder.project.id, translationId)
 }

@@ -44,7 +44,7 @@ describe('AI review prompts in the playground', () => {
   it('creates and saves a review prompt with criteria', () => {
     openPlayground(projectId, 'key_untagged');
     gcy('ai-prompt-type-review').click();
-    gcy('ai-prompt-review-criteria').type('Use a formal tone.');
+    gcy('ai-prompt-review-criteria-input').type('Use a formal tone.');
     gcy('ai-prompt-save-as-new-button').click();
     gcy('ai-prompt-save-as-field-name').type('My review prompt');
     gcy('ai-prompt-save-dialog-save').click();
@@ -57,10 +57,10 @@ describe('AI review prompts in the playground', () => {
   it('loading a saved review prompt locks the switch', () => {
     openPlayground(projectId, 'key_untagged');
     loadPrompt('Brand review');
-    gcy('ai-prompt-review-criteria')
-      .find('textarea')
-      .first()
-      .should('have.value', 'Use informal language.');
+    gcy('ai-prompt-review-criteria-input').should(
+      'have.value',
+      'Use informal language.'
+    );
     gcy('ai-prompt-type-review')
       .should('have.attr', 'aria-pressed', 'true')
       .should('be.disabled');
@@ -96,19 +96,15 @@ describe('AI review prompts in the playground', () => {
   it('saving a changed prompt switches the active rule to Score only', () => {
     openPlayground(projectId, 'key_untagged');
     loadPrompt('Brand review');
-    gcy('ai-prompt-review-criteria').find('textarea').first().type(' More.');
+    gcy('ai-prompt-review-criteria-input').type(' More.');
     gcy('ai-prompt-save-button').click();
     gcy('ai-review-prompt-save-warning').should('be.visible');
     cy.gcy('global-confirmation-confirm').click();
-    new E2AiReviewRulesView().visit(projectId);
-    gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule' }).within(
-      () => {
-        gcyAdvanced({
-          value: 'ai-review-rule-mode',
-          mode: 'SCORE_ONLY',
-        }).should('exist');
-      }
-    );
+    const rulesView = new E2AiReviewRulesView();
+    rulesView.visit(projectId);
+    rulesView.getRule('UI rule').within(() => {
+      rulesView.getRuleMode('SCORE_ONLY').should('exist');
+    });
   });
 
   it('prompts list shows a type chip per prompt', () => {

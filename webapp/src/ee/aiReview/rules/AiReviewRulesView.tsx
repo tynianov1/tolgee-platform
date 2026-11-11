@@ -19,6 +19,11 @@ import {
   runVariantForMode,
 } from 'tg.ee.module/aiReview/runs/AiReviewRunDialog';
 
+const enabledFirstThenNewest = (
+  a: { enabled: boolean; id: number },
+  b: { enabled: boolean; id: number }
+) => Number(b.enabled) - Number(a.enabled) || b.id - a.id;
+
 export const AiReviewRulesView = () => {
   const { t } = useTranslate();
   const theme = useTheme();
@@ -67,9 +72,8 @@ export const AiReviewRulesView = () => {
     return <BoxLoading />;
   }
 
-  // Newest first, so a just-saved rule is on top; disabled rules go to the end.
   const rules = [...(rulesLoadable.data?._embedded?.aiReviewRules ?? [])].sort(
-    (a, b) => Number(b.enabled) - Number(a.enabled) || b.id - a.id
+    enabledFirstThenNewest
   );
   const promptNames = Object.fromEntries(
     (promptsLoadable.data?._embedded?.prompts ?? []).map((prompt) => [
@@ -179,7 +183,7 @@ export const AiReviewRulesView = () => {
               display="grid"
               sx={(theme) => ({
                 border: `1px solid ${theme.palette.tokens.border.secondary}`,
-                borderRadius: '8px',
+                borderRadius: `${theme.shape.borderRadius * 2}px`,
                 overflow: 'hidden',
               })}
             >

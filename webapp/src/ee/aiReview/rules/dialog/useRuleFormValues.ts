@@ -3,6 +3,8 @@ import { components } from 'tg.service/apiSchema.generated';
 type AiReviewRuleModel = components['schemas']['AiReviewRuleModel'];
 type AiReviewRuleRequest = components['schemas']['AiReviewRuleRequest'];
 
+const DEFAULT_THRESHOLD = 85;
+
 export type RuleFormValues = {
   name: string;
   tagIn: string[];
@@ -10,7 +12,7 @@ export type RuleFormValues = {
   namespaceIn: string[];
   namespaceNotIn: string[];
   languageIds: number[];
-  /** Every language unchecked; the rule can't be saved like that. */
+  /** Distinct from an empty `languageIds`, which means all languages. */
   noLanguages: boolean;
   branchIn: string[];
   branchNotIn: string[];
@@ -33,7 +35,7 @@ export const getRuleInitialValues = (
   noLanguages: false,
   branchIn: rule?.branchIn ?? [],
   branchNotIn: rule?.branchNotIn ?? [],
-  threshold: rule?.threshold ?? 85,
+  threshold: rule?.threshold ?? DEFAULT_THRESHOLD,
   never: rule?.never ?? false,
   mode: rule?.mode ?? 'SCORE_ONLY',
   promptId: rule?.promptId ?? '',
@@ -62,5 +64,5 @@ export const ruleValuesToRequest = (
 
 function toThreshold(value: number | string): number {
   const parsed = Number(value);
-  return Number.isFinite(parsed) && value !== '' ? parsed : 85;
+  return Number.isFinite(parsed) && value !== '' ? parsed : DEFAULT_THRESHOLD;
 }

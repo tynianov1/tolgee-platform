@@ -8,10 +8,7 @@ import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.Path
 import jakarta.persistence.criteria.Predicate
 
-/**
- * Whether an AI review result still describes the translation's state. The Kotlin and Criteria
- * forms must agree, or the outcome filter lists keys whose cells show nothing.
- */
+/** The Kotlin and Criteria forms must agree, or the outcome filter lists keys whose cells show nothing. */
 object AiReviewResultApplies {
   fun stillApplies(
     status: AiReviewStatus,

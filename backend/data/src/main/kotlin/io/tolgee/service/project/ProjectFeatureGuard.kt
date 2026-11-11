@@ -47,28 +47,16 @@ class ProjectFeatureGuard(
   fun isFeatureEnabled(
     feature: Feature,
     project: Project = projectHolder.projectEntity,
-  ): Boolean {
-    if (!enabledFeaturesProvider.isFeatureEnabled(project.organizationOwner.id, feature)) {
-      return false
-    }
-    if (!ProjectFeatureRegistry.isEnabledOnProject(feature, project)) {
-      return false
-    }
-    return true
-  }
+  ): Boolean =
+    enabledFeaturesProvider.isFeatureEnabled(project.organizationOwner.id, feature) &&
+      ProjectFeatureRegistry.isEnabledOnProject(feature, project)
 
   fun isFeatureEnabled(
     feature: Feature,
     project: ProjectDto = projectHolder.project,
-  ): Boolean {
-    if (!enabledFeaturesProvider.isFeatureEnabled(project.organizationOwnerId, feature)) {
-      return false
-    }
-    if (!ProjectFeatureRegistry.isEnabledOnProject(feature, project)) {
-      return false
-    }
-    return true
-  }
+  ): Boolean =
+    enabledFeaturesProvider.isFeatureEnabled(project.organizationOwnerId, feature) &&
+      ProjectFeatureRegistry.isEnabledOnProject(feature, project)
 
   private fun isValueUsed(value: Any?): Boolean {
     return when (value) {

@@ -5,6 +5,7 @@ import io.tolgee.model.enums.TranslationProtection
 import io.tolgee.model.enums.TranslationState
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.model.translation.Translation
+import io.tolgee.service.aiReview.AiReviewEligibleText
 import io.tolgee.service.aiReview.AiReviewManaged
 import io.tolgee.service.aiReview.AiReviewQueued
 import io.tolgee.service.aiReview.AiReviewTextHash
@@ -17,13 +18,10 @@ object AiReviewEligibility {
   ): Boolean {
     if (translation.language.id == baseLanguageId) return false
     if (isTrashed(translation)) return false
-    if (translation.text.isNullOrBlank()) return false
-    if (translation.state == TranslationState.DISABLED) return false
-    if (translation.outdated) return false
+    if (!AiReviewEligibleText.of(translation)) return false
     return isRequeuedHumanDecision(review) || !isHumanReviewed(translation, review)
   }
 
-  /** A manual run with the re-review option queues human decisions; only then they run again. */
   fun isRequeuedHumanDecision(review: TranslationAiReview?): Boolean =
     review != null && review.status in HUMAN_DECISIONS && review.reReviewRequested
 
@@ -35,7 +33,6 @@ object AiReviewEligibility {
     review: TranslationAiReview?,
   ): Boolean = translation.state == TranslationState.REVIEWED && !isAiManagedReview(translation, review)
 
-  /** See docs/ai-review/README.md 3.3 "AI-managed review". */
   fun isAiManagedReview(
     translation: Translation,
     review: TranslationAiReview?,

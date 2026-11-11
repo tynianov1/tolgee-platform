@@ -7,6 +7,7 @@ import io.tolgee.constants.Feature
 import io.tolgee.constants.Message
 import io.tolgee.ee.component.PublicEnabledFeaturesProvider
 import io.tolgee.ee.development.AiReviewTestData
+import io.tolgee.ee.service.aiReview.AiReviewActionService
 import io.tolgee.ee.service.aiReview.AiReviewDemotionServiceEeImpl
 import io.tolgee.ee.service.aiReview.AiReviewEligibility
 import io.tolgee.fixtures.andAssertThatJson
@@ -50,6 +51,9 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   @Autowired
   private lateinit var demotionService: AiReviewDemotionServiceEeImpl
 
+  @Autowired
+  private lateinit var aiReviewActionService: AiReviewActionService
+
   lateinit var testData: AiReviewTestData
   lateinit var reviewer: UserAccount
 
@@ -70,20 +74,13 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
       model = "gpt-test"
     }
     reviewer =
-      testData.root
-        .addUserAccount { username = "ai_review_state_editor" }
-        .self
-    testData.projectBuilder.addPermission {
-      user = reviewer
-      type = null
-      scopes =
-        arrayOf(
-          Scope.KEYS_VIEW,
-          Scope.TRANSLATIONS_VIEW,
-          Scope.TRANSLATIONS_EDIT,
-          Scope.TRANSLATIONS_STATE_EDIT,
-        )
-    }
+      testData.addUserWithScopes(
+        "ai_review_state_editor",
+        Scope.KEYS_VIEW,
+        Scope.TRANSLATIONS_VIEW,
+        Scope.TRANSLATIONS_EDIT,
+        Scope.TRANSLATIONS_STATE_EDIT,
+      )
   }
 
   @AfterEach
@@ -100,14 +97,15 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
 
   @Test
   fun `un-review with the set-state endpoint marks OVERRIDDEN and resolves the row`() {
+    testData.deTranslationBuilder.data.aiReviews
+      .single()
+      .self
+      .apply {
+        lastFailureReason = AiReviewFailureReason.PROVIDER_ERROR
+        lastFailedAt = currentDateProvider.date
+        reReviewRequested = true
+      }
     save()
-    executeInNewTransaction(platformTransactionManager) {
-      val row = translationAiReviewRepository.findByTranslationId(testData.deTranslation.id)!!
-      row.lastFailureReason = AiReviewFailureReason.PROVIDER_ERROR
-      row.lastFailedAt = currentDateProvider.date
-      row.reReviewRequested = true
-      translationAiReviewRepository.save(row)
-    }
     performAuthPut(
       "$projectUrl/translations/${testData.deTranslation.id}/set-state/TRANSLATED",
       null,
@@ -206,6 +204,21 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `a machine overwrite that un-reviews an AI approval deletes the row instead of overriding`() {
+    save()
+
+    aiReviewActionService.settleHumanUnReview(
+      projectId = testData.project.id,
+      translationIds = listOf(testData.deTranslation.id),
+      textChangedIds = setOf(testData.deTranslation.id),
+      resolvedById = testData.user.id,
+      aiReviewOn = true,
+    )
+
+    review(testData.deTranslation.id).assert.isNull()
+  }
+
+  @Test
   fun `a bulk un-review without the feature deletes a FAILED marker`() {
     testData.frTranslation.state = TranslationState.REVIEWED
     testData.frTranslation.auto = true
@@ -221,29 +234,9 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `the batch state operation marks OVERRIDDEN and keeps flags as today`() {
+  fun `a batch un-review overrides an AI approval and keeps the machine-translated flag`() {
     save()
-    val job =
-      executeInNewTransaction(platformTransactionManager) {
-        batchJobService.startJob(
-          request =
-            SetTranslationsStateStateRequest().apply {
-              keyIds = listOf(testData.key.id)
-              languageIds = listOf(testData.german.id)
-              state = TranslationState.TRANSLATED
-            },
-          project = entityManager.getReference(Project::class.java, testData.project.id),
-          author = entityManager.getReference(UserAccount::class.java, testData.user.id),
-          type = BatchJobType.SET_TRANSLATIONS_STATE,
-          isHidden = false,
-        )
-      }
-    waitForNotThrowing(pollTime = 100, timeout = 30_000) {
-      batchJobService
-        .getJobDtoNoCache(job.id)
-        .status.assert
-        .isEqualTo(BatchJobStatus.SUCCESS)
-    }
+    bulkSetState(testData.german.id, TranslationState.TRANSLATED)
 
     waitForNotThrowing(pollTime = 100, timeout = 10_000) {
       review(testData.deTranslation.id)?.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
@@ -305,16 +298,21 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
     save()
   }
 
-  private fun bulkReviewFrench() = bulkSetFrenchState(TranslationState.REVIEWED)
+  private fun bulkReviewFrench() = bulkSetState(testData.french.id, TranslationState.REVIEWED)
 
-  private fun bulkSetFrenchState(state: TranslationState) {
+  private fun bulkSetFrenchState(state: TranslationState) = bulkSetState(testData.french.id, state)
+
+  private fun bulkSetState(
+    languageId: Long,
+    state: TranslationState,
+  ) {
     val job =
       executeInNewTransaction(platformTransactionManager) {
         batchJobService.startJob(
           request =
             SetTranslationsStateStateRequest().apply {
               keyIds = listOf(testData.key.id)
-              languageIds = listOf(testData.french.id)
+              languageIds = listOf(languageId)
               this.state = state
             },
           project = entityManager.getReference(Project::class.java, testData.project.id),

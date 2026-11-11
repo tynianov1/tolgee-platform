@@ -8,6 +8,7 @@ import {
 } from '@untitled-ui/icons-react';
 
 import { components } from 'tg.service/apiSchema.generated';
+import { isScoreOnlyStatus } from 'tg.ee.module/aiReview/translations/aiReviewVisibility';
 
 type AiReviewSummary = components['schemas']['TranslationAiReviewSummaryModel'];
 
@@ -57,15 +58,12 @@ type Props = {
 export const AiReviewBadge = ({ aiReview }: Props) => {
   const { status, score, lastFailed } = aiReview;
 
+  const scoreOnlyRun = isScoreOnlyStatus(status);
   const look = clsx({
     green: status === 'APPROVED',
     orange: status === 'BELOW_THRESHOLD',
-    grey:
-      status === 'FAILED' ||
-      status === 'OVERRIDDEN' ||
-      status === 'SCORE_ONLY_PASS' ||
-      status === 'SCORE_ONLY_FAIL',
-    scoreOnlyRun: status === 'SCORE_ONLY_PASS' || status === 'SCORE_ONLY_FAIL',
+    grey: status === 'FAILED' || status === 'OVERRIDDEN' || scoreOnlyRun,
+    scoreOnlyRun,
   });
 
   return (

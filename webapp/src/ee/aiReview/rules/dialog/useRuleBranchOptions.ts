@@ -2,7 +2,7 @@ import { useProject } from 'tg.hooks/useProject';
 import { useApiQuery } from 'tg.service/http/useQueryApi';
 import { useIsBranchingEnabled } from 'tg.component/branching/useIsBranchingEnabled';
 
-export const useRuleScopeOptions = () => {
+export const useRuleBranchOptions = () => {
   const project = useProject();
   const isBranchingEnabled = useIsBranchingEnabled();
 

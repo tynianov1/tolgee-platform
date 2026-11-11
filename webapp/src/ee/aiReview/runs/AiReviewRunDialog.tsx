@@ -12,14 +12,16 @@ import {
 import { useTranslate } from '@tolgee/react';
 
 import { components } from 'tg.service/apiSchema.generated';
+import {
+  SkipReason,
+  useAiReviewSkipReasonLabel,
+} from 'tg.ee.module/aiReview/runs/useAiReviewSkipReasonLabel';
 import { BoxLoading } from 'tg.component/common/BoxLoading';
 import LoadingButton from 'tg.component/common/form/LoadingButton';
 import { useAiReviewRun } from 'tg.ee.module/aiReview/runs/useAiReviewRun';
 
 type AiReviewRunRequest = components['schemas']['AiReviewRunRequest'];
 type BatchJobModel = components['schemas']['BatchJobModel'];
-type SkipReason =
-  keyof components['schemas']['AiReviewRunPreviewModel']['skipped'];
 
 export type AiReviewRunVariant = 'review' | 'score' | 'retry';
 
@@ -43,6 +45,7 @@ export const AiReviewRunDialog = ({
   onStarted,
 }: Props) => {
   const { t } = useTranslate();
+  const { skipReasonLabel } = useAiReviewSkipReasonLabel();
   const { preview, start, projectId } = useAiReviewRun();
 
   const variantConfig = {
@@ -109,66 +112,6 @@ export const AiReviewRunDialog = ({
     ([, count]) => Number(count) > 0
   );
 
-  function skipReasonLabel(reason: SkipReason, count: number) {
-    const params = { count };
-    switch (reason) {
-      case 'ALREADY_HAS_RESULT':
-        return t(
-          'ai_review_run_skip_already_has_result',
-          'Already has a result: {count}',
-          params
-        );
-      case 'ALREADY_QUEUED':
-        return t(
-          'ai_review_run_skip_already_queued',
-          'Already queued: {count}',
-          params
-        );
-      case 'OVERRIDDEN':
-        return t(
-          'ai_review_run_skip_overridden',
-          'Overridden by a human: {count}',
-          params
-        );
-      case 'HUMAN_REVIEWED':
-        return t(
-          'ai_review_run_skip_human_reviewed',
-          'Reviewed by a human: {count}',
-          params
-        );
-      case 'NO_RULE':
-        return t(
-          'ai_review_run_skip_no_rule',
-          'No rule applies: {count}',
-          params
-        );
-      case 'NEVER':
-        return t(
-          'ai_review_run_skip_never',
-          'The rule says Never: {count}',
-          params
-        );
-      case 'OPEN_QA_ISSUES':
-        return t(
-          'ai_review_run_skip_open_qa_issues',
-          'Open QA issues: {count}',
-          params
-        );
-      case 'OUTDATED':
-        return t('ai_review_run_skip_outdated', 'Outdated: {count}', params);
-      case 'EMPTY':
-        return t('ai_review_run_skip_empty', 'Empty: {count}', params);
-      case 'NO_PERMISSION':
-        return t(
-          'ai_review_run_skip_no_permission',
-          'No permission: {count}',
-          params
-        );
-      default:
-        return `${reason}: ${count}`;
-    }
-  }
-
   function handleStart() {
     start.mutate(
       {
@@ -207,11 +150,11 @@ export const AiReviewRunDialog = ({
               <Typography
                 variant="body2"
                 color="textSecondary"
-                data-cy="ai-review-run-includes-resolved"
+                data-cy="ai-review-run-includes-overridden"
               >
                 {t(
                   'ai_review_run_includes_overridden',
-                  '{count, plural, one {Includes # translation a human overridden.} other {Includes # translations a human overridden.}}',
+                  '{count, plural, one {Includes # translation overridden by a human.} other {Includes # translations overridden by a human.}}',
                   { count: overriddenToReReview }
                 )}
               </Typography>
@@ -247,7 +190,8 @@ export const AiReviewRunDialog = ({
               <Alert severity="warning" data-cy="ai-review-run-warning">
                 {t(
                   'ai_review_run_warning_large',
-                  'You are about to review more than 1,000 translations.'
+                  'You are about to review more than {limit, number} translations.',
+                  { limit: WARNING_LIMIT }
                 )}
               </Alert>
             )}

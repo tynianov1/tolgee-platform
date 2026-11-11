@@ -53,7 +53,7 @@ export const TranslationFiltersPopup = ({
   const { t } = useTranslate();
   const project = useProject();
   const { isEnabled } = useEnabledFeatures();
-  const aiReviewEnabled = useAiReviewActive();
+  const aiReviewActive = useAiReviewActive();
   const tasksEnabled = isEnabled('TASKS') || isEnabled('ORDER_TRANSLATION');
   const tasksFilterAvailable =
     tasksEnabled || Boolean(getTaskFiltersLength(value));
@@ -119,7 +119,7 @@ export const TranslationFiltersPopup = ({
                 selectedLanguages={selectedLanguages}
               />
             )}
-            {(aiReviewEnabled || Boolean(getAiReviewFiltersLength(value))) && (
+            {(aiReviewActive || Boolean(getAiReviewFiltersLength(value))) && (
               <SubfilterAiReview
                 value={value}
                 actions={actions}

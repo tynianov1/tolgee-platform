@@ -1,9 +1,9 @@
 import { useProject } from 'tg.hooks/useProject';
 
-import { useAiReviewEnabled } from 'tg.ee.module/aiReview/hooks/useAiReviewEnabled';
+import { useAiReviewFeatureEnabled } from 'tg.ee.module/aiReview/hooks/useAiReviewFeatureEnabled';
 
 export const useAiReviewActive = () => {
   const project = useProject();
-  const aiReviewEnabled = useAiReviewEnabled();
-  return aiReviewEnabled && project.useAiReview;
+  const aiReviewFeatureEnabled = useAiReviewFeatureEnabled();
+  return aiReviewFeatureEnabled && project.useAiReview;
 };

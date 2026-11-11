@@ -89,14 +89,21 @@ class AiReviewRunService(
         isHidden = false,
       )
     val (withRow, withoutRow) = classified.toReview.partition { it.hasRow }
-    withRow.map { it.translationId }.chunked(CHUNK).forEach { chunk ->
-      reviewRepository.findAllByTranslationIdIn(chunk).forEach { row ->
-        row.reReviewRequested = true
-        row.manualRunBatchJobId = job.id
-      }
-    }
+    requestReReview(withRow.map { it.translationId }, job.id)
     queueService.queueAndClearContext(withoutRow.map { it.translationId }, manualRunBatchJobId = job.id)
     return entityManager.find(BatchJob::class.java, job.id)
+  }
+
+  private fun requestReReview(
+    translationIds: List<Long>,
+    jobId: Long,
+  ) {
+    translationIds.chunked(CHUNK).forEach { chunk ->
+      reviewRepository.findAllByTranslationIdIn(chunk).forEach { row ->
+        row.reReviewRequested = true
+        row.manualRunBatchJobId = jobId
+      }
+    }
   }
 
   /**
@@ -194,10 +201,9 @@ class AiReviewRunService(
       if (decision is RuleDecision.Never) return CandidateResult.Skipped(AiReviewSkipReason.NEVER)
       if (decision !is RuleDecision.Review) return CandidateResult.Skipped(AiReviewSkipReason.NO_RULE)
       val reason =
-        rowSkipReason(row) ?: qaSkipReason(decision, translation, openQaIssueIds) ?: permissionSkipReason(
-          decision,
-          translation,
-        )
+        rowSkipReason(row)
+          ?: qaSkipReason(decision, translation, openQaIssueIds)
+          ?: permissionSkipReason(decision, translation)
       if (reason != null) return CandidateResult.Skipped(reason)
 
       return CandidateResult.Review(
@@ -225,9 +231,7 @@ class AiReviewRunService(
 
     private fun rowSkipReason(row: TranslationAiReview?): AiReviewSkipReason? {
       if (row == null) return null
-      if (!request.reReview) {
-        if (row.status == AiReviewStatus.OVERRIDDEN) return AiReviewSkipReason.OVERRIDDEN
-      }
+      if (!request.reReview && row.status == AiReviewStatus.OVERRIDDEN) return AiReviewSkipReason.OVERRIDDEN
       if (AiReviewEligibility.isQueued(row)) return AiReviewSkipReason.ALREADY_QUEUED
       val hasResult = row.status in RESULT_STATUSES
       val reRun = request.reReview || (request.failedOnly && row.lastFailureReason != null)

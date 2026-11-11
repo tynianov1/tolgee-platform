@@ -19,7 +19,7 @@ import {
   useTranslationsSelector,
 } from 'tg.views/projects/translations/context/TranslationsContext';
 import { BasicPromptOption } from './TabBasic';
-import { PromptType } from './PromptTypeToggle';
+import { PromptType } from 'tg.ee.module/llm/AiPrompt/PromptTypeToggle';
 import { AI_PLAYGROUND_TAG } from './PreviewDatasetDialog';
 import { DOCS_ROOT } from 'tg.constants/docLinks';
 

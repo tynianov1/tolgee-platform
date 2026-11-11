@@ -7,10 +7,8 @@ import org.apache.commons.codec.digest.DigestUtils.sha256Hex
 
 /** The Kotlin, native SQL and Criteria forms must give the same hash, or rows silently stop matching. */
 object AiReviewTextHash {
-  /** Needs the alias `t` for the translation table. */
   const val CURRENT_TEXT_SQL = "encode(sha256(convert_to(coalesce(t.text, ''), 'UTF8')), 'hex')"
 
-  /** Needs the alias `t` for Translation. */
   const val CURRENT_TEXT_JPQL =
     "function('encode', function('sha256', function('convert_to', coalesce(t.text, ''), 'UTF8')), 'hex')"
 

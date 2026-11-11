@@ -9,12 +9,12 @@ import {
   AiContextData,
   AiPromptsList,
   AiReviewRulesView,
-  useAiReviewEnabled,
+  useAiReviewFeatureEnabled,
 } from 'tg.ee';
 
 export const useAiViewItems = () => {
   const { t } = useTranslate();
-  const aiReviewEnabled = useAiReviewEnabled();
+  const aiReviewFeatureEnabled = useAiReviewFeatureEnabled();
   const { satisfiesPermission } = useProjectPermissions();
 
   const items: AiViewItem[] = [
@@ -46,7 +46,7 @@ export const useAiViewItems = () => {
         label: t('ai_menu_review', 'AI review'),
         dataCy: 'ai-menu-review',
         condition: ({ satisfiesPermission }) =>
-          aiReviewEnabled && satisfiesPermission('prompts.view'),
+          aiReviewFeatureEnabled && satisfiesPermission('prompts.view'),
       },
       link: LINKS.PROJECT_AI_REVIEW,
       requireExactMatch: true,

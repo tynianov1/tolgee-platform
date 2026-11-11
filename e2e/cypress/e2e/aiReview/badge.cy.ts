@@ -33,7 +33,7 @@ describe('AI review badge', () => {
     });
   }
 
-  it('shows a badge per status and none for human-resolved or pending rows', () => {
+  it('shows a badge per status and none for a pending row', () => {
     const badges: [string, string][] = [
       ['key_approved', 'APPROVED'],
       ['key_below_threshold', 'BELOW_THRESHOLD'],
@@ -45,17 +45,18 @@ describe('AI review badge', () => {
       visitKey(key);
       new E2AiReviewBadge(key).assertVisible(status);
     });
-    ['key_pending'].forEach((key) => {
-      visitKey(key);
-      new E2AiReviewBadge(key).assertAbsent();
-    });
+    visitKey('key_pending');
+    new E2AiReviewBadge('key_pending').assertAbsent();
   });
 
   it('an overridden row shows a hover chip and the popover names the human', () => {
-    visitKey('key_overridden');
-    new E2AiReviewBadge('key_overridden').openPopover('OVERRIDDEN', {
-      force: true,
-    });
+    visitKey('key_overridden_after_failed_rereview');
+    new E2AiReviewBadge('key_overridden_after_failed_rereview').openPopover(
+      'OVERRIDDEN',
+      {
+        force: true,
+      }
+    );
     gcy('ai-review-popover-status').should('be.visible');
     gcy('ai-review-popover-resolved')
       .should('be.visible')
@@ -81,12 +82,8 @@ describe('AI review badge', () => {
 
   it('shows the warning mark and previous-result note for a failed re-review', () => {
     visitKey('key_last_failed');
-    getTranslationCell('key_last_failed', 'de').within(() => {
-      gcyAdvanced({
-        value: 'ai-review-badge',
-        status: 'APPROVED',
-        'last-failed': 'true',
-      }).should('be.visible');
+    new E2AiReviewBadge('key_last_failed').assertVisible('APPROVED', {
+      lastFailed: true,
     });
     new E2AiReviewBadge('key_last_failed').openPopover('APPROVED');
     gcy('ai-review-popover-re-review-failed').should('be.visible');
@@ -134,11 +131,8 @@ describe('AI review badge', () => {
     new E2AiReviewBadge('key_failed').openPopover('FAILED');
     gcy('ai-review-popover-failure-reason').should('be.visible');
     gcy('ai-review-popover-retry').click();
-    getTranslationCell('key_failed', 'de').within(() => {
-      gcyAdvanced(
-        { value: 'ai-review-badge', status: 'APPROVED' },
-        { timeout: 60_000 }
-      ).should('be.visible');
+    new E2AiReviewBadge('key_failed').assertVisible('APPROVED', {
+      timeout: 60_000,
     });
   });
 
@@ -149,11 +143,7 @@ describe('AI review badge', () => {
       .trigger('mouseover')
       .findDcy('translation-state-button')
       .click();
-    getTranslationCell('key_approved', 'de').within(() => {
-      gcyAdvanced({ value: 'ai-review-badge', status: 'OVERRIDDEN' }).should(
-        'exist'
-      );
-    });
+    new E2AiReviewBadge('key_approved').assertExists('OVERRIDDEN');
     getTranslationCell('key_approved', 'de')
       .closestDcy('translations-table-cell-translation')
       .findDcy('translations-state-indicator')
@@ -171,11 +161,8 @@ describe('AI review badge', () => {
     visitKey('key_below_threshold');
     new E2AiReviewBadge('key_below_threshold').assertVisible('BELOW_THRESHOLD');
     editCell('Deutsch für key_below_threshold', 'Neuer Text');
-    getTranslationCell('key_below_threshold', 'de').within(() => {
-      gcyAdvanced(
-        { value: 'ai-review-badge', status: 'APPROVED' },
-        { timeout: 30_000 }
-      ).should('be.visible');
+    new E2AiReviewBadge('key_below_threshold').assertVisible('APPROVED', {
+      timeout: 30_000,
     });
   });
 });

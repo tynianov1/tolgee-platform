@@ -40,8 +40,9 @@ describe('AI review batch operation', () => {
 
   it('preview shows counts and skip reasons', () => {
     visit();
-    view.openAiReviewRunDialog().assertVariant('review');
-    gcy('ai-review-run-to-review').should('be.visible');
+    const runDialog = view.openAiReviewRunDialog();
+    runDialog.assertVariant('review');
+    runDialog.getToReview().should('be.visible');
     gcyAdvanced({
       value: 'ai-review-run-skip-reason',
       reason: 'ALREADY_HAS_RESULT',
@@ -75,16 +76,18 @@ describe('AI review batch operation', () => {
   it('re-review checkbox changes the counts', () => {
     visit();
     const runDialog = view.openAiReviewRunDialog();
-    gcy('ai-review-run-to-review')
+    runDialog
+      .getToReview()
       .invoke('attr', 'data-cy-count')
       .then((withoutReReview) => {
         runDialog.cancel();
         gcy('ai-review-batch-re-review').click();
         gcy('batch-operations-submit-button').click();
-        gcy('ai-review-run-to-review')
+        runDialog
+          .getToReview()
           .invoke('attr', 'data-cy-count')
           .should('not.eq', withoutReReview);
-        gcy('ai-review-run-includes-resolved').should('be.visible');
+        gcy('ai-review-run-includes-overridden').should('be.visible');
       });
   });
 

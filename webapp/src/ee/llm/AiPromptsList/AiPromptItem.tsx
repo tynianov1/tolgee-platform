@@ -12,7 +12,7 @@ import { messageService } from 'tg.service/MessageService';
 import { PromptRename } from '../AiPrompt/PromptRename';
 import { useProjectPermissions } from 'tg.hooks/useProjectPermissions';
 import { SecondaryChip } from 'tg.component/common/chips/SecondaryChip';
-import { useAiReviewEnabled } from 'tg.ee.module/aiReview/hooks/useAiReviewEnabled';
+import { useAiReviewFeatureEnabled } from 'tg.ee.module/aiReview/hooks/useAiReviewFeatureEnabled';
 
 type PromptModel = components['schemas']['PromptModel'];
 
@@ -62,7 +62,7 @@ export const AiPromptItem = ({ prompt }: Props) => {
   const { t } = useTranslate();
   const history = useHistory();
   const { satisfiesPermission } = useProjectPermissions();
-  const aiReviewEnabled = useAiReviewEnabled();
+  const aiReviewFeatureEnabled = useAiReviewFeatureEnabled();
 
   const deleteLoadable = useApiMutation({
     url: '/v2/projects/{projectId}/prompts/{promptId}',
@@ -132,7 +132,7 @@ export const AiPromptItem = ({ prompt }: Props) => {
             data-cy="ai-prompt-review-chip"
           />
         )}
-        {aiReviewEnabled && prompt.type === 'TRANSLATE' && (
+        {aiReviewFeatureEnabled && prompt.type === 'TRANSLATE' && (
           <SecondaryChip
             size="small"
             label={t('ai_prompts_translate_chip', 'Translate')}

@@ -132,11 +132,7 @@ class PromptServiceEeImpl(
     val prompt = findPrompt(projectId, promptId)
     if (dto.type != prompt.type) throw BadRequestException(Message.PROMPT_TYPE_CANNOT_BE_CHANGED)
     val reviewCriteria = dto.reviewCriteria.takeIf { prompt.type == PromptType.REVIEW }
-    val outputChanges =
-      prompt.template != dto.template ||
-        prompt.providerName != dto.providerName ||
-        prompt.basicPromptOptions?.toList() != dto.basicPromptOptions ||
-        prompt.reviewCriteria != reviewCriteria
+    val outputChanges = changesOutput(prompt, dto, reviewCriteria)
     prompt.name = dto.name
     prompt.template = dto.template
     prompt.providerName = dto.providerName
@@ -145,10 +141,20 @@ class PromptServiceEeImpl(
     if (outputChanges) prompt.revision += 1
     promptRepository.save(prompt)
     if (outputChanges && prompt.type == PromptType.REVIEW) {
-      aiReviewRuleService.switchRulesUsingPromptToScoreOnlyRun(projectId, prompt.id)
+      aiReviewRuleService.switchRulesUsingPromptToScoreOnly(projectId, prompt.id)
     }
     return withResolvedProviderName(prompt)
   }
+
+  private fun changesOutput(
+    prompt: Prompt,
+    dto: PromptDto,
+    reviewCriteria: String?,
+  ): Boolean =
+    prompt.template != dto.template ||
+      prompt.providerName != dto.providerName ||
+      prompt.basicPromptOptions?.toList() != dto.basicPromptOptions ||
+      prompt.reviewCriteria != reviewCriteria
 
   fun deletePrompt(
     projectId: Long,
@@ -157,7 +163,7 @@ class PromptServiceEeImpl(
     val prompt = this.findPrompt(projectId, promptId)
     val project = projectService.get(projectId)
     mtServiceConfigService.removePrompt(project, prompt.id)
-    if (prompt.type == PromptType.REVIEW) aiReviewRuleService.detachPromptAndSwitchToScoreOnlyRun(projectId, prompt.id)
+    if (prompt.type == PromptType.REVIEW) aiReviewRuleService.detachPromptAndSwitchToScoreOnly(projectId, prompt.id)
     promptRepository.delete(prompt)
   }
 

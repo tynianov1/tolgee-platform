@@ -19,7 +19,7 @@ const StyledScopeLine = styled(Typography)`
 
 const StyledFlag = styled(FlagImage)`
   display: block;
-  border-radius: 2px;
+  border-radius: ${({ theme }) => theme.shape.borderRadius / 2}px;
 `;
 
 type AiReviewRuleModel = components['schemas']['AiReviewRuleModel'];

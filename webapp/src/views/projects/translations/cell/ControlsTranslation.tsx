@@ -20,7 +20,7 @@ import {
   AiReviewCellButton,
   getAiReviewCellVisibility,
   QaBadge,
-  useAiReviewEnabled,
+  useAiReviewFeatureEnabled,
   useQaChecksEnabled,
 } from 'tg.ee';
 
@@ -113,9 +113,9 @@ export const ControlsTranslation: React.FC<
 
   const translateTransition = useTaskTransitionTranslation();
   const qaChecksEnabled = useQaChecksEnabled();
-  const aiReviewEnabled = useAiReviewEnabled();
+  const aiReviewFeatureEnabled = useAiReviewFeatureEnabled();
   const aiReviewVisibility =
-    aiReviewEnabled && translationId !== undefined
+    aiReviewFeatureEnabled && translationId !== undefined
       ? getAiReviewCellVisibility(aiReview)
       : 'none';
   const displayAiReview = aiReviewVisibility !== 'none';

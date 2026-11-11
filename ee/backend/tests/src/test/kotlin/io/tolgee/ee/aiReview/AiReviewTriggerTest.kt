@@ -327,9 +327,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
 
     editTranslation("de", "Gleich zahlen")
 
-    waitForNotThrowing(pollTime = 100, timeout = 10_000) {
-      review(testData.deTranslation.id)?.status.assert.isNotEqualTo(AiReviewStatus.APPROVED)
-    }
+    waitForApproved(testData.deTranslation.id, "Gleich zahlen")
   }
 
   @Test

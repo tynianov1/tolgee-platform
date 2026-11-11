@@ -7,15 +7,10 @@ import { useProject } from 'tg.hooks/useProject';
 
 type Props = {
   translationId: number;
-  showRetry: boolean;
   onClose: () => void;
 };
 
-export const AiReviewPopoverActions = ({
-  translationId,
-  showRetry,
-  onClose,
-}: Props) => {
+export const AiReviewRetryButton = ({ translationId, onClose }: Props) => {
   const { t } = useTranslate();
   const project = useProject();
 
@@ -25,10 +20,6 @@ export const AiReviewPopoverActions = ({
   });
 
   const path = { projectId: project.id, translationId };
-
-  if (!showRetry) {
-    return null;
-  }
 
   return (
     <Box display="flex" justifyContent="end" gap={1}>

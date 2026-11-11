@@ -5,7 +5,7 @@ import { useApiMutation, useApiQuery } from 'tg.service/http/useQueryApi';
 import { useOpenedPrompt } from './useOpenedPrompt';
 import { useProject } from 'tg.hooks/useProject';
 import { PromptItem } from './PromptLoadMenu';
-import { PromptType } from './PromptTypeToggle';
+import { PromptType } from 'tg.ee.module/llm/AiPrompt/PromptTypeToggle';
 import { usePreventPageLeave } from 'tg.hooks/usePreventPageLeave';
 import { confirmation } from 'tg.hooks/confirmation';
 import { T } from '@tolgee/react';

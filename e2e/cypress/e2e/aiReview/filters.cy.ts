@@ -73,10 +73,7 @@ describe('AI review filters', () => {
     view.openAiReviewFilter();
     view.toggleAiReviewOutcome('NOT_REVIEWED_YET');
     view.applyFilterForExpand();
-    gcyAdvanced({
-      value: 'translations-filter-apply-for-language',
-      language: 'de',
-    }).click();
+    view.applyAiReviewFilterForLanguage('de');
     waitForGlobalLoading();
     view.getTranslationCell('key_not_reviewed', 'de').should('exist');
     view.getTranslationCell('key_untagged', 'de').should('not.exist');
@@ -102,17 +99,11 @@ describe('AI review filters', () => {
     view.getTranslationCell('key_below_threshold', 'de').should('exist');
 
     view.applyFilterForExpand();
-    gcyAdvanced({
-      value: 'translations-filter-apply-for-language',
-      language: 'fr',
-    }).click();
+    view.applyAiReviewFilterForLanguage('fr');
     waitForGlobalLoading();
     view.getTranslationCell('key_below_threshold', 'de').should('not.exist');
 
-    gcyAdvanced({
-      value: 'translations-filter-apply-for-language',
-      language: 'de',
-    }).click();
+    view.applyAiReviewFilterForLanguage('de');
     waitForGlobalLoading();
     view.getTranslationCell('key_below_threshold', 'de').should('exist');
   });

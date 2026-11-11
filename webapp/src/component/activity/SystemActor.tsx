@@ -106,14 +106,20 @@ const AiReviewerLabel = ({ authorName, dataCySpans }: AiReviewerLabelProps) => {
   if (!authorName) {
     const label = t('activity_system_actor_ai_reviewer', 'AI reviewer');
     if (dataCySpans) {
-      return <span data-cy="activity-system-actor">{label}</span>;
+      return (
+        <span data-cy="activity-system-actor" data-cy-started-by="false">
+          {label}
+        </span>
+      );
     }
     return <span>{label}</span>;
   }
 
   const params = dataCySpans
     ? {
-        actor: <span data-cy="activity-system-actor" />,
+        actor: (
+          <span data-cy="activity-system-actor" data-cy-started-by="true" />
+        ),
         startedby: <span data-cy="activity-started-by" />,
         name: authorName,
       }

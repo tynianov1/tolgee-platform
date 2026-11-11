@@ -8,7 +8,7 @@ import {
   QaIssuesUpdatedData,
 } from 'tg.websocket-client/WebsocketClient';
 import { useGlobalContext } from 'tg.globalContext/GlobalContext';
-import { useAiReviewEnabled, useQaChecksEnabled } from 'tg.ee';
+import { useAiReviewFeatureEnabled, useQaChecksEnabled } from 'tg.ee';
 import { useDebouncedCallback } from 'use-debounce';
 
 export const useWebsocketService = (
@@ -18,7 +18,7 @@ export const useWebsocketService = (
   const project = useProject();
   const client = useGlobalContext((c) => c.wsClient.client);
   const qaChecksEnabled = useQaChecksEnabled();
-  const aiReviewEnabled = useAiReviewEnabled();
+  const aiReviewFeatureEnabled = useAiReviewFeatureEnabled();
 
   function updateTranslations(event: TranslationsModifiedData) {
     const translationUpdates = event.data?.translations?.map((translation) => ({
@@ -161,7 +161,7 @@ export const useWebsocketService = (
   }, [project, client, qaChecksEnabled]);
 
   useEffect(() => {
-    if (client && aiReviewEnabled) {
+    if (client && aiReviewFeatureEnabled) {
       return client.subscribe(
         `/projects/${project.id}/ai-review-updated`,
         (event) => {
@@ -170,7 +170,7 @@ export const useWebsocketService = (
         }
       );
     }
-  }, [project, client, aiReviewEnabled]);
+  }, [project, client, aiReviewFeatureEnabled]);
 
   return {
     setEventBlockers,

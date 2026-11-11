@@ -7,7 +7,6 @@ import io.tolgee.model.translation.Translation
 
 /** See docs/ai-review/README.md 3.3 "AI-managed review". */
 object AiReviewManaged {
-  /** Needs the alias `r` for TranslationAiReview and `t` for its Translation. */
   const val JPQL =
     "(t.state = io.tolgee.model.enums.TranslationState.REVIEWED and (" +
       "(r.status in (io.tolgee.model.enums.aiReview.AiReviewStatus.APPROVED," +
@@ -28,7 +27,7 @@ object AiReviewManaged {
   ): Boolean {
     if (isAiApproval(translation, review)) return true
     if (translation.state != TranslationState.REVIEWED || review == null) return false
-    if (review.status == AiReviewStatus.BELOW_THRESHOLD && review.textHash == AiReviewTextHash.of(translation)) {
+    if (review.status == AiReviewStatus.BELOW_THRESHOLD && isForCurrentText(translation, review)) {
       return true
     }
     return translation.auto && keepsAiManaged(review)
@@ -42,6 +41,11 @@ object AiReviewManaged {
   ): Boolean {
     if (translation.state != TranslationState.REVIEWED) return false
     if (review == null || review.status != AiReviewStatus.APPROVED) return false
-    return review.textHash == AiReviewTextHash.of(translation)
+    return isForCurrentText(translation, review)
   }
+
+  private fun isForCurrentText(
+    translation: Translation,
+    review: TranslationAiReview,
+  ): Boolean = review.textHash == AiReviewTextHash.of(translation)
 }

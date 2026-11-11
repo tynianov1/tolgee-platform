@@ -52,31 +52,35 @@ class AiReviewQueueService(
   ) {
     if (translationIds.isEmpty()) return
     if (aiReviewProject(projectId) == null) {
-      deleteRowsAndPublish(projectId, translationIds)
+      clearRowsKeepingAiManagedMarkers(projectId, translationIds)
       return
     }
     val projectRules = evaluator.forProject(projectId)
     if (projectRules.rules.isEmpty()) {
-      deleteRowsAndPublish(projectId, translationIds)
+      clearRowsKeepingAiManagedMarkers(projectId, translationIds)
       return
     }
     val baseLanguageId = languageService.getProjectBaseLanguage(projectId).id
 
-    val updates = mutableListOf<AiReviewUpdate>()
-    val queuedIds =
-      translationIds.chunked(IN_CLAUSE_CHUNK).flatMap { chunk ->
-        requeueChunk(chunk, projectRules, baseLanguageId, updates)
+    val chunks =
+      translationIds.chunked(IN_CLAUSE_CHUNK).map { chunk ->
+        requeueChunk(chunk, projectRules, baseLanguageId)
       }
-    websocketPublisher.publishAfterCommit(projectId, updates)
-    startJobsForReady(projectId, queuedIds)
+    websocketPublisher.publishAfterCommit(projectId, chunks.flatMap { it.updates })
+    startJobsForReady(projectId, chunks.flatMap { it.queuedIds })
   }
+
+  private data class RequeuedChunk(
+    val queuedIds: List<Long>,
+    val updates: List<AiReviewUpdate>,
+  )
 
   private fun requeueChunk(
     chunk: List<Long>,
     projectRules: AiReviewRuleEvaluator.ProjectRules,
     baseLanguageId: Long,
-    updates: MutableList<AiReviewUpdate>,
-  ): List<Long> {
+  ): RequeuedChunk {
+    val updates = mutableListOf<AiReviewUpdate>()
     val oldRows = reviewRepository.findAllByTranslationIdIn(chunk).associateBy { it.translation.id }
     val toQueue = mutableListOf<Translation>()
     val toKeepAiManaged = mutableListOf<Translation>()
@@ -104,7 +108,7 @@ class AiReviewQueueService(
     if (deleted) entityManager.flush()
     insertRows(toQueue, AiReviewStatus.PENDING)
     insertRows(toKeepAiManaged, AiReviewStatus.FAILED)
-    return toQueue.map { it.id }
+    return RequeuedChunk(toQueue.map { it.id }, updates)
   }
 
   private fun newStatus(
@@ -116,7 +120,7 @@ class AiReviewQueueService(
     return null
   }
 
-  private fun deleteRowsAndPublish(
+  private fun clearRowsKeepingAiManagedMarkers(
     projectId: Long,
     translationIds: Collection<Long>,
   ) {
@@ -171,7 +175,7 @@ class AiReviewQueueService(
 
   @Transactional
   fun onBaseLanguageChanged(projectId: Long) {
-    reviewRepository.deleteByProject(projectId, AiReviewEligibility.HUMAN_DECISIONS)
+    reviewRepository.deleteByProjectExceptStatuses(projectId, keptStatuses = AiReviewEligibility.HUMAN_DECISIONS)
   }
 
   // Reads come first, writes after: a lookup between inserts would flush them one by one.
@@ -199,11 +203,8 @@ class AiReviewQueueService(
     return queued
   }
 
-  /**
-   * A user edit and a run start can queue the same translation at the same time. `on conflict do
-   * nothing` keeps the unique translation_id from aborting the caller's transaction; the claim later
-   * points a row with an old hash at the current text.
-   */
+  // on conflict do nothing: a user edit and a run start can insert the same translation_id
+  // concurrently, and the conflict must not abort the caller's transaction.
   private fun insertRows(
     translations: List<Translation>,
     status: AiReviewStatus,
@@ -286,14 +287,7 @@ class AiReviewQueueService(
   ) {
     if (keyIds.isEmpty()) return
     aiReviewProject(projectId) ?: return
-    val projectRef = entityManager.getReference(Project::class.java, projectId)
-    batchJobService.startJob(
-      request = AiReviewDemotionRequest(keyIds = keyIds.toList()),
-      project = projectRef,
-      author = null,
-      type = BatchJobType.AI_REVIEW_DEMOTION,
-      isHidden = true,
-    )
+    startHiddenJob(projectId, AiReviewDemotionRequest(keyIds = keyIds.toList()), BatchJobType.AI_REVIEW_DEMOTION)
   }
 
   @Transactional
@@ -311,12 +305,24 @@ class AiReviewQueueService(
     handlingStuckItems: Boolean,
   ) {
     if (translationIds.isEmpty()) return
+    startHiddenJob(
+      projectId,
+      AiReviewRequest(translationIds = translationIds, handlingStuckItems = handlingStuckItems),
+      BatchJobType.AI_REVIEW,
+    )
+  }
+
+  private fun startHiddenJob(
+    projectId: Long,
+    request: Any,
+    type: BatchJobType,
+  ) {
     val projectRef = entityManager.getReference(Project::class.java, projectId)
     batchJobService.startJob(
-      request = AiReviewRequest(translationIds = translationIds, handlingStuckItems = handlingStuckItems),
+      request = request,
       project = projectRef,
       author = null,
-      type = BatchJobType.AI_REVIEW,
+      type = type,
       isHidden = true,
     )
   }

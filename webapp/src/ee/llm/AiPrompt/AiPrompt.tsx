@@ -2,13 +2,14 @@ import { Box, IconButton, styled, Tab, Tabs } from '@mui/material';
 import { useTranslate } from '@tolgee/react';
 import { Edit01, X } from '@untitled-ui/icons-react';
 
-import { useAiReviewEnabled } from 'tg.ee.module/aiReview/hooks/useAiReviewEnabled';
+import { useAiReviewActive } from 'tg.ee.module/aiReview/hooks/useAiReviewActive';
 
 import { useTranslationsActions } from 'tg.views/projects/translations/context/TranslationsContext';
 import { components } from 'tg.service/apiSchema.generated';
 import { DeletableKeyWithTranslationsModelType } from 'tg.views/projects/translations/context/types';
 
 import { AiResult } from './AiResult';
+import { parsedResultPreview } from 'tg.ee.module/llm/AiPrompt/AiResultParsedViews';
 import { PromptLoadMenu } from './PromptLoadMenu';
 import { PromptPreviewMenu } from './PromptPreviewMenu';
 import { PromptSaveMenu } from './PromptSaveMenu';
@@ -115,7 +116,7 @@ export const AiPrompt: React.FC<React.PropsWithChildren<Props>> = ({
   const isAdminAccess = useIsAdminAccess(project.computedPermission);
   const cellSelected = Boolean(keyData && language);
 
-  const aiReviewEnabled = useAiReviewEnabled() && project.useAiReview;
+  const aiReviewActive = useAiReviewActive();
   const {
     isLoading,
     canBeRenamed,
@@ -149,6 +150,13 @@ export const AiPrompt: React.FC<React.PropsWithChildren<Props>> = ({
   } = usePromptState({
     language,
     keyData,
+  });
+
+  const parsedResult = parsedResultPreview({
+    promptType,
+    runData,
+    isPlural: keyData?.keyIsPlural,
+    locale: language?.tag,
   });
 
   if (isLoading && !openPromptData) {
@@ -204,7 +212,7 @@ export const AiPrompt: React.FC<React.PropsWithChildren<Props>> = ({
               </IconButton>
             </Box>
           </StyledTitle>
-          {aiReviewEnabled && (
+          {aiReviewActive && (
             <PromptTypeToggle
               value={promptType}
               locked={typeLocked}
@@ -259,13 +267,8 @@ export const AiPrompt: React.FC<React.PropsWithChildren<Props>> = ({
           <Box sx={{ margin: '20px', display: 'grid', gap: 1.5 }}>
             <AiResult
               raw={runData?.result}
-              json={runData?.parsedJson as any}
-              isPlural={keyData?.keyIsPlural}
-              locale={language?.tag}
               loading={runIsLoading}
-              promptType={promptType}
-              issues={runData?.issues}
-              score={runData?.score}
+              parsed={parsedResult}
             />
             {usage && <AiResultUsage usage={usage} price={runData?.price} />}
           </Box>

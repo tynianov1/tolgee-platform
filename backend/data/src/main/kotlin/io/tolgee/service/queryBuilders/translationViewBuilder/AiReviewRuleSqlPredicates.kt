@@ -1,10 +1,12 @@
 package io.tolgee.service.queryBuilders.translationViewBuilder
 
 import io.tolgee.model.aiReview.AiReviewRule
+import io.tolgee.model.branching.Branch
 import io.tolgee.model.key.Key
 import io.tolgee.model.key.KeyMeta
 import io.tolgee.model.key.Key_
 import io.tolgee.model.key.Namespace
+import io.tolgee.model.key.Tag
 import io.tolgee.model.translation.Translation
 import io.tolgee.model.translation.Translation_
 import jakarta.persistence.criteria.AbstractQuery
@@ -13,7 +15,6 @@ import jakarta.persistence.criteria.Path
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
 
-/** Null means the feature is off and the AI review filters are ignored. */
 data class AiReviewFilterData(
   val rules: List<AiReviewRule>,
   val branchingEnabled: Boolean,
@@ -29,14 +30,13 @@ class AiReviewRuleSqlPredicates(
 ) {
   companion object {
     private const val WITHOUT_TAGS = ""
+    private const val WITHOUT_NAMESPACE = ""
     private val ESCAPE_CHAR = WildcardLikeUtil.ESCAPE_CHAR
 
     fun coversLanguage(
       rule: AiReviewRule,
       languageId: Long,
     ): Boolean = rule.languages.isEmpty() || rule.languages.any { it.id == languageId }
-
-    fun effectiveNever(rule: AiReviewRule): Boolean = rule.never
   }
 
   fun scopePredicate(
@@ -79,7 +79,7 @@ class AiReviewRuleSqlPredicates(
     if (named.isNotEmpty()) {
       val sub = subquery.subquery(Long::class.java)
       val keyMeta = sub.from(KeyMeta::class.java)
-      val tag = keyMeta.join<KeyMeta, io.tolgee.model.key.Tag>("tags")
+      val tag = keyMeta.join<KeyMeta, Tag>("tags")
       sub.select(cb.literal(1L))
       sub.where(
         cb.equal(keyMeta.get<Key>("key").get<Long>("id"), key.get(Key_.id)),
@@ -90,7 +90,7 @@ class AiReviewRuleSqlPredicates(
     if (WITHOUT_TAGS in ruleTags) {
       val sub = subquery.subquery(Long::class.java)
       val keyMeta = sub.from(KeyMeta::class.java)
-      keyMeta.join<KeyMeta, io.tolgee.model.key.Tag>("tags")
+      keyMeta.join<KeyMeta, Tag>("tags")
       sub.select(cb.literal(1L))
       sub.where(cb.equal(keyMeta.get<Key>("key").get<Long>("id"), key.get(Key_.id)))
       parts.add(cb.not(cb.exists(sub)))
@@ -103,7 +103,7 @@ class AiReviewRuleSqlPredicates(
     key: Path<Key>,
   ): Predicate {
     val parts = mutableListOf<Predicate>()
-    val named = names.filter { it != "" }
+    val named = names.filter { it != WITHOUT_NAMESPACE }
     if (named.isNotEmpty()) {
       val sub = subquery.subquery(Long::class.java)
       val namespace = sub.from(Namespace::class.java)
@@ -114,7 +114,7 @@ class AiReviewRuleSqlPredicates(
       )
       parts.add(cb.exists(sub))
     }
-    if ("" in names) {
+    if (WITHOUT_NAMESPACE in names) {
       parts.add(cb.isNull(key.get(Key_.namespace)))
     }
     return cb.or(*parts.toTypedArray())
@@ -128,7 +128,7 @@ class AiReviewRuleSqlPredicates(
       patterns.map { pattern ->
         val like = WildcardLikeUtil.toLikePattern(WildcardLikeUtil.EXACT_PREFIX + pattern)
         val sub = subquery.subquery(Long::class.java)
-        val branch = sub.from(io.tolgee.model.branching.Branch::class.java)
+        val branch = sub.from(Branch::class.java)
         sub.select(cb.literal(1L))
         sub.where(
           cb.equal(branch, key.get(Key_.branch)),

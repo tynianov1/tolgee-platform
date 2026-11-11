@@ -46,8 +46,6 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
           .also { user ->
             addPermission {
               this.user = user
-              // The REVIEW permission type has no prompt scopes, so the e2e "reviewer" persona
-              // carries the granular scopes the AI review UI needs.
               type = null
               scopes =
                 arrayOf(
@@ -153,12 +151,11 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
         threshold = 85
         lastFailureReason = AiReviewFailureReason.PROVIDER_ERROR
       }
-      addReviewedKey("key_overridden", AiReviewStatus.OVERRIDDEN, 92, reviewed = false) {
+      addReviewedKey("key_overridden_after_failed_rereview", AiReviewStatus.OVERRIDDEN, 92, reviewed = false) {
         rule = activeRule
         threshold = 85
         resolvedBy = user
         resolvedAt = Date()
-        // A failed escape-hatch re-review leaves this on an overridden row; Retry must stay hidden.
         lastFailureReason = AiReviewFailureReason.PROVIDER_ERROR
       }
       addReviewedKey("key_rule_deleted", AiReviewStatus.APPROVED, 91) {

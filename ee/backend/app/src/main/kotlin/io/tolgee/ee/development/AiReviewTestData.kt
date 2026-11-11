@@ -162,6 +162,25 @@ open class AiReviewTestData : BaseTestData() {
     val key: Key get() = keyBuilder.self
   }
 
+  fun addUserWithScopes(
+    name: String,
+    vararg scopes: Scope,
+    stateChangeLanguages: Set<Language> = emptySet(),
+  ): UserAccount =
+    root
+      .addUserAccount { username = name }
+      .self
+      .also { user ->
+        projectBuilder.addPermission {
+          this.user = user
+          type = null
+          this.scopes = scopes.toList().toTypedArray()
+          if (stateChangeLanguages.isNotEmpty()) {
+            this.stateChangeLanguages = stateChangeLanguages.toMutableSet()
+          }
+        }
+      }
+
   fun addKeyWithTranslations(
     name: String,
     tags: List<String> = listOf("ui"),

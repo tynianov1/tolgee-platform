@@ -20,12 +20,13 @@ class AiReviewRuleCache(
   fun get(projectId: Long): List<RuleSnapshot> =
     ArrayList(aiReviewRuleRepository.findEnabledWithScope(projectId).map { it.toSnapshot() })
 
-  /**
-   * Evicts again after the surrounding transaction ends: between the in-transaction evict and the
-   * commit, a concurrent reader can put the old committed rules back into the cache.
-   */
   fun evict(projectId: Long) {
     evictNow(projectId)
+    evictAgainAfterCompletion(projectId)
+  }
+
+  // Between the in-transaction evict and the commit, a concurrent reader can put the old rules back.
+  private fun evictAgainAfterCompletion(projectId: Long) {
     if (!TransactionSynchronizationManager.isSynchronizationActive()) return
     TransactionSynchronizationManager.registerSynchronization(
       object : TransactionSynchronization {

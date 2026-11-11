@@ -14,7 +14,7 @@ import { T, useTranslate } from '@tolgee/react';
 import { useApiMutation, useApiQuery } from 'tg.service/http/useQueryApi';
 import { BatchJobModel } from 'tg.views/projects/translations/BatchOperations/types';
 import { BasicPromptOption } from './TabBasic';
-import { PromptType } from './PromptTypeToggle';
+import { PromptType } from 'tg.ee.module/llm/AiPrompt/PromptTypeToggle';
 import { BoxLoading } from 'tg.component/common/BoxLoading';
 import { Lightbulb02 } from '@untitled-ui/icons-react';
 import { BatchOperationsLanguagesSelect } from 'tg.views/projects/translations/BatchOperations/components/BatchOperationsLanguagesSelect';

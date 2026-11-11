@@ -6,7 +6,7 @@ import { RuleFormValues } from 'tg.ee.module/aiReview/rules/dialog/useRuleFormVa
 import { RuleKeysFilter } from 'tg.ee.module/aiReview/rules/dialog/RuleKeysFilter';
 import { RuleLanguagesField } from 'tg.ee.module/aiReview/rules/dialog/RuleLanguagesField';
 import { ScopeAutocomplete } from 'tg.ee.module/aiReview/rules/dialog/ScopeAutocomplete';
-import { useRuleScopeOptions } from 'tg.ee.module/aiReview/rules/dialog/useRuleScopeOptions';
+import { useRuleBranchOptions } from 'tg.ee.module/aiReview/rules/dialog/useRuleBranchOptions';
 
 const StyledTwoColumns = styled('div')`
   display: grid;
@@ -22,7 +22,7 @@ const StyledTwoColumns = styled('div')`
 export const RuleAppliesTo = () => {
   const { t } = useTranslate();
   const { values, setFieldValue } = useFormikContext<RuleFormValues>();
-  const { isBranchingEnabled, branchOptions } = useRuleScopeOptions();
+  const { isBranchingEnabled, branchOptions } = useRuleBranchOptions();
 
   function setScope(
     field: 'branchIn' | 'branchNotIn',

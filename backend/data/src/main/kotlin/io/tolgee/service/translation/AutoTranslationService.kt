@@ -490,10 +490,8 @@ class AutoTranslationService(
   }
 
   companion object {
-    /** Import activities start a visible batch job. */
     val IMPORT_ACTIVITIES = listOf(ActivityType.IMPORT)
 
-    /** Low volume activities start a hidden batch job. */
     val LOW_VOLUME_ACTIVITIES =
       listOf(ActivityType.SET_TRANSLATIONS, ActivityType.CREATE_KEY, ActivityType.COMPLEX_EDIT)
   }

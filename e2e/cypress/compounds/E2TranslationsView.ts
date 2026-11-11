@@ -108,6 +108,14 @@ export class E2TranslationsView {
     return this;
   }
 
+  applyAiReviewFilterForLanguage(tag: string) {
+    gcyAdvanced({
+      value: 'translations-filter-apply-for-language',
+      language: tag,
+    }).click();
+    return this;
+  }
+
   getTaskTypeFilter(type: TaskType) {
     return gcyAdvanced({ value: 'translations-filter-task-type', type });
   }

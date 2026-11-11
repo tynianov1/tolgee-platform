@@ -11,11 +11,7 @@ import {
   styled,
 } from '@mui/material';
 import { T, useTranslate } from '@tolgee/react';
-import {
-  CheckCircleBroken,
-  DotsVertical,
-  Edit02,
-} from '@untitled-ui/icons-react';
+import { DotsVertical, Edit02 } from '@untitled-ui/icons-react';
 
 import { components } from 'tg.service/apiSchema.generated';
 import { confirmation } from 'tg.hooks/confirmation';
@@ -23,6 +19,7 @@ import { messageService } from 'tg.service/MessageService';
 import { useApiMutation } from 'tg.service/http/useQueryApi';
 import { useProject } from 'tg.hooks/useProject';
 import { useProjectPermissions } from 'tg.hooks/useProjectPermissions';
+import { AiReviewRuleModeChip } from 'tg.ee.module/aiReview/rules/AiReviewRuleModeChip';
 import { AiReviewRuleScopeChips } from 'tg.ee.module/aiReview/rules/AiReviewRuleScopeChips';
 import { AiReviewRuleDialog } from 'tg.ee.module/aiReview/rules/dialog/AiReviewRuleDialog';
 import {
@@ -37,10 +34,9 @@ type AiReviewRuleModel = components['schemas']['AiReviewRuleModel'];
 
 const StyledItem = styled(Box)`
   display: grid;
-  gap: 8px;
-  padding: 16px 20px;
+  gap: ${({ theme }) => theme.spacing(1)};
+  padding: ${({ theme }) => theme.spacing(2, 2.5)};
 
-  // Rows in one list, like projects: a line between them, none after the last.
   &:not(:last-of-type) {
     border-bottom: 1px solid
       ${({ theme }) => theme.palette.tokens.border.secondary};
@@ -77,12 +73,12 @@ const StyledRow = styled(Box)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: ${({ theme }) => theme.spacing(1)};
   min-width: 0;
 `;
 
 const StyledName = styled(Box)`
-  font-size: 16px;
+  font-size: ${({ theme }) => theme.typography.body1.fontSize}px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -122,41 +118,8 @@ export const AiReviewRuleItem = ({ rule, promptNames }: Props) => {
     invalidatePrefix: '/v2/projects/{projectId}/ai-review-rules',
   });
 
-  const isScoreOnlyRun = rule.mode === 'SCORE_ONLY';
   const customPromptName =
     rule.promptId != null ? promptNames[rule.promptId] : undefined;
-
-  function modeLabel() {
-    if (rule.never) {
-      return t('ai_review_rule_mode_no_review', 'No AI review');
-    }
-    return isScoreOnlyRun
-      ? t('ai_review_rule_mode_score_only', 'AI score only')
-      : t(
-          'ai_review_rule_mode_auto_mark_threshold',
-          'Auto-mark as reviewed · {threshold}+',
-          { threshold: rule.threshold }
-        );
-  }
-
-  function modeHint() {
-    if (rule.never) {
-      return t(
-        'ai_review_rule_mode_no_review_hint',
-        'AI never scores or reviews these keys and languages, even if another rule matches them.'
-      );
-    }
-    return isScoreOnlyRun
-      ? t(
-          'ai_review_rule_mode_score_only_hint',
-          'AI scores translations and lists issues. Nothing else changes.'
-        )
-      : t(
-          'ai_review_rule_mode_auto_mark_hint',
-          'Translations scoring {threshold} or more are marked as reviewed. The rest wait for your team.',
-          { threshold: rule.threshold }
-        );
-  }
 
   function handleToggle() {
     enabledLoadable.mutate({
@@ -210,32 +173,7 @@ export const AiReviewRuleItem = ({ rule, promptNames }: Props) => {
             className="dim"
           >
             <StyledName data-cy="ai-review-rule-label">{label}</StyledName>
-            <Tooltip title={modeHint()} disableInteractive>
-              <Chip
-                size="small"
-                data-cy="ai-review-rule-mode"
-                data-cy-mode={rule.mode}
-                label={modeLabel()}
-                icon={
-                  !rule.never && !isScoreOnlyRun ? (
-                    <CheckCircleBroken width={16} height={16} />
-                  ) : undefined
-                }
-                sx={
-                  rule.never
-                    ? undefined
-                    : (theme) => ({
-                        '& .MuiChip-icon': { color: 'inherit' },
-                        color: isScoreOnlyRun
-                          ? theme.palette.tokens.secondary.contrast
-                          : theme.palette.tokens.success.contrast,
-                        backgroundColor: isScoreOnlyRun
-                          ? theme.palette.tokens.secondary.main
-                          : theme.palette.tokens.success.main,
-                      })
-                }
-              />
-            </Tooltip>
+            <AiReviewRuleModeChip rule={rule} />
           </Box>
           {!rule.enabled && (
             <Tooltip

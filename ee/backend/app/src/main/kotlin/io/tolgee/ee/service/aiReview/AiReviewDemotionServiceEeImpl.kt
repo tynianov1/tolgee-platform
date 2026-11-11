@@ -18,10 +18,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-/**
- * Re-checks AI approvals against the current rules using the stored score — no LLM call. It never
- * promotes: a stored score is good enough to remove an approval, not to give one.
- */
+/** See docs/ai-review/README.md 3.4 "Demotion uses the stored score and never promotes". */
 @Primary
 @Service
 class AiReviewDemotionServiceEeImpl(
@@ -101,10 +98,7 @@ class AiReviewDemotionServiceEeImpl(
     return AiReviewUpdate.of(row, scoreOnlyRun = false)
   }
 
-  /**
-   * README 3.4: approvals of a deleted or disabled rule stay until a matching stricter rule removes
-   * them. A rule that only matches in Score only must not change anything live (README 3.1).
-   */
+  // See docs/ai-review/README.md 3.4 "Deleting a rule keeps approval rows".
   private fun keepsWithoutActiveRule(
     row: TranslationAiReview,
     translation: Translation,

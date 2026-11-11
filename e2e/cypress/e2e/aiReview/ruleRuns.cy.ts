@@ -29,48 +29,28 @@ describe('AI review rule runs', () => {
 
   it('Review now shows the preview and starts a visible job', () => {
     rulesView.visit(projectId);
-    gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule' }).within(
-      () => {
-        gcy('ai-review-rule-review-now').click();
-      }
-    );
+    rulesView.clickReviewNow('UI rule');
     runDialog.assertVariant('review');
-    gcy('ai-review-run-to-review').should('be.visible');
+    runDialog.getToReview().should('be.visible');
     runDialog.start();
     gcy('batch-operations-summary').should('exist');
-    gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule' }).within(
-      () => {
-        gcy('ai-review-rule-review-now', { timeout: 60_000 }).should(
-          'not.exist'
-        );
-      }
-    );
+    rulesView.getRule('UI rule').within(() => {
+      gcy('ai-review-rule-review-now', { timeout: 60_000 }).should('not.exist');
+    });
   });
 
   it('Score now on a Score only rule', () => {
     rulesView.visit(projectId);
-    gcyAdvanced({
-      value: 'ai-review-rule-item',
-      name: 'Legal score only',
-    }).within(() => {
-      gcy('ai-review-rule-review-now').click();
-    });
+    rulesView.clickReviewNow('Legal score only');
     runDialog.assertVariant('score').start();
-    gcyAdvanced({
-      value: 'ai-review-rule-item',
-      name: 'Legal score only',
-    }).within(() => {
+    rulesView.getRule('Legal score only').within(() => {
       gcy('ai-review-rule-review-now', { timeout: 60_000 }).should('not.exist');
     });
   });
 
   it('Retry failed reviews brings the failed count to 0', () => {
     rulesView.visit(projectId);
-    gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule' }).within(
-      () => {
-        gcy('ai-review-rule-retry-failed').click();
-      }
-    );
+    rulesView.clickRetryFailed('UI rule');
     runDialog.assertVariant('retry').start();
     gcyAdvanced(
       { value: 'ai-review-rule-counts', mode: 'ACTIVE', failed: '0' },

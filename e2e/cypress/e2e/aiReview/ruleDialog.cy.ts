@@ -38,7 +38,7 @@ describe('AI review rule dialog', () => {
 
   it('creates a rule with tags, languages, branches and a custom threshold', () => {
     const dialog = openCreateDialog(branchingProjectId);
-    gcy('ai-review-rule-form-name').type('Branch rule');
+    dialog.getNameInput().type('Branch rule');
 
     gcy('ai-review-rule-form-keys-filter-select').click();
     gcyAdvanced({ value: 'submenu-item', id: 'tags' }).click();
@@ -56,35 +56,35 @@ describe('AI review rule dialog', () => {
     gcy('ai-review-rule-form-branch-in').type('release{enter}');
     gcy('ai-review-rule-form-branch-not-in').type('feature/*{enter}');
 
-    gcy('ai-review-rule-form-mode-active').click();
+    dialog.selectActiveMode();
     dialog.setThreshold(90);
 
     dialog.save();
     waitForGlobalLoading();
 
-    gcyAdvanced({ value: 'ai-review-rule-item', name: 'Branch rule' }).within(
-      () => {
-        gcyAdvanced({
-          value: 'ai-review-scope-chip',
-          scope: 'ui',
-          kind: 'include',
-        }).should('exist');
-        gcyAdvanced({
-          value: 'ai-review-scope-chip',
-          scope: 'release',
-          kind: 'include',
-        }).should('exist');
-        gcyAdvanced({
-          value: 'ai-review-scope-chip',
-          scope: 'feature/*',
-          kind: 'exclude',
-        }).should('exist');
-        gcy('ai-review-rule-language-flag').should('have.length', 1);
-      }
-    );
+    rulesView.getRule('Branch rule').within(() => {
+      gcyAdvanced({
+        value: 'ai-review-scope-chip',
+        scope: 'ui',
+        kind: 'include',
+      }).should('exist');
+      gcyAdvanced({
+        value: 'ai-review-scope-chip',
+        scope: 'release',
+        kind: 'include',
+      }).should('exist');
+      gcyAdvanced({
+        value: 'ai-review-scope-chip',
+        scope: 'feature/*',
+        kind: 'exclude',
+      }).should('exist');
+      gcy('ai-review-rule-language-flag').should('have.length', 1);
+    });
 
-    rulesView.openEditDialog('Branch rule');
-    gcy('ai-review-rule-form-threshold-input').should('have.value', '90');
+    rulesView
+      .openEditDialog('Branch rule')
+      .getThresholdInput()
+      .should('have.value', '90');
   });
 
   it('selecting a branch removes it from the except options', () => {
@@ -96,11 +96,11 @@ describe('AI review rule dialog', () => {
   });
 
   it('the threshold shows only for Active rules', () => {
-    openCreateDialog(projectId);
+    const dialog = openCreateDialog(projectId);
     gcy('ai-review-rule-form-threshold-slider').should('not.exist');
-    gcy('ai-review-rule-form-mode-active').click();
+    dialog.selectActiveMode();
     gcy('ai-review-rule-form-threshold-slider').should('be.visible');
-    gcy('ai-review-rule-form-mode-score-only').click();
+    dialog.selectScoreOnlyMode();
     gcy('ai-review-rule-form-threshold-slider').should('not.exist');
   });
 
@@ -116,14 +116,14 @@ describe('AI review rule dialog', () => {
   });
 
   it('Save needs a name and at least one language', () => {
-    openCreateDialog(projectId);
-    gcy('ai-review-rule-form-save').should('be.disabled');
-    gcy('ai-review-rule-form-name').type('Named');
-    gcy('ai-review-rule-form-save').should('not.be.disabled');
+    const dialog = openCreateDialog(projectId);
+    dialog.getSaveButton().should('be.disabled');
+    dialog.getNameInput().type('Named');
+    dialog.getSaveButton().should('not.be.disabled');
     gcy('ai-review-rule-form-languages-select').click();
     gcy('ai-review-rule-form-languages-all').click();
     cy.get('body').type('{esc}');
-    gcy('ai-review-rule-form-save').should('be.disabled');
+    dialog.getSaveButton().should('be.disabled');
   });
 
   it('branch fields are hidden when branching is off', () => {
@@ -142,15 +142,11 @@ describe('AI review rule dialog', () => {
   it('edit keeps values', () => {
     rulesView.visit(projectId);
     const dialog = rulesView.openEditDialog('UI rule');
-    gcy('ai-review-rule-form-name')
-      .find('input')
-      .should('have.value', 'UI rule');
+    dialog.getNameInput().should('have.value', 'UI rule');
     gcy('ai-review-rule-form-mode-active').find('input').should('be.checked');
-    gcy('ai-review-rule-form-threshold-input').should('have.value', '85');
+    dialog.getThresholdInput().should('have.value', '85');
     dialog.save();
     waitForGlobalLoading();
-    gcyAdvanced({ value: 'ai-review-rule-item', name: 'UI rule' }).should(
-      'exist'
-    );
+    rulesView.getRule('UI rule').should('exist');
   });
 });

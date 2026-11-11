@@ -3,21 +3,18 @@ import {
   getProjectByNameFromTestData,
 } from '../../common/apiCalls/testData/testData';
 import { login } from '../../common/apiCalls/common';
-import {
-  gcy,
-  gcyAdvanced,
-  visitProjectSettingsAdvanced,
-} from '../../common/shared';
+import { gcy, visitProjectSettingsAdvanced } from '../../common/shared';
 import {
   restoreAiReviewFeature,
   withoutAiReviewFeature,
 } from '../../common/aiReview';
-import { waitForGlobalLoading } from '../../common/loading';
+import { E2SourceChangeSettings } from '../../compounds/aiReview/E2SourceChangeSettings';
 
 describe('AI review source change settings', () => {
   let projectId: number;
   let protectedProjectId: number;
   let switchOffProjectId: number;
+  const settings = new E2SourceChangeSettings();
 
   beforeEach(() => {
     aiReviewTestData.clean();
@@ -46,40 +43,16 @@ describe('AI review source change settings', () => {
   it('shows the defaults in the advanced project settings', () => {
     visitProjectSettingsAdvanced(projectId);
     gcy('ai-review-source-change-settings').should('be.visible');
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'aiApproved',
-      selected: 'RETRANSLATE',
-    }).should('exist');
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'humanEdited',
-      selected: 'MARK_OUTDATED',
-    }).should('exist');
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'humanReviewed',
-      selected: 'MARK_OUTDATED',
-    }).should('exist');
+    settings.getSelect('aiApproved', 'RETRANSLATE').should('exist');
+    settings.getSelect('humanEdited', 'MARK_OUTDATED').should('exist');
+    settings.getSelect('humanReviewed', 'MARK_OUTDATED').should('exist');
   });
 
   it('a maintainer changes a value and it survives a reload', () => {
     visitProjectSettingsAdvanced(projectId);
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'humanEdited',
-    }).click();
-    gcyAdvanced({
-      value: 'source-change-select-item',
-      action: 'RETRANSLATE',
-    }).click();
-    waitForGlobalLoading();
+    settings.choose('humanEdited', 'RETRANSLATE');
     cy.reload();
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'humanEdited',
-      selected: 'RETRANSLATE',
-    }).should('exist');
+    settings.getSelect('humanEdited', 'RETRANSLATE').should('exist');
   });
 
   it('hides the whole block without the AI review feature', () => {
@@ -92,49 +65,24 @@ describe('AI review source change settings', () => {
   it('hides the AI approved row when the project switch is off', () => {
     visitProjectSettingsAdvanced(switchOffProjectId);
     gcy('ai-review-source-change-settings').should('be.visible');
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'humanEdited',
-    }).should('exist');
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'aiApproved',
-    }).should('not.exist');
+    settings.getSelect('humanEdited').should('exist');
+    settings.getSelect('aiApproved').should('not.exist');
   });
 
   it('locks the protected rows under protect reviewed with helper texts', () => {
     visitProjectSettingsAdvanced(protectedProjectId);
-    gcyAdvanced({ value: 'source-change-select', field: 'aiApproved' }).should(
-      'have.attr',
-      'aria-disabled',
-      'true'
-    );
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'humanReviewed',
-    }).should('have.attr', 'aria-disabled', 'true');
-    gcyAdvanced({ value: 'source-change-select', field: 'humanEdited' }).should(
-      'not.have.attr',
-      'aria-disabled',
-      'true'
-    );
-    gcyAdvanced({
-      value: 'source-change-locked-hint',
-      field: 'aiApproved',
-    }).should('be.visible');
-    gcyAdvanced({
-      value: 'source-change-locked-hint',
-      field: 'humanReviewed',
-    }).should('be.visible');
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'aiApproved',
-      selected: 'RETRANSLATE',
-    }).should('exist');
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'humanReviewed',
-      selected: 'MARK_OUTDATED',
-    }).should('exist');
+    settings
+      .getSelect('aiApproved')
+      .should('have.attr', 'aria-disabled', 'true');
+    settings
+      .getSelect('humanReviewed')
+      .should('have.attr', 'aria-disabled', 'true');
+    settings
+      .getSelect('humanEdited')
+      .should('not.have.attr', 'aria-disabled', 'true');
+    settings.getLockedHint('aiApproved').should('be.visible');
+    settings.getLockedHint('humanReviewed').should('be.visible');
+    settings.getSelect('aiApproved', 'RETRANSLATE').should('exist');
+    settings.getSelect('humanReviewed', 'MARK_OUTDATED').should('exist');
   });
 });

@@ -5,7 +5,6 @@ import {
 import { login } from '../../common/apiCalls/common';
 import {
   confirmStandard,
-  gcy,
   gcyAdvanced,
   visitProjectSettingsAdvanced,
 } from '../../common/shared';
@@ -14,6 +13,8 @@ import { waitForGlobalLoading } from '../../common/loading';
 import { E2AiReviewRulesView } from '../../compounds/aiReview/E2AiReviewRulesView';
 import { E2AiReviewRunDialog } from '../../compounds/aiReview/E2AiReviewRunDialog';
 import { E2ActivityChecker } from '../../compounds/E2ActivityChecker';
+import { E2AiReviewBadge } from '../../compounds/aiReview/E2AiReviewBadge';
+import { E2SourceChangeSettings } from '../../compounds/aiReview/E2SourceChangeSettings';
 import { E2TranslationsView } from '../../compounds/E2TranslationsView';
 
 const AUTOMATIC_REVIEW_TIMEOUT = 30_000;
@@ -43,52 +44,28 @@ describe('AI reviewer in activity', () => {
     rulesView.visit(projectId);
 
     const createDialog = rulesView.openCreateDialog();
-    gcy('ai-review-rule-form-name').type('Activity rule');
+    createDialog.getNameInput().type('Activity rule');
     createDialog.save();
     runDialog.cancel();
 
     const editDialog = rulesView.openEditDialog('Legal score only');
-    gcy('ai-review-rule-form-name').type(' 2');
+    editDialog.getNameInput().type(' 2');
     editDialog.save();
     runDialog.cancel();
 
-    gcyAdvanced({
-      value: 'ai-review-rule-menu',
-      name: 'Activity rule',
-    }).click();
-    gcy('ai-review-rule-menu-delete').click();
+    rulesView.deleteRule('Activity rule');
     confirmStandard();
     waitForGlobalLoading();
 
     visitProjectSettingsAdvanced(projectId);
-    gcyAdvanced({
-      value: 'source-change-select',
-      field: 'humanEdited',
-    }).click();
-    gcyAdvanced({
-      value: 'source-change-select-item',
-      action: 'RETRANSLATE',
-    }).click();
-    waitForGlobalLoading();
+    new E2SourceChangeSettings().choose('humanEdited', 'RETRANSLATE');
 
     activity.visitDashboard(projectId);
     // activity-compact uses display: contents, so it has no own box to be "visible".
-    gcyAdvanced({
-      value: 'activity-compact',
-      type: 'AI_REVIEW_RULE_CREATE',
-    }).should('exist');
-    gcyAdvanced({
-      value: 'activity-compact',
-      type: 'AI_REVIEW_RULE_UPDATE',
-    }).should('exist');
-    gcyAdvanced({
-      value: 'activity-compact',
-      type: 'AI_REVIEW_RULE_DELETE',
-    }).should('exist');
-    gcyAdvanced({
-      value: 'activity-compact',
-      type: 'AI_REVIEW_SETTINGS_UPDATE',
-    }).should('exist');
+    activity.getActivity('AI_REVIEW_RULE_CREATE').should('exist');
+    activity.getActivity('AI_REVIEW_RULE_UPDATE').should('exist');
+    activity.getActivity('AI_REVIEW_RULE_DELETE').should('exist');
+    activity.getActivity('AI_REVIEW_SETTINGS_UPDATE').should('exist');
   });
 
   it('an automatic review shows the AI reviewer without an author', () => {
@@ -97,16 +74,15 @@ describe('AI reviewer in activity', () => {
       search: 'key_not_reviewed',
     });
     editCell('Noch nicht geprüft', 'Neuer Text');
-    gcyAdvanced(
-      { value: 'ai-review-badge', status: 'APPROVED' },
-      { timeout: AUTOMATIC_REVIEW_TIMEOUT }
-    ).should('be.visible');
+    new E2AiReviewBadge('key_not_reviewed').assertVisible('APPROVED', {
+      timeout: AUTOMATIC_REVIEW_TIMEOUT,
+    });
     activity.visitDashboard(projectId);
-    const startedBy: DataCy.Value = 'activity-started-by';
-    gcyAdvanced({ value: 'activity-compact', type: 'AI_REVIEW' })
-      .not(`:has([data-cy=${startedBy}])`)
-      .findDcy('activity-system-actor')
-      .should('be.visible');
+    activity.getActivity('AI_REVIEW').should('exist');
+    gcyAdvanced({
+      value: 'activity-system-actor',
+      'started-by': 'false',
+    }).should('be.visible');
   });
 
   // Asserts on seeded data: a live run finalizes its activity asynchronously, so it would race.
@@ -126,10 +102,9 @@ describe('AI reviewer in activity', () => {
       search: 'key_not_reviewed',
     });
     editCell('Noch nicht geprüft', 'Neuer Text');
-    gcyAdvanced(
-      { value: 'ai-review-badge', status: 'APPROVED' },
-      { timeout: AUTOMATIC_REVIEW_TIMEOUT }
-    ).should('be.visible');
+    new E2AiReviewBadge('key_not_reviewed').assertVisible('APPROVED', {
+      timeout: AUTOMATIC_REVIEW_TIMEOUT,
+    });
     gcyAdvanced({
       value: 'translations-table-cell',
       key: 'key_not_reviewed',

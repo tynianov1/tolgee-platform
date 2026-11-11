@@ -8,6 +8,10 @@ export class E2AiReviewRunDialog {
     return this;
   }
 
+  getToReview() {
+    return gcy('ai-review-run-to-review');
+  }
+
   start() {
     gcy('ai-review-run-start').click();
   }

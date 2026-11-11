@@ -8,7 +8,6 @@ import io.tolgee.model.UserAccount
 import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.repository.aiReview.TranslationAiReviewRepository
-import io.tolgee.service.aiReview.AiReviewTextHash
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -45,18 +44,10 @@ class AiReviewActionService(
         rows
           .filter { it.status == AiReviewStatus.APPROVED }
           .partition { !aiReviewOn || isMachineOverwrite(it, textChangedIds) }
-      overriddenApprovals.forEach { row ->
-        resolve(row, AiReviewStatus.OVERRIDDEN, resolvedById)
-        updates += AiReviewUpdate.of(row, scoreOnlyRun = false)
-      }
-      deleteAndCollectRemovals(rows.filter { AiReviewEligibility.isMarker(it) } + deletedApprovals, updates)
+      updates += markOverridden(overriddenApprovals, resolvedById)
+      updates += deleteRows(rows.filter { AiReviewEligibility.isMarker(it) } + deletedApprovals)
     }
     websocketPublisher.publishAfterCommit(projectId, updates)
-  }
-
-  companion object {
-    private val OVERRIDABLE_RESULTS =
-      setOf(AiReviewStatus.BELOW_THRESHOLD, AiReviewStatus.SCORE_ONLY_PASS, AiReviewStatus.SCORE_ONLY_FAIL)
   }
 
   private fun isMachineOverwrite(
@@ -75,38 +66,39 @@ class AiReviewActionService(
     translationIds.chunked(IN_CLAUSE_CHUNK).forEach { chunk ->
       val rows = reviewRepository.findAllWithTranslationByTranslationIdIn(chunk)
       val (toOverride, rest) = rows.partition { aiReviewOn && overridesOnHumanReview(it) }
-      toOverride.forEach { row ->
-        resolve(row, AiReviewStatus.OVERRIDDEN, resolvedById)
-        updates += AiReviewUpdate.of(row, scoreOnlyRun = false)
-      }
-      deleteAndCollectRemovals(rest.filter { AiReviewEligibility.keepsAiManaged(it) }, updates)
+      updates += markOverridden(toOverride, resolvedById)
+      updates += deleteRows(rest.filter { AiReviewEligibility.keepsAiManaged(it) })
     }
     websocketPublisher.publishAfterCommit(projectId, updates)
   }
 
   private fun overridesOnHumanReview(row: TranslationAiReview): Boolean =
-    row.status in OVERRIDABLE_RESULTS && row.textHash == AiReviewTextHash.of(row.translation)
+    row.status in OVERRIDABLE_RESULTS && AiReviewEligibility.isReviewForCurrentText(row.translation, row)
 
-  private fun deleteAndCollectRemovals(
-    rows: List<TranslationAiReview>,
-    updates: MutableList<AiReviewUpdate>,
-  ) {
-    if (rows.isEmpty()) return
-    rows.forEach { updates += AiReviewUpdate.removed(it.translation) }
+  private fun deleteRows(rows: List<TranslationAiReview>): List<AiReviewUpdate> {
+    if (rows.isEmpty()) return emptyList()
+    val removals = rows.map { AiReviewUpdate.removed(it.translation) }
     reviewRepository.deleteAllByIdInBatch(rows.map { it.id })
+    return removals
   }
 
-  private fun resolve(
-    row: TranslationAiReview,
-    status: AiReviewStatus,
+  private fun markOverridden(
+    rows: List<TranslationAiReview>,
     resolvedById: Long?,
-  ) {
-    row.status = status
-    row.resolvedBy = resolvedById?.let { entityManager.getReference(UserAccount::class.java, it) }
-    row.resolvedAt = currentDateProvider.date
-    row.reReviewRequested = false
-    // An overridden row must never show Retry, so the stale failure data goes with the decision.
-    row.lastFailureReason = null
-    row.lastFailedAt = null
+  ): List<AiReviewUpdate> =
+    rows.map { row ->
+      row.status = AiReviewStatus.OVERRIDDEN
+      row.resolvedBy = resolvedById?.let { entityManager.getReference(UserAccount::class.java, it) }
+      row.resolvedAt = currentDateProvider.date
+      row.reReviewRequested = false
+      // An overridden row must never show Retry, so the stale failure data goes with the decision.
+      row.lastFailureReason = null
+      row.lastFailedAt = null
+      AiReviewUpdate.of(row, scoreOnlyRun = false)
+    }
+
+  companion object {
+    private val OVERRIDABLE_RESULTS =
+      setOf(AiReviewStatus.BELOW_THRESHOLD, AiReviewStatus.SCORE_ONLY_PASS, AiReviewStatus.SCORE_ONLY_FAIL)
   }
 }

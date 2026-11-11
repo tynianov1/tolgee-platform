@@ -18,7 +18,6 @@ export const RuleQaCheckbox = () => {
 
   return (
     <FormControlLabel
-      // Set apart from the mode radios so it doesn't read as a third mode.
       sx={{ justifySelf: 'start', mt: 1.5 }}
       control={
         <Checkbox

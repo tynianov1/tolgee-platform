@@ -3,12 +3,12 @@ package io.tolgee.service.queryBuilders.translationViewBuilder
 import io.tolgee.model.Language_
 import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.aiReview.TranslationAiReview_
-import io.tolgee.model.enums.TranslationState
 import io.tolgee.model.enums.aiReview.AiReviewFilterOutcome
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.model.key.Key_
 import io.tolgee.model.translation.Translation
 import io.tolgee.model.translation.Translation_
+import io.tolgee.service.aiReview.AiReviewEligibleText
 import io.tolgee.service.aiReview.AiReviewResultApplies
 import io.tolgee.service.aiReview.AiReviewTextHash
 import jakarta.persistence.criteria.CriteriaBuilder
@@ -17,7 +17,6 @@ import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
 import jakarta.persistence.criteria.Subquery
 
-/** Builds the predicate for the `filterAiReviewStatus` / `filterAiReviewInLang` filters. */
 internal class AiReviewFilterBuilder(
   private val filtering: QueryTranslationFiltering,
   private val queryBase: QueryBase<*>,
@@ -95,12 +94,7 @@ internal class AiReviewFilterBuilder(
     if (coveredByRules.isEmpty()) return null
 
     val conditions = mutableListOf<Predicate>()
-    // Same text and state conditions as AiReviewBacklogQuery.CANDIDATES and AiReviewEligibility.isEligible.
-    conditions.add(cb.not(t.get(Translation_.state).`in`(TranslationState.DISABLED, TranslationState.REVIEWED)))
-    conditions.add(cb.isFalse(t.get(Translation_.outdated)))
-    conditions.add(
-      cb.isTrue(cb.function("textregexeq", Boolean::class.java, t.get(Translation_.text), cb.literal("\\S"))),
-    )
+    conditions.addAll(AiReviewEligibleText.criteriaNotReviewed(cb, t))
     conditions.add(cb.or(*coveredByRules.toTypedArray()))
     conditions.add(cb.not(cb.exists(currentResultRowSubquery(subquery, t))))
 
@@ -129,7 +123,7 @@ internal class AiReviewFilterBuilder(
       val (nevers, positives) =
         data.rules
           .filter { AiReviewRuleSqlPredicates.coversLanguage(it, languageId) }
-          .partition { AiReviewRuleSqlPredicates.effectiveNever(it) }
+          .partition { it.never }
       if (positives.isEmpty()) return@mapNotNull null
       val parts = mutableListOf<Predicate>()
       parts.add(cb.equal(t.get(Translation_.language).get(Language_.id), languageId))

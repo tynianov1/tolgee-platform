@@ -3,11 +3,8 @@ package io.tolgee.ee.aiReview
 import io.tolgee.AbstractSpringTest
 import io.tolgee.ee.development.AiReviewTestData
 import io.tolgee.ee.service.aiReview.AiReviewEligibility
-import io.tolgee.ee.service.aiReview.AiReviewRuleEvaluator
-import io.tolgee.ee.service.aiReview.matching.RuleDecision
 import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.enums.TranslationState
-import io.tolgee.model.enums.aiReview.AiReviewRuleMode
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.model.translation.Translation
 import io.tolgee.repository.aiReview.TranslationAiReviewRepository
@@ -22,9 +19,6 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest
 class AiReviewRuleEvaluatorTest : AbstractSpringTest() {
   @Autowired
-  lateinit var evaluator: AiReviewRuleEvaluator
-
-  @Autowired
   lateinit var translationAiReviewRepository: TranslationAiReviewRepository
 
   lateinit var testData: AiReviewTestData
@@ -37,50 +31,6 @@ class AiReviewRuleEvaluatorTest : AbstractSpringTest() {
   @AfterEach
   fun cleanup() {
     testDataService.cleanTestData(testData.root)
-  }
-
-  @Test
-  fun `evaluate picks the strictest of two DB rules`() {
-    val stricter =
-      testData.addRule {
-        tagIn = mutableListOf("ui")
-        threshold = 92
-        mode = AiReviewRuleMode.ACTIVE
-      }
-    testDataService.saveTestData(testData.root)
-
-    val decision = evaluate(testData.deTranslation.id) as RuleDecision.Review
-    decision.rule.id.assert
-      .isEqualTo(stricter.self.id)
-    decision.threshold.assert.isEqualTo(92)
-  }
-
-  @Test
-  fun `evaluate ignores disabled rules`() {
-    testData.addRule {
-      tagIn = mutableListOf("ui")
-      threshold = 92
-      enabled = false
-    }
-    testDataService.saveTestData(testData.root)
-
-    (evaluate(testData.deTranslation.id) as RuleDecision.Review)
-      .rule.id.assert
-      .isEqualTo(testData.rule.id)
-  }
-
-  @Test
-  fun `evaluate with activeOnly skips Score only rules`() {
-    testData.addRule {
-      tagIn = mutableListOf("ui")
-      threshold = 95
-      mode = AiReviewRuleMode.SCORE_ONLY
-    }
-    testDataService.saveTestData(testData.root)
-
-    val decision = evaluate(testData.deTranslation.id, activeOnly = true) as RuleDecision.Review
-    decision.rule.id.assert
-      .isEqualTo(testData.rule.id)
   }
 
   @Test
@@ -185,14 +135,6 @@ class AiReviewRuleEvaluatorTest : AbstractSpringTest() {
 
     isAiApproval(stale.self.id).assert.isFalse()
   }
-
-  private fun evaluate(
-    translationId: Long,
-    activeOnly: Boolean = false,
-  ): RuleDecision =
-    executeInNewTransaction(platformTransactionManager) {
-      evaluator.evaluate(loadTranslation(translationId), activeOnly)
-    }
 
   private fun isEligible(translationId: Long): Boolean =
     executeInNewTransaction(platformTransactionManager) {

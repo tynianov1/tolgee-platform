@@ -207,6 +207,7 @@ export const TabBasic = ({
           onChange={(e) => onReviewCriteriaChange(e.target.value)}
           sx={{ marginTop: 2 }}
           data-cy="ai-prompt-review-criteria"
+          inputProps={{ 'data-cy': 'ai-prompt-review-criteria-input' }}
         />
       )}
       {projectDescription && descriptionLoadable.isSuccess && (

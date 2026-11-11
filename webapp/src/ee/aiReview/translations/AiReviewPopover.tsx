@@ -9,8 +9,9 @@ import { useTimeDistance } from 'tg.hooks/useTimeDistance';
 import { AiReviewBadge } from 'tg.ee.module/aiReview/translations/AiReviewBadge';
 import { AiReviewIssueList } from 'tg.ee.module/aiReview/translations/AiReviewIssueList';
 import { useAiReviewDetails } from 'tg.ee.module/aiReview/translations/useAiReviewDetails';
-import { AiReviewPopoverActions } from 'tg.ee.module/aiReview/translations/AiReviewPopoverActions';
+import { AiReviewRetryButton } from 'tg.ee.module/aiReview/translations/AiReviewRetryButton';
 import { useAiReviewStatusLabels } from 'tg.ee.module/aiReview/translations/useAiReviewStatusLabels';
+import { isScoreOnlyStatus } from 'tg.ee.module/aiReview/translations/aiReviewVisibility';
 
 type AiReviewSummary = components['schemas']['TranslationAiReviewSummaryModel'];
 type State = components['schemas']['TranslationViewModel']['state'];
@@ -78,9 +79,7 @@ export const AiReviewPopover = ({
 
   const protectedNoteVisible =
     aiReview.status === 'BELOW_THRESHOLD' && state === 'REVIEWED';
-  const scoreOnly =
-    aiReview.status === 'SCORE_ONLY_PASS' ||
-    aiReview.status === 'SCORE_ONLY_FAIL';
+  const scoreOnly = isScoreOnlyStatus(aiReview.status);
   const showRetry =
     aiReview.status !== 'OVERRIDDEN' &&
     (aiReview.status === 'FAILED' || Boolean(details?.lastFailureReason)) &&
@@ -212,11 +211,12 @@ export const AiReviewPopover = ({
           ) : (
             <AiReviewIssueList issues={details.issues} />
           )}
-          <AiReviewPopoverActions
-            translationId={translationId}
-            showRetry={showRetry}
-            onClose={onClose}
-          />
+          {showRetry && (
+            <AiReviewRetryButton
+              translationId={translationId}
+              onClose={onClose}
+            />
+          )}
         </Box>
       )}
     </Popover>

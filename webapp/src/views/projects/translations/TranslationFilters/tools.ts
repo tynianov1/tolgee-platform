@@ -64,18 +64,12 @@ export type FiltersInternal = {
   filterSuggestionLanguage?: true | string;
   filterTaskLanguage?: true | string;
 
-  /*
-   * this one differs from the others above
-   *
-   * Specifies which languages will be considered when filtering by the QA check type:
-   *  - undefined = all languages (default)
-   *  - false = all but base
-   *  - string = one language tag
-   */
-  filterQaCheckTypeLanguage?: false | string;
-  // same semantics for the AI review outcome filter
-  filterAiReviewOutcomeLanguage?: false | string;
+  filterQaCheckTypeLanguage?: LanguageScope;
+  filterAiReviewOutcomeLanguage?: LanguageScope;
 };
+
+/** Unlike above: undefined = all languages, false = all but base, string = one language tag. */
+type LanguageScope = false | string;
 
 export type AddParams =
   | ['filterTag', string]

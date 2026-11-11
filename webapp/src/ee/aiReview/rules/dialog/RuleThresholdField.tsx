@@ -89,7 +89,6 @@ export const RuleThresholdField = () => {
           sx={{
             width: 56,
             flexShrink: 0,
-            // Centred on the slider track, not on the track and its labels.
             mt: '1px',
             // The theme makes outlined inputs transparent; this one sits on the grey panel.
             '& .MuiInputBase-root.MuiOutlinedInput-root': {
@@ -97,7 +96,7 @@ export const RuleThresholdField = () => {
                 theme.palette.tokens.background['paper-1'],
             },
             '& .MuiInputBase-input': {
-              py: '4px',
+              py: 0.5,
               px: 1,
               textAlign: 'center',
               fontSize: 14,

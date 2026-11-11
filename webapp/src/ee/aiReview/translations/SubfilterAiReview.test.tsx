@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getAiReviewFiltersLength,
   getAiReviewFiltersName,
-} from './SubfilterAiReview';
+} from 'tg.ee.module/aiReview/translations/SubfilterAiReview';
 import { AiReviewFilterOutcome } from 'tg.views/projects/translations/TranslationFilters/tools';
 
 const nameKey = (outcome: AiReviewFilterOutcome) =>

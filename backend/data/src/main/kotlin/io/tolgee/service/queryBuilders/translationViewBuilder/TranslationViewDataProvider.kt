@@ -404,6 +404,7 @@ class TranslationViewDataProvider(
     }
   }
 
+  /** Null means the feature is off and the AI review filters are ignored. */
   private fun resolveAiReviewFilterData(
     project: Project,
     aiReviewEnabled: Boolean,

@@ -85,6 +85,7 @@ declare namespace DataCy {
         "ai-prompt-result-translation": true;
         "ai-prompt-review-chip": true;
         "ai-prompt-review-criteria": true;
+        "ai-prompt-review-criteria-input": true;
         "ai-prompt-save-as-field-name": true;
         "ai-prompt-save-as-field-use-as-default": true;
         "ai-prompt-save-as-new-button": true;
@@ -170,7 +171,7 @@ declare namespace DataCy {
         "ai-review-rules-view": true;
         "ai-review-run-cancel": true;
         "ai-review-run-dialog": true;
-        "ai-review-run-includes-resolved": true;
+        "ai-review-run-includes-overridden": true;
         "ai-review-run-score-only-count": true;
         "ai-review-run-skip-reason": true;
         "ai-review-run-start": true;

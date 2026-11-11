@@ -52,12 +52,10 @@ const StyledDialogContent = styled(DialogContent)`
 type Props = {
   onClose: () => void;
   rule?: AiReviewRuleModel;
-  /** Creates a new rule prefilled from this one. */
   duplicateOf?: AiReviewRuleModel;
   onRequestRun?: (saved: AiReviewRuleModel) => void;
 };
 
-// "Checkout" -> "Checkout 2", "Checkout 2" -> "Checkout 3"; an unnamed rule stays unnamed.
 function duplicateName(name?: string) {
   if (!name) {
     return '';
@@ -80,21 +78,25 @@ export const AiReviewRuleDialog = ({
 
   const queryClient = useQueryClient();
 
-  async function offerRun(saved: AiReviewRuleModel) {
+  async function refreshRules() {
     await queryClient.invalidateQueries(matchUrlPrefix(RULES_URL));
-    // A rule that keeps AI away has nothing to score, so there is no run to offer.
-    if (saved.never || !onRequestRun || !canRun) {
-      return;
-    }
+  }
+
+  function cachedRule(ruleId: number) {
     const rules = queryClient.getQueryData<RulesList>([
       RULES_URL,
       { projectId: project.id },
       undefined,
       undefined,
     ]);
-    const refreshed = rules?._embedded?.aiReviewRules?.find(
-      (r) => r.id === saved.id
-    );
+    return rules?._embedded?.aiReviewRules?.find((r) => r.id === ruleId);
+  }
+
+  function offerRun(saved: AiReviewRuleModel) {
+    if (saved.never || !onRequestRun || !canRun) {
+      return;
+    }
+    const refreshed = cachedRule(saved.id);
     if (!refreshed?.counts?.backlog) {
       return;
     }
@@ -128,7 +130,7 @@ export const AiReviewRuleDialog = ({
       )
     );
     onClose();
-    offerRun(data);
+    refreshRules().then(() => offerRun(data));
   }
 
   function handleSubmit(values: RuleFormValues) {
@@ -215,7 +217,6 @@ export const AiReviewRuleDialog = ({
                     <Box display="grid" gap={0.5}>
                       <RuleModeSelect />
                       {values.mode === 'ACTIVE' && (
-                        // A light panel across the form for the settings of the selected mode.
                         <Box
                           display="grid"
                           gap={1}
@@ -230,7 +231,6 @@ export const AiReviewRuleDialog = ({
                           <RuleThresholdField />
                         </Box>
                       )}
-                      {/* Applies to both modes: AI skips these translations entirely. */}
                       <RuleQaCheckbox />
                     </Box>
                   </>
@@ -242,7 +242,6 @@ export const AiReviewRuleDialog = ({
                 </Button>
                 <LoadingButton
                   loading={isSubmitting}
-                  // The name is how rules are told apart in the list; a rule needs a language.
                   disabled={!values.name.trim() || values.noLanguages}
                   variant="contained"
                   color="primary"

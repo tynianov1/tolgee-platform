@@ -21,7 +21,6 @@ import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.batch.BatchJobChunkExecution
 import io.tolgee.model.enums.LlmProviderPriority
 import io.tolgee.model.enums.SystemActor
-import io.tolgee.model.enums.TranslationProtection
 import io.tolgee.model.enums.TranslationState
 import io.tolgee.model.enums.aiReview.AiReviewFailureReason
 import io.tolgee.model.enums.aiReview.AiReviewRuleMode
@@ -107,13 +106,11 @@ class AiReviewBatchServiceEeImpl(
       if (!AiReviewEligibility.isQueued(row)) return@executeInNewTransaction null
       val textHash = AiReviewEligibility.currentTextHash(translation)
       if (row.textHash != textHash) {
-        // A missed text-change event leaves the hash stale and the row queued forever.
         refreshForCurrentText(row, textHash)
         entityManager.flush()
       }
 
       val project = translation.key.project
-      // Losing the feature stops processing but keeps the queued rows for a later regain.
       if (!projectFeatureGuard.isFeatureEnabled(Feature.AI_REVIEW, project)) {
         return@executeInNewTransaction null
       }
@@ -150,7 +147,7 @@ class AiReviewBatchServiceEeImpl(
     val decision = decisionIfEligible(translation, row, aiManaged, baseLanguageId)
     if (decision is RuleDecision.Review) return decision
     if (aiManaged) {
-      leaveQueueAiManaged(row)
+      leaveQueueMarkingPendingFailed(row)
       return null
     }
     deleteUnlessResolved(row)
@@ -167,12 +164,9 @@ class AiReviewBatchServiceEeImpl(
     return evaluator.evaluate(translation, activeOnly = aiManaged)
   }
 
-  /**
-   * The row must stay, or the Reviewed state would look like a human review. A PENDING row has no
-   * result to fall back to, so it becomes FAILED, which keeps it AI-managed but out of the queue.
-   */
-  private fun leaveQueueAiManaged(row: TranslationAiReview) {
-    row.reReviewRequested = false
+  // The row must stay, or the Reviewed state would look like a human review.
+  private fun leaveQueueMarkingPendingFailed(row: TranslationAiReview) {
+    leaveQueue(row)
     if (row.status == AiReviewStatus.PENDING) row.status = AiReviewStatus.FAILED
   }
 
@@ -190,7 +184,7 @@ class AiReviewBatchServiceEeImpl(
 
   private fun markSkippedForQaIssues(row: TranslationAiReview) {
     row.status = AiReviewStatus.SKIPPED_QA_ISSUES
-    row.reReviewRequested = false
+    leaveQueue(row)
   }
 
   private fun claim(
@@ -274,13 +268,14 @@ class AiReviewBatchServiceEeImpl(
           return@executeInNewTransaction releaseToUnReview(row)
         }
         val decision =
-          currentDecisionOrNull(translation, row, assignment) ?: return@executeInNewTransaction releaseClaim(row)
+          currentDecisionOrNull(translation, row, assignment)
+            ?: return@executeInNewTransaction releaseClaimWithoutUpdate(row)
         when (qaGateFor(translation, translation.key.project, decision)) {
           QaGateResult.PASS -> Unit
-          QaGateResult.WAIT_FOR_FRESH_QA -> return@executeInNewTransaction releaseClaim(row)
+          QaGateResult.WAIT_FOR_FRESH_QA -> return@executeInNewTransaction releaseClaimWithoutUpdate(row)
           QaGateResult.OPEN_ISSUES -> {
             markSkippedForQaIssues(row)
-            return@executeInNewTransaction releaseClaim(row)
+            return@executeInNewTransaction releaseClaimWithoutUpdate(row)
           }
         }
 
@@ -304,7 +299,7 @@ class AiReviewBatchServiceEeImpl(
     return decision
   }
 
-  private fun releaseClaim(row: TranslationAiReview): AiReviewUpdate? {
+  private fun releaseClaimWithoutUpdate(row: TranslationAiReview): AiReviewUpdate? {
     row.batchJobId = null
     return null
   }
@@ -331,16 +326,19 @@ class AiReviewBatchServiceEeImpl(
   }
 
   private fun releaseToHumanReview(row: TranslationAiReview): AiReviewUpdate? {
-    if (!AiReviewEligibility.keepsAiManaged(row)) return releaseClaim(row)
-    reviewRepository.delete(row)
-    return AiReviewUpdate.removed(row.translation)
+    if (!AiReviewEligibility.keepsAiManaged(row)) return releaseClaimWithoutUpdate(row)
+    return deleteRow(row)
   }
 
   private fun releaseToUnReview(row: TranslationAiReview): AiReviewUpdate? {
     if (!AiReviewEligibility.isMarker(row)) {
-      row.reReviewRequested = false
-      return releaseClaim(row)
+      leaveQueue(row)
+      return releaseClaimWithoutUpdate(row)
     }
+    return deleteRow(row)
+  }
+
+  private fun deleteRow(row: TranslationAiReview): AiReviewUpdate {
     reviewRepository.delete(row)
     return AiReviewUpdate.removed(row.translation)
   }
@@ -411,9 +409,7 @@ class AiReviewBatchServiceEeImpl(
     row.issues = outcome.issues.toMutableList()
     row.providerName = outcome.providerName
     row.model = outcome.model
-    row.failureReason = null
-    row.lastFailureReason = null
-    row.lastFailedAt = null
+    clearFailure(row)
 
     if (status == AiReviewStatus.APPROVED) {
       translation.state = TranslationState.REVIEWED
@@ -465,6 +461,10 @@ class AiReviewBatchServiceEeImpl(
     row.status = AiReviewStatus.PENDING
     row.score = null
     row.issues = mutableListOf()
+    clearFailure(row)
+  }
+
+  private fun clearFailure(row: TranslationAiReview) {
     row.failureReason = null
     row.lastFailureReason = null
     row.lastFailedAt = null
@@ -472,10 +472,13 @@ class AiReviewBatchServiceEeImpl(
 
   private fun deleteUnlessResolved(row: TranslationAiReview) {
     if (AiReviewEligibility.isHumanDecision(row)) {
-      // A requeued human decision with no winner any more must still leave the queue.
-      row.reReviewRequested = false
+      leaveQueue(row)
       return
     }
     reviewRepository.delete(row)
+  }
+
+  private fun leaveQueue(row: TranslationAiReview) {
+    row.reReviewRequested = false
   }
 }

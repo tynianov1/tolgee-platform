@@ -15,10 +15,6 @@ import { FieldLabel } from 'tg.component/FormField';
 import { useLanguagesContent } from 'tg.component/common/form/LanguagesSelect/useLanguagesContent';
 import { RuleFormValues } from 'tg.ee.module/aiReview/rules/dialog/useRuleFormValues';
 
-/**
- * An empty `languageIds` means all languages, so "All" shows every language checked.
- * Unchecking one from there leaves the rest selected, which makes "all but one" two clicks.
- */
 export const RuleLanguagesField = () => {
   const { t } = useTranslate();
   const languages = useProjectLanguages();
@@ -83,8 +79,7 @@ export const RuleLanguagesField = () => {
               ? t('ai_review_rule_form_languages_none', 'Select languages')
               : isAll
               ? t('ai_review_rule_form_languages_all', 'All languages')
-              : // Language tags, like the language select in the translations view.
-                selectedTags.join(', ')}
+              : selectedTags.join(', ')}
           </Typography>
         )}
         MenuProps={{ PaperProps: { sx: { minWidth: 200, maxWidth: 280 } } }}

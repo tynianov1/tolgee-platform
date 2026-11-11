@@ -2,7 +2,7 @@ import { useApiQuery } from 'tg.service/http/useQueryApi';
 import { messageService } from 'tg.service/MessageService';
 import { TranslatedError } from 'tg.translationTools/TranslatedError';
 import { PromptItem } from './PromptLoadMenu';
-import { PromptType } from './PromptTypeToggle';
+import { PromptType } from 'tg.ee.module/llm/AiPrompt/PromptTypeToggle';
 import { usePromptUrlState } from 'tg.views/projects/translations/useUrlPromptState';
 
 type Props = {

@@ -3,6 +3,7 @@ package io.tolgee.ee.service.aiReview
 import io.tolgee.ee.service.aiReview.AiReviewKeyScopeSql.toKeyScope
 import io.tolgee.ee.service.aiReview.matching.KeyScope
 import io.tolgee.model.enums.TranslationState
+import io.tolgee.service.aiReview.AiReviewEligibleText
 import io.tolgee.service.aiReview.AiReviewTextHash
 import jakarta.persistence.EntityManager
 import jakarta.persistence.Query
@@ -128,10 +129,7 @@ class AiReviewBacklogQuery(
         and k.deleted_at is null
         and (b.id is null or b.deleted_at is null)
         and t.language_id <> :baseLanguageId
-        and t.text ~ '\S'
-        and t.state <> :disabled
-        and t.state <> :reviewed
-        and t.outdated = false
+        and ${AiReviewEligibleText.SQL_NOT_REVIEWED}
         and r.id is null
     """
   }

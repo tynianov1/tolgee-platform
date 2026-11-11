@@ -117,7 +117,7 @@ class AiReviewRuleService(
   }
 
   @Transactional
-  fun switchRulesUsingPromptToScoreOnlyRun(
+  fun switchRulesUsingPromptToScoreOnly(
     projectId: Long,
     promptId: Long,
   ) {
@@ -127,7 +127,7 @@ class AiReviewRuleService(
   }
 
   @Transactional
-  fun detachPromptAndSwitchToScoreOnlyRun(
+  fun detachPromptAndSwitchToScoreOnly(
     projectId: Long,
     promptId: Long,
   ) {
