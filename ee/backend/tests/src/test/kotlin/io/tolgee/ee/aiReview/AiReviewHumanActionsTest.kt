@@ -99,7 +99,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `un-review with the set-state endpoint marks SUPERSEDED and resolves the row`() {
+  fun `un-review with the set-state endpoint marks OVERRIDDEN and resolves the row`() {
     save()
     executeInNewTransaction(platformTransactionManager) {
       val row = translationAiReviewRepository.findByTranslationId(testData.deTranslation.id)!!
@@ -114,7 +114,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
     ).andIsOk
 
     val row = review(testData.deTranslation.id)!!
-    row.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    row.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     row.resolvedBy!!
       .id.assert
       .isEqualTo(testData.user.id)
@@ -125,7 +125,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `reviewing over a below-threshold result supersedes it`() {
+  fun `reviewing over a below-threshold result overrides it`() {
     testData.frTranslation.state = TranslationState.TRANSLATED
     testData.addReview(testData.frTranslationBuilder, AiReviewStatus.BELOW_THRESHOLD, 40) {
       rule = testData.rule
@@ -138,7 +138,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
     ).andIsOk
 
     val row = review(testData.frTranslation.id)!!
-    row.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    row.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     row.resolvedBy!!
       .id.assert
       .isEqualTo(testData.user.id)
@@ -146,7 +146,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `reviewing over a score-only result supersedes it`() {
+  fun `reviewing over a score-only result overrides it`() {
     testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
     testData.frTranslation.state = TranslationState.TRANSLATED
     testData.addReview(testData.frTranslationBuilder, AiReviewStatus.SCORE_ONLY_FAIL, 40) {
@@ -160,15 +160,15 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
     ).andIsOk
 
     val row = review(testData.frTranslation.id)!!
-    row.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    row.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     row.resolvedBy!!
       .id.assert
       .isEqualTo(testData.user.id)
   }
 
   @Test
-  fun `retry is rejected for a superseded row`() {
-    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.SUPERSEDED, 40) {
+  fun `retry is rejected for an overridden row`() {
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.OVERRIDDEN, 40) {
       resolvedBy = testData.user
     }
     save()
@@ -221,7 +221,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `the batch state operation marks SUPERSEDED and keeps flags as today`() {
+  fun `the batch state operation marks OVERRIDDEN and keeps flags as today`() {
     save()
     val job =
       executeInNewTransaction(platformTransactionManager) {
@@ -246,7 +246,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
     }
 
     waitForNotThrowing(pollTime = 100, timeout = 10_000) {
-      review(testData.deTranslation.id)?.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+      review(testData.deTranslation.id)?.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     }
     val row = review(testData.deTranslation.id)!!
     row.resolvedBy!!
@@ -271,12 +271,12 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a bulk human review of an MT text with an AI row supersedes the row`() {
+  fun `a bulk human review of an MT text with an AI row overrides the row`() {
     saveFrenchMtTextWithBelowThresholdRow()
     bulkReviewFrench()
 
     waitForNotThrowing(pollTime = 100, timeout = 10_000) {
-      review(testData.frTranslation.id)?.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+      review(testData.frTranslation.id)?.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     }
     executeInNewTransaction(platformTransactionManager) {
       val translation = translationService.get(testData.frTranslation.id)
@@ -343,7 +343,7 @@ class AiReviewHumanActionsTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `demotion by the system does not mark SUPERSEDED`() {
+  fun `demotion by the system does not mark OVERRIDDEN`() {
     save()
     executeInNewTransaction(platformTransactionManager) {
       entityManager.find(AiReviewRule::class.java, testData.rule.id).threshold = 95

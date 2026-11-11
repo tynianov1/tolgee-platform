@@ -131,7 +131,7 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a human review supersedes a below-threshold row and leaves it out of the filter`() {
+  fun `a human review overrides a below-threshold row and leaves it out of the filter`() {
     testData.addKeyWithTranslations("k.reviewedFailed").let {
       it.de.self.state = TranslationState.REVIEWED
       testData.addReview(it.de, AiReviewStatus.FAILED, 40) { rule = testData.rule }
@@ -155,7 +155,7 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
       .containsExactlyInAnyOrder("k.below", "k.aiBelow")
     keysFor("filterAiReviewStatus=FAILED").assert.containsExactly("k.failed")
     fetch("search=k.humanBelow").andIsOk.andAssertThatJson {
-      node("_embedded.keys[0].translations.de.aiReview.status").isEqualTo("SUPERSEDED")
+      node("_embedded.keys[0].translations.de.aiReview.status").isEqualTo("OVERRIDDEN")
     }
   }
 

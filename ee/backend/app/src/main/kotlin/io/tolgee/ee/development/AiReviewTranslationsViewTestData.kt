@@ -13,7 +13,7 @@ class AiReviewTranslationsViewTestData : AiReviewTestData() {
     keyWithRow("k.failed", AiReviewStatus.FAILED, null)
     keyWithRow("k.pending", AiReviewStatus.PENDING, null)
     keyWithRow("k.skipped", AiReviewStatus.SKIPPED_QA_ISSUES, null)
-    keyWithRow("k.superseded", AiReviewStatus.SUPERSEDED, 92)
+    keyWithRow("k.overridden", AiReviewStatus.OVERRIDDEN, 92)
     addKeyWithTranslations("k.none")
     addKeyWithTranslations("k.untagged", tags = emptyList())
     addRule {

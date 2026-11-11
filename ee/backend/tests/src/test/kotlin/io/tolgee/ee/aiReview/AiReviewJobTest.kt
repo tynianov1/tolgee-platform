@@ -453,12 +453,12 @@ class AiReviewJobTest : AbstractSpringTest() {
 
   @Test
   fun `skips non-claimable rows without calling the LLM`() {
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SUPERSEDED, 95)
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.OVERRIDDEN, 95)
     save()
 
     runJob(testData.deTranslation.id)
 
-    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     verify(openaiApiService, never()).translate(any(), any(), any())
   }
 

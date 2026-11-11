@@ -136,7 +136,7 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
   @Test
   fun `disabling drops pending queue rows and keeps results`() {
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)
-    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.SUPERSEDED, 95) {
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.OVERRIDDEN, 95) {
       reReviewRequested = true
     }
     val approved = testData.addKeyWithTranslations("keep.key").de
@@ -153,7 +153,7 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
     }
     review(testData.deTranslation.id).assert.isNull()
     val confirmed = review(testData.frTranslation.id)!!
-    confirmed.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    confirmed.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     confirmed.reReviewRequested.assert.isFalse()
     review(approved.self.id)!!.status.assert.isEqualTo(AiReviewStatus.APPROVED)
   }

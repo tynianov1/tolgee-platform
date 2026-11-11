@@ -104,7 +104,7 @@ export const AiReviewRunDialog = ({
   const data = preview.data;
   const toReview = data?.toReview ?? 0;
   const scoreOnlyRunCount = data?.scoreOnlyRunCount ?? 0;
-  const supersededToReReview = data?.supersededToReReview ?? 0;
+  const overriddenToReReview = data?.overriddenToReReview ?? 0;
   const skipped = Object.entries(data?.skipped ?? {}).filter(
     ([, count]) => Number(count) > 0
   );
@@ -124,10 +124,10 @@ export const AiReviewRunDialog = ({
           'Already queued: {count}',
           params
         );
-      case 'SUPERSEDED':
+      case 'OVERRIDDEN':
         return t(
-          'ai_review_run_skip_superseded',
-          'Superseded by a human: {count}',
+          'ai_review_run_skip_overridden',
+          'Overridden by a human: {count}',
           params
         );
       case 'HUMAN_REVIEWED':
@@ -203,16 +203,16 @@ export const AiReviewRunDialog = ({
             >
               {config.countLine(toReview)}
             </Typography>
-            {supersededToReReview > 0 && (
+            {overriddenToReReview > 0 && (
               <Typography
                 variant="body2"
                 color="textSecondary"
                 data-cy="ai-review-run-includes-resolved"
               >
                 {t(
-                  'ai_review_run_includes_superseded',
-                  '{count, plural, one {Includes # translation a human superseded.} other {Includes # translations a human superseded.}}',
-                  { count: supersededToReReview }
+                  'ai_review_run_includes_overridden',
+                  '{count, plural, one {Includes # translation a human overridden.} other {Includes # translations a human overridden.}}',
+                  { count: overriddenToReReview }
                 )}
               </Typography>
             )}

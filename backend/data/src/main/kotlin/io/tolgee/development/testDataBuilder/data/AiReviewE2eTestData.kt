@@ -153,12 +153,12 @@ class AiReviewE2eTestData : BaseTestData("test_username", "ai_review_project") {
         threshold = 85
         lastFailureReason = AiReviewFailureReason.PROVIDER_ERROR
       }
-      addReviewedKey("key_superseded", AiReviewStatus.SUPERSEDED, 92, reviewed = false) {
+      addReviewedKey("key_overridden", AiReviewStatus.OVERRIDDEN, 92, reviewed = false) {
         rule = activeRule
         threshold = 85
         resolvedBy = user
         resolvedAt = Date()
-        // A failed escape-hatch re-review leaves this on a superseded row; Retry must stay hidden.
+        // A failed escape-hatch re-review leaves this on an overridden row; Retry must stay hidden.
         lastFailureReason = AiReviewFailureReason.PROVIDER_ERROR
       }
       addReviewedKey("key_rule_deleted", AiReviewStatus.APPROVED, 91) {

@@ -224,7 +224,7 @@ class AiReviewMidFlightChangeTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a human un-review settled during a re-review keeps the superseded marker`() {
+  fun `a human un-review settled during a re-review keeps the overridden marker`() {
     approvalQueuedForReReview()
     save()
     stubWithMidFlightChange {
@@ -243,7 +243,7 @@ class AiReviewMidFlightChangeTest : AuthorizedControllerTest() {
 
     translation(testData.deTranslation.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
     val row = review(testData.deTranslation.id)!!
-    row.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    row.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     row.batchJobId.assert.isNull()
     rule().autoReviewedCount.assert.isEqualTo(0)
     verify(openaiApiService, times(1)).translate(any(), any(), any())
@@ -304,7 +304,7 @@ class AiReviewMidFlightChangeTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `an AI claim after a bulk un-review chunk commits keeps the superseded marker`() {
+  fun `an AI claim after a bulk un-review chunk commits keeps the overridden marker`() {
     approvalQueuedForReReview()
     save()
     doNothing().whenever(aiReviewActivityListener).onBatchJobFinalized(any<OnBatchJobFinalized>())
@@ -314,7 +314,7 @@ class AiReviewMidFlightChangeTest : AuthorizedControllerTest() {
     runJob(testData.deTranslation.id)
 
     translation(testData.deTranslation.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
-    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     verify(openaiApiService, never()).translate(any(), any(), any())
   }
 

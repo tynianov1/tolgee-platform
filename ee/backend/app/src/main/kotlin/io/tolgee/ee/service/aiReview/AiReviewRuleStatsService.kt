@@ -88,7 +88,7 @@ class AiReviewRuleStatsService(
       AiReviewStatus.APPROVED,
       AiReviewStatus.BELOW_THRESHOLD,
       AiReviewStatus.SKIPPED_QA_ISSUES,
-      AiReviewStatus.SUPERSEDED,
+      AiReviewStatus.OVERRIDDEN,
       -> withFailure
     }
   }

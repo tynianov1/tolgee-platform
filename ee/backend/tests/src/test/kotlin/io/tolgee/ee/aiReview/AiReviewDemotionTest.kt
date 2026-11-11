@@ -200,15 +200,15 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
   }
 
   @Test
-  fun `a SUPERSEDED row is never demoted`() {
+  fun `an OVERRIDDEN row is never demoted`() {
     testData.frTranslation.state = TranslationState.REVIEWED
     testData.frTranslation.auto = true
-    row(testData.frTranslationBuilder, AiReviewStatus.SUPERSEDED, 60)
+    row(testData.frTranslationBuilder, AiReviewStatus.OVERRIDDEN, 60)
     save()
     setRuleThresholdDirectly(90)
     demoteDirectly(testData.key.id)
 
-    review(testData.frTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    review(testData.frTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
     translation(testData.frTranslation.id).state.assert.isEqualTo(TranslationState.REVIEWED)
   }
 
@@ -318,8 +318,8 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
     val failed = testData.addKeyWithTranslations("k5")
     val skipped = testData.addKeyWithTranslations("k6")
     val pending = testData.addKeyWithTranslations("k7")
-    row(confirmed.de, AiReviewStatus.SUPERSEDED, 95)
-    row(rejected.de, AiReviewStatus.SUPERSEDED, 40)
+    row(confirmed.de, AiReviewStatus.OVERRIDDEN, 95)
+    row(rejected.de, AiReviewStatus.OVERRIDDEN, 40)
     row(belowThreshold.de, AiReviewStatus.BELOW_THRESHOLD, 50)
     row(scoreOnlyRun.de, AiReviewStatus.SCORE_ONLY_PASS, 90)
     row(failed.de, AiReviewStatus.FAILED, null)

@@ -25,10 +25,10 @@ export const useAiReviewStatusLabels = () => {
         );
       case 'FAILED':
         return t('ai_review_popover_status_failed', 'Review failed');
-      case 'SUPERSEDED':
+      case 'OVERRIDDEN':
         return t(
-          'ai_review_popover_status_superseded',
-          'Superseded by a human'
+          'ai_review_popover_status_overridden',
+          'Overridden by a human'
         );
       default:
         return status;

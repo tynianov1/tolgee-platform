@@ -51,9 +51,9 @@ describe('AI review badge', () => {
     });
   });
 
-  it('a superseded row shows a hover chip and the popover names the human', () => {
-    visitKey('key_superseded');
-    new E2AiReviewBadge('key_superseded').openPopover('SUPERSEDED', {
+  it('an overridden row shows a hover chip and the popover names the human', () => {
+    visitKey('key_overridden');
+    new E2AiReviewBadge('key_overridden').openPopover('OVERRIDDEN', {
       force: true,
     });
     gcy('ai-review-popover-status').should('be.visible');
@@ -142,7 +142,7 @@ describe('AI review badge', () => {
     });
   });
 
-  it('a human un-review of an AI approval leaves a superseded chip', () => {
+  it('a human un-review of an AI approval leaves an overridden chip', () => {
     visitKey('key_approved');
     getTranslationCell('key_approved', 'de')
       .closestDcy('translations-table-cell-translation')
@@ -150,7 +150,7 @@ describe('AI review badge', () => {
       .findDcy('translation-state-button')
       .click();
     getTranslationCell('key_approved', 'de').within(() => {
-      gcyAdvanced({ value: 'ai-review-badge', status: 'SUPERSEDED' }).should(
+      gcyAdvanced({ value: 'ai-review-badge', status: 'OVERRIDDEN' }).should(
         'exist'
       );
     });

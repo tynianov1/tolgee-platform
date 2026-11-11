@@ -189,7 +189,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
   @Test
   fun `with no enabled rule a text change deletes even a resolved row`() {
     testData.rule.enabled = false
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SUPERSEDED, 95)
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.OVERRIDDEN, 95)
     save()
     editTranslation("de", "Gleich zahlen")
 
@@ -200,7 +200,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
   @Test
   fun `a text change deletes the row even when AI review is off`() {
     enabledFeaturesProvider.forceEnabled = emptySet()
-    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.SUPERSEDED, 95)
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.OVERRIDDEN, 95)
     save()
     editTranslation("de", "Gleich zahlen")
 
@@ -248,7 +248,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
     testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)
     testData.addReview(testData.frTranslationBuilder, AiReviewStatus.APPROVED, 90)
     val confirmed = testData.addKeyWithTranslations("confirmed_key")
-    testData.addReview(confirmed.fr, AiReviewStatus.SUPERSEDED, 95)
+    testData.addReview(confirmed.fr, AiReviewStatus.OVERRIDDEN, 95)
     save()
 
     performAuthPut(
@@ -262,7 +262,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
 
     review(testData.deTranslation.id).assert.isNull()
     review(testData.frTranslation.id).assert.isNull()
-    review(confirmed.fr.self.id)!!.status.assert.isEqualTo(AiReviewStatus.SUPERSEDED)
+    review(confirmed.fr.self.id)!!.status.assert.isEqualTo(AiReviewStatus.OVERRIDDEN)
   }
 
   @Test

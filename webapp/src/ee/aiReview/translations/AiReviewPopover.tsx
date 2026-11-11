@@ -82,7 +82,7 @@ export const AiReviewPopover = ({
     aiReview.status === 'SCORE_ONLY_PASS' ||
     aiReview.status === 'SCORE_ONLY_FAIL';
   const showRetry =
-    aiReview.status !== 'SUPERSEDED' &&
+    aiReview.status !== 'OVERRIDDEN' &&
     (aiReview.status === 'FAILED' || Boolean(details?.lastFailureReason)) &&
     canRun;
 
@@ -172,8 +172,8 @@ export const AiReviewPopover = ({
             {resolvedParams && (
               <Typography variant="body2" data-cy="ai-review-popover-resolved">
                 {t(
-                  'ai_review_popover_superseded_by',
-                  'Superseded by {name} {time}',
+                  'ai_review_popover_overridden_by',
+                  'Overridden by {name} {time}',
                   resolvedParams
                 )}
               </Typography>

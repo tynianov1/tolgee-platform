@@ -1469,10 +1469,10 @@ export interface components {
     };
     AiReviewRunPreviewModel: {
       /** Format: int64 */
+      overriddenToReReview: number;
+      /** Format: int64 */
       scoreOnlyRunCount: number;
       skipped: { [key: string]: number };
-      /** Format: int64 */
-      supersededToReReview: number;
       /** Format: int64 */
       toReview: number;
     };
@@ -2974,6 +2974,13 @@ export interface components {
     DomainRequest: {
       domain: string;
       state: string;
+    };
+    DryRunMergeBranchRequest: {
+      /**
+       * Format: int64
+       * @description Source branch id
+       */
+      sourceBranchId: number;
     };
     EditKeyDto: {
       /** @description The branch of the key. (When empty or null default branch will be used) */
@@ -6570,13 +6577,6 @@ export interface components {
       publicRead: boolean;
       signingRegion: string;
     };
-    DryRunMergeBranchRequest: {
-      /**
-       * Format: int64
-       * @description Source branch id
-       */
-      sourceBranchId: number;
-    };
     ScreenshotInfoDto: {
       location?: string;
       positions?: components["schemas"]["KeyInScreenshotPositionDto"][];
@@ -7689,7 +7689,7 @@ export interface components {
         | "SCORE_ONLY_FAIL"
         | "FAILED"
         | "SKIPPED_QA_ISSUES"
-        | "SUPERSEDED";
+        | "OVERRIDDEN";
       /** Format: int32 */
       threshold?: number;
     };
@@ -7708,7 +7708,7 @@ export interface components {
         | "SCORE_ONLY_FAIL"
         | "FAILED"
         | "SKIPPED_QA_ISSUES"
-        | "SUPERSEDED";
+        | "OVERRIDDEN";
     };
     TranslationCommentDto: {
       /** @enum {string} */

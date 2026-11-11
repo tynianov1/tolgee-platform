@@ -97,9 +97,9 @@ class AiReviewRuleEvaluatorTest : AbstractSpringTest() {
     val humanReviewed =
       testData.addKeyWithTranslations("k.reviewed").de.also { it.self.state = TranslationState.REVIEWED }
     val confirmed =
-      testData.addKeyWithTranslations("k.superseded").de.also {
+      testData.addKeyWithTranslations("k.overridden").de.also {
         it.self.state = TranslationState.REVIEWED
-        testData.addReview(it, AiReviewStatus.SUPERSEDED, 90)
+        testData.addReview(it, AiReviewStatus.OVERRIDDEN, 90)
       }
     val staleApproval =
       testData.addKeyWithTranslations("k.stale").de.also {

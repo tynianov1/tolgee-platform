@@ -52,7 +52,7 @@ describe('AI review batch operation', () => {
     }).should('be.visible');
     gcyAdvanced({
       value: 'ai-review-run-skip-reason',
-      reason: 'SUPERSEDED',
+      reason: 'OVERRIDDEN',
     }).should('be.visible');
   });
 

@@ -48,7 +48,7 @@ class AiReviewRunService(
     val toReview: List<ToReview>,
     val scoreOnlyRunCount: Long,
     val skipped: Map<AiReviewSkipReason, Long>,
-    val supersededToReReview: Long,
+    val overriddenToReReview: Long,
   )
 
   private data class ToReview(
@@ -66,7 +66,7 @@ class AiReviewRunService(
       toReview = classified.toReview.size.toLong(),
       scoreOnlyRunCount = classified.scoreOnlyRunCount,
       skipped = classified.skipped,
-      supersededToReReview = classified.supersededToReReview,
+      overriddenToReReview = classified.overriddenToReReview,
     )
   }
 
@@ -127,7 +127,7 @@ class AiReviewRunService(
     val toReview = mutableListOf<ToReview>()
     var scoreOnlyRunCount = 0L
     val skipped = mutableMapOf<AiReviewSkipReason, Long>()
-    var supersededToReReview = 0L
+    var overriddenToReReview = 0L
 
     candidateTranslationIds(projectId, request).distinct().chunked(CHUNK).forEach { chunk ->
       val rows = reviewRepository.findAllByTranslationIdIn(chunk).associateBy { it.translation.id }
@@ -137,7 +137,7 @@ class AiReviewRunService(
           is CandidateResult.Skipped -> skipped.merge(result.reason, 1L, Long::plus)
           is CandidateResult.Review -> {
             if (result.scoreOnlyRun) scoreOnlyRunCount++
-            if (rows[translation.id]?.status == AiReviewStatus.SUPERSEDED) supersededToReReview++
+            if (rows[translation.id]?.status == AiReviewStatus.OVERRIDDEN) overriddenToReReview++
             toReview += ToReview(translation.id, hasRow = result.hasRow)
           }
           CandidateResult.NotACandidate -> Unit
@@ -145,7 +145,7 @@ class AiReviewRunService(
       }
       entityManager.clear()
     }
-    return Classified(toReview, scoreOnlyRunCount, skipped, supersededToReReview)
+    return Classified(toReview, scoreOnlyRunCount, skipped, overriddenToReReview)
   }
 
   private fun openQaIssueIds(
@@ -226,7 +226,7 @@ class AiReviewRunService(
     private fun rowSkipReason(row: TranslationAiReview?): AiReviewSkipReason? {
       if (row == null) return null
       if (!request.reReview) {
-        if (row.status == AiReviewStatus.SUPERSEDED) return AiReviewSkipReason.SUPERSEDED
+        if (row.status == AiReviewStatus.OVERRIDDEN) return AiReviewSkipReason.OVERRIDDEN
       }
       if (AiReviewEligibility.isQueued(row)) return AiReviewSkipReason.ALREADY_QUEUED
       val hasResult = row.status in RESULT_STATUSES

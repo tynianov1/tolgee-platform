@@ -40,7 +40,7 @@ default). While it is off, the review endpoints (detail, retry, run preview, run
 review) return `FEATURE_NOT_ENABLED_FOR_PROJECT`, but rules and review prompts stay manageable.
 Turning it on creates one default rule ("Default rule": Score only, threshold 85, skip open QA
 issues, all languages) when the project has no rules yet — never a second one. Turning it off
-deletes the `PENDING` queue rows and clears re-review flags; stored results and superseded markers
+deletes the `PENDING` queue rows and clears re-review flags; stored results and overridden markers
 stay.
 
 ## 2. How it works
@@ -56,7 +56,7 @@ stay.
    - Score only rule: only a score, the state never changes.
    - No usable answer: `FAILED`, nothing changes.
 5. A human decision wins over the AI. When a human reviews or un-reviews a translation that has an
-   AI result, the row becomes a `SUPERSEDED` marker that names the user (see 3.3).
+   AI result, the row becomes an `OVERRIDDEN` marker that names the user (see 3.3).
 
 ## 3. Decisions
 
@@ -129,12 +129,12 @@ stay.
   it, Keep is not offered for AI approvals). *Why:* otherwise auto translation would still replace
   the text, and "Keep" would not keep it. Open point: after this the text is still machine
   translated, so the missing mark is not true. A better way is not decided yet.
-- **Any human un-review of an AI approval marks the row `SUPERSEDED`.** That includes the normal
+- **Any human un-review of an AI approval marks the row `OVERRIDDEN`.** That includes the normal
   state button and the batch "Mark as translated". The flags follow what that path does today (the
   state button clears `auto`, the batch path does not). The marker keeps who resolved it and when,
   and the badge shows a quiet chip on hover. *Why:* the AI must never undo a human decision, and
   the marker tells the next reader that the AI result was overruled, by whom.
-  Retry is hidden for a superseded row, and the retry endpoint refuses it. Only a manual run with
+  Retry is hidden for an overridden row, and the retry endpoint refuses it. Only a manual run with
   the re-review option reviews it again.
   A human text edit that un-reviews the text drops the old row (the hash no longer matches). A
   machine overwrite also drops it: when the same change writes new text with `auto` (bulk "Machine
@@ -142,7 +142,7 @@ stay.
   does not say the AI was wrong.
   While the feature or the project switch is off, a human un-review deletes the approval instead.
   *Why:* a kept marker on a project that opted out blocks later runs for no reason.
-- **A human review over a bad AI result also marks the row `SUPERSEDED`.** When a human sets
+- **A human review over a bad AI result also marks the row `OVERRIDDEN`.** When a human sets
   Reviewed on a text with a current `BELOW_THRESHOLD`, `SCORE_ONLY_PASS` or `SCORE_ONLY_FAIL` row
   (and AI review is on for the project), the row converts instead of being deleted. *Why:* the
   human overruled the AI here too, and the marker keeps that visible.
@@ -165,7 +165,7 @@ stay.
   not seen.
 - **"AI-managed review"** (`AiReviewManaged`): a Reviewed translation with an AI approval or a
   below-threshold result for the current text, or with `auto` and an AI row that is not
-  `SUPERSEDED` or Score only. It is not human-reviewed, so the AI may review it again.
+  `OVERRIDDEN` or Score only. It is not human-reviewed, so the AI may review it again.
   *Why:* after MT replaced an approval, or after a demotion or a failed re-review under protection,
   the row is no longer an approval, but the state is still the AI's. This also holds for
   human-written text (no `auto`) that the AI approved. When a human sets Reviewed, the activity
@@ -174,7 +174,7 @@ stay.
   needed also for `auto` texts. *Why:* otherwise a later re-review could set a human review back to
   Translated. For a batch job, the listener handles human state changes in each chunk's own
   transaction, not when the job ends. *Why:* a job that claims the row after a chunk commits would
-  see an AI-managed review. The listener's delete or `SUPERSEDED` commits together with the human
+  see an AI-managed review. The listener's delete or `OVERRIDDEN` commits together with the human
   change, so a job that claimed the row before finds no row or a human decision and drops its
   result. In the same way, a re-review of an AI approval drops its result when a human un-reviews
   the approval during the LLM call.
@@ -228,7 +228,7 @@ stay.
   look like human reviews. Later demotion runs keep these approvals too (also for a disabled rule):
   only a matching rule that is stricter than the stored score, or a Never, removes them. A rule edit
   that changes only the name starts no demotion.
-- **A base language change deletes all rows except human decisions** (`SUPERSEDED`).
+- **A base language change deletes all rows except human decisions** (`OVERRIDDEN`).
   *Why:* every stored score was measured against the old base language. The cost: a Reviewed
   translation that the AI approved keeps its state and `auto` but loses its row, so it counts as a
   human review and "Approved by AI" is no longer shown.

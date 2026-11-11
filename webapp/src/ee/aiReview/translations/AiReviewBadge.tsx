@@ -62,7 +62,7 @@ export const AiReviewBadge = ({ aiReview }: Props) => {
     orange: status === 'BELOW_THRESHOLD',
     grey:
       status === 'FAILED' ||
-      status === 'SUPERSEDED' ||
+      status === 'OVERRIDDEN' ||
       status === 'SCORE_ONLY_PASS' ||
       status === 'SCORE_ONLY_FAIL',
     scoreOnlyRun: status === 'SCORE_ONLY_PASS' || status === 'SCORE_ONLY_FAIL',
@@ -76,8 +76,8 @@ export const AiReviewBadge = ({ aiReview }: Props) => {
       data-cy-last-failed={String(Boolean(lastFailed))}
     >
       {status === 'FAILED' ? <AlertCircle /> : <Stars01 />}
-      {status === 'SUPERSEDED' && <XClose />}
-      {status !== 'FAILED' && status !== 'SUPERSEDED' && score}
+      {status === 'OVERRIDDEN' && <XClose />}
+      {status !== 'FAILED' && status !== 'OVERRIDDEN' && score}
       {lastFailed && <AlertTriangle />}
     </StyledPill>
   );

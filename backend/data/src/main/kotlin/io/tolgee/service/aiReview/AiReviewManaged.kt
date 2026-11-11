@@ -14,11 +14,11 @@ object AiReviewManaged {
       " io.tolgee.model.enums.aiReview.AiReviewStatus.BELOW_THRESHOLD)" +
       " and r.textHash = ${AiReviewTextHash.CURRENT_TEXT_JPQL})" +
       " or (t.auto = true and r.status not in (" +
-      "io.tolgee.model.enums.aiReview.AiReviewStatus.SUPERSEDED," +
+      "io.tolgee.model.enums.aiReview.AiReviewStatus.OVERRIDDEN," +
       " io.tolgee.model.enums.aiReview.AiReviewStatus.SCORE_ONLY_PASS," +
       " io.tolgee.model.enums.aiReview.AiReviewStatus.SCORE_ONLY_FAIL))))"
 
-  val HUMAN_DECISIONS = setOf(AiReviewStatus.SUPERSEDED)
+  val HUMAN_DECISIONS = setOf(AiReviewStatus.OVERRIDDEN)
 
   private val NOT_AI_MANAGED = HUMAN_DECISIONS + setOf(AiReviewStatus.SCORE_ONLY_PASS, AiReviewStatus.SCORE_ONLY_FAIL)
 

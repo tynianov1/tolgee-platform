@@ -17,7 +17,7 @@ describe('AI review filter name', () => {
   });
 
   it('has no entry for human decisions', () => {
-    for (const gone of ['SUPERSEDED', 'CONFIRMED', 'REJECTED']) {
+    for (const gone of ['OVERRIDDEN', 'CONFIRMED', 'REJECTED']) {
       expect(
         getAiReviewFiltersName({
           filterAiReviewOutcomes: [gone as AiReviewFilterOutcome],
