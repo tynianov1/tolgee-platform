@@ -94,6 +94,7 @@ export const useWebsocketService = (
                     score: update.score ?? undefined,
                     scoreOnlyRun: update.scoreOnlyRun,
                     lastFailed: update.lastFailed,
+                    queued: update.queued,
                   },
           },
         }))

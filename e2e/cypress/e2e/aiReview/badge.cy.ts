@@ -33,7 +33,7 @@ describe('AI review badge', () => {
     });
   }
 
-  it('shows a badge per status and none for a pending row', () => {
+  it('shows a badge per status and a queued badge for a pending row', () => {
     const badges: [string, string][] = [
       ['key_approved', 'APPROVED'],
       ['key_below_threshold', 'BELOW_THRESHOLD'],
@@ -43,10 +43,12 @@ describe('AI review badge', () => {
     ];
     badges.forEach(([key, status]) => {
       visitKey(key);
-      new E2AiReviewBadge(key).assertVisible(status);
+      new E2AiReviewBadge(key).assertVisible(status, { queued: false });
     });
     visitKey('key_pending');
-    new E2AiReviewBadge('key_pending').assertAbsent();
+    new E2AiReviewBadge('key_pending').assertVisible('PENDING', {
+      queued: true,
+    });
   });
 
   it('an overridden row shows a hover chip and the popover names the human', () => {

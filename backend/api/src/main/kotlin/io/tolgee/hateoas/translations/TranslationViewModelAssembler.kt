@@ -41,6 +41,7 @@ class TranslationViewModelAssembler(
             score = view.aiReviewScore,
             scoreOnlyRun = view.aiReviewScoreOnlyRun,
             lastFailed = view.aiReviewLastFailed,
+            queued = view.aiReviewQueued,
           )
         },
     )

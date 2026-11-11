@@ -30,6 +30,8 @@ export const useAiReviewStatusLabels = () => {
           'ai_review_popover_status_overridden',
           'Overridden by a human'
         );
+      case 'PENDING':
+        return t('ai_review_popover_status_pending', 'Waiting for AI review');
       default:
         return status;
     }

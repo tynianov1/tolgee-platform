@@ -335,6 +335,42 @@ class AiReviewRunTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `a rule run re-reviews score-only results once the rule is active`() {
+    val scored = testData.addKeyWithTranslations("k.scored")
+    testData.addReview(scored.de, AiReviewStatus.SCORE_ONLY_PASS, 90)
+    save()
+
+    performAuthPost(
+      "$projectUrl/ai-review/run/preview",
+      runBody(ruleId = testData.rule.id),
+    ).andIsOk.andAssertThatJson {
+      node("toReview").isEqualTo(4)
+      node("scoreOnlyRunCount").isEqualTo(0)
+    }
+
+    performAuthPost("$projectUrl/ai-review/run", runBody(ruleId = testData.rule.id)).andIsOk
+    waitForNotThrowing(pollTime = 100, timeout = 30_000) {
+      review(scored.de.self.id)?.status.assert.isEqualTo(AiReviewStatus.APPROVED)
+    }
+  }
+
+  @Test
+  fun `a score-only rule run does not re-score its own results`() {
+    testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
+    val scored = testData.addKeyWithTranslations("k.scored")
+    testData.addReview(scored.de, AiReviewStatus.SCORE_ONLY_FAIL, 60)
+    save()
+
+    performAuthPost(
+      "$projectUrl/ai-review/run/preview",
+      runBody(ruleId = testData.rule.id),
+    ).andIsOk.andAssertThatJson {
+      node("toReview").isEqualTo(3)
+      node("scoreOnlyRunCount").isEqualTo(3)
+    }
+  }
+
+  @Test
   fun `an NBSP-only text is reviewable in the run preview like in the SQL backlog`() {
     val nbsp = testData.addKeyWithTranslations("k.nbsp", deText = "\u00A0")
     save()

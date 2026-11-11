@@ -10,6 +10,9 @@ export const isScoreOnlyStatus = (status?: AiReviewSummary['status']) =>
 export const getAiReviewCellVisibility = (
   aiReview: AiReviewSummary | undefined
 ): AiReviewCellVisibility => {
+  if (aiReview?.queued) {
+    return 'badge';
+  }
   switch (aiReview?.status) {
     case 'OVERRIDDEN':
       return 'hover';

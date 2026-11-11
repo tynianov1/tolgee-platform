@@ -27,6 +27,7 @@ data class TranslationView(
   var aiReviewScore: Int? = null,
   var aiReviewScoreOnlyRun: Boolean = false,
   var aiReviewLastFailed: Boolean = false,
+  var aiReviewQueued: Boolean = false,
 ) {
   var suggestions: List<TranslationSuggestionView>? = null
   var qaIssues: List<TranslationQaIssue> = emptyList()

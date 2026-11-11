@@ -380,7 +380,7 @@ class TranslationViewDataProvider(
           .createNativeQuery(
             """
             select r.translation_id, r.status, r.score, r.rule_mode, (r.last_failure_reason is not null),
-                   t.state
+                   t.state, r.re_review_requested
             from translation_ai_review r
             join translation t on t.id = r.translation_id
             where r.translation_id in :ids
@@ -400,6 +400,7 @@ class TranslationViewDataProvider(
           status == AiReviewStatus.SCORE_ONLY_PASS ||
           status == AiReviewStatus.SCORE_ONLY_FAIL
         view.aiReviewLastFailed = row[4] as Boolean
+        view.aiReviewQueued = status == AiReviewStatus.PENDING || row[6] as Boolean
       }
     }
   }

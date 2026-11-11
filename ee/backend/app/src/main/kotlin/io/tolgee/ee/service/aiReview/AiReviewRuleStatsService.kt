@@ -1,6 +1,7 @@
 package io.tolgee.ee.service.aiReview
 
 import io.tolgee.ee.service.aiReview.matching.RuleDecision
+import io.tolgee.model.enums.aiReview.AiReviewRuleMode
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.repository.aiReview.AiReviewRuleRepository
 import io.tolgee.repository.aiReview.TranslationAiReviewRepository
@@ -48,6 +49,7 @@ class AiReviewRuleStatsService(
       .groupCandidates(projectId, baseLanguageId(projectId), evaluator.defaultBranchName(projectId))
       .forEach { group ->
         val decision = decide(group.scope, group.languageId) as? RuleDecision.Review ?: return@forEach
+        if (group.hasScoreOnlyRow && decision.rule.mode != AiReviewRuleMode.ACTIVE) return@forEach
         val current = counts[decision.rule.id] ?: return@forEach
         counts[decision.rule.id] = current.copy(backlog = current.backlog + group.translationCount)
       }
@@ -63,6 +65,7 @@ class AiReviewRuleStatsService(
     val decide = evaluator.decider(projectId)
     backlogQuery.forEachCandidate(projectId, baseLanguageId(projectId), evaluator.defaultBranchName(projectId)) {
       val decision = decide(it.scope, it.languageId) as? RuleDecision.Review ?: return@forEachCandidate
+      if (it.hasScoreOnlyRow && decision.rule.mode != AiReviewRuleMode.ACTIVE) return@forEachCandidate
       if (decision.rule.id == ruleId) fn(it.translationId)
     }
   }

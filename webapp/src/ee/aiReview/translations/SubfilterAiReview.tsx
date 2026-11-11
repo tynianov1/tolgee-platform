@@ -153,6 +153,7 @@ export const SubfilterAiReview = ({
                         status: badgeStatus,
                         scoreOnlyRun: badgeStatus.startsWith('SCORE_ONLY'),
                         lastFailed: false,
+                        queued: false,
                       }}
                     />
                   )

@@ -7,4 +7,5 @@ data class TranslationAiReviewSummaryModel(
   val score: Int?,
   val scoreOnlyRun: Boolean,
   val lastFailed: Boolean,
+  val queued: Boolean,
 )

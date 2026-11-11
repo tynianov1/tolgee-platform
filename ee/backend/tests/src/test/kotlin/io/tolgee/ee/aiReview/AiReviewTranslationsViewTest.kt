@@ -99,6 +99,27 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `the summary reports queued for pending and re-review rows`() {
+    testData.addKeyWithTranslations("k.rereview").let {
+      testData.addReview(it.de, AiReviewStatus.SCORE_ONLY_PASS, 90) {
+        reReviewRequested = true
+      }
+    }
+    save()
+    fetch("search=k.pending").andIsOk.andAssertThatJson {
+      node("_embedded.keys[0].translations.de.aiReview.status").isEqualTo("PENDING")
+      node("_embedded.keys[0].translations.de.aiReview.queued").isEqualTo(true)
+    }
+    fetch("search=k.rereview").andIsOk.andAssertThatJson {
+      node("_embedded.keys[0].translations.de.aiReview.status").isEqualTo("SCORE_ONLY_PASS")
+      node("_embedded.keys[0].translations.de.aiReview.queued").isEqualTo(true)
+    }
+    fetch("search=k.approved").andIsOk.andAssertThatJson {
+      node("_embedded.keys[0].translations.de.aiReview.queued").isEqualTo(false)
+    }
+  }
+
+  @Test
   fun `the summary is null without the feature`() {
     save()
     enabledFeaturesProvider.forceEnabled = emptySet()

@@ -3,6 +3,7 @@ import { alpha, styled } from '@mui/material';
 import {
   AlertCircle,
   AlertTriangle,
+  DotsHorizontal,
   Stars01,
   XClose,
 } from '@untitled-ui/icons-react';
@@ -49,6 +50,9 @@ const StyledPill = styled('span')`
     background: transparent;
     border: 1px solid;
   }
+  &.queued {
+    opacity: 0.6;
+  }
 `;
 
 type Props = {
@@ -56,14 +60,19 @@ type Props = {
 };
 
 export const AiReviewBadge = ({ aiReview }: Props) => {
-  const { status, score, lastFailed } = aiReview;
+  const { status, score, lastFailed, queued } = aiReview;
 
   const scoreOnlyRun = isScoreOnlyStatus(status);
   const look = clsx({
     green: status === 'APPROVED',
     orange: status === 'BELOW_THRESHOLD',
-    grey: status === 'FAILED' || status === 'OVERRIDDEN' || scoreOnlyRun,
+    grey:
+      status === 'FAILED' ||
+      status === 'OVERRIDDEN' ||
+      status === 'PENDING' ||
+      scoreOnlyRun,
     scoreOnlyRun,
+    queued,
   });
 
   return (
@@ -72,10 +81,12 @@ export const AiReviewBadge = ({ aiReview }: Props) => {
       data-cy="ai-review-badge"
       data-cy-status={status}
       data-cy-last-failed={String(Boolean(lastFailed))}
+      data-cy-queued={String(Boolean(queued))}
     >
       {status === 'FAILED' ? <AlertCircle /> : <Stars01 />}
       {status === 'OVERRIDDEN' && <XClose />}
       {status !== 'FAILED' && status !== 'OVERRIDDEN' && score}
+      {queued && <DotsHorizontal />}
       {lastFailed && <AlertTriangle />}
     </StyledPill>
   );

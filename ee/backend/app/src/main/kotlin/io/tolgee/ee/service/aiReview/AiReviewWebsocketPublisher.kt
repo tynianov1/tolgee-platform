@@ -4,6 +4,7 @@ import io.tolgee.component.CurrentDateProvider
 import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.model.translation.Translation
+import io.tolgee.service.aiReview.AiReviewQueued
 import io.tolgee.service.aiReview.AiReviewResultApplies
 import io.tolgee.websocket.ActivityWebsocketListener
 import io.tolgee.websocket.WebsocketEvent
@@ -22,12 +23,20 @@ data class AiReviewUpdate(
   val score: Int?,
   val scoreOnlyRun: Boolean,
   val lastFailed: Boolean,
+  val queued: Boolean,
 ) {
   companion object {
     fun of(
       row: TranslationAiReview,
       scoreOnlyRun: Boolean,
-    ) = of(row.translation, row.status, row.score, scoreOnlyRun, lastFailed = row.lastFailureReason != null)
+    ) = of(
+      row.translation,
+      row.status,
+      row.score,
+      scoreOnlyRun,
+      lastFailed = row.lastFailureReason != null,
+      queued = AiReviewQueued.of(row),
+    )
 
     fun of(
       translation: Translation,
@@ -35,6 +44,7 @@ data class AiReviewUpdate(
       score: Int?,
       scoreOnlyRun: Boolean,
       lastFailed: Boolean,
+      queued: Boolean,
     ): AiReviewUpdate {
       if (status == null) return removed(translation)
       if (!AiReviewResultApplies.stillApplies(status, translation.state)) return removed(translation)
@@ -46,6 +56,7 @@ data class AiReviewUpdate(
         score = score,
         scoreOnlyRun = scoreOnlyRun,
         lastFailed = lastFailed,
+        queued = queued,
       )
     }
 
@@ -58,6 +69,7 @@ data class AiReviewUpdate(
         score = null,
         scoreOnlyRun = false,
         lastFailed = false,
+        queued = false,
       )
   }
 }

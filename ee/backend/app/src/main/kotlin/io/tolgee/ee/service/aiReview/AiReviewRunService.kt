@@ -44,6 +44,7 @@ class AiReviewRunService(
   private val userAccountService: UserAccountService,
   private val batchJobService: BatchJobService,
   private val entityManager: EntityManager,
+  private val websocketPublisher: AiReviewWebsocketPublisher,
 ) {
   private data class Classified(
     val toReview: List<ToReview>,
@@ -90,22 +91,30 @@ class AiReviewRunService(
         isHidden = false,
       )
     val (withRow, withoutRow) = classified.toReview.partition { it.hasRow }
-    requestReReview(withRow.map { it.translationId }, job.id)
-    queueService.queueAndClearContext(withoutRow.map { it.translationId }, manualRunBatchJobId = job.id)
+    val reReviewUpdates = requestReReview(withRow.map { it.translationId }, job.id)
+    val queuedUpdates =
+      queueService.queueAndClearContext(withoutRow.map { it.translationId }, manualRunBatchJobId = job.id)
+    websocketPublisher.publishAfterCommit(projectId, reReviewUpdates + queuedUpdates)
     return entityManager.find(BatchJob::class.java, job.id)
   }
 
   private fun requestReReview(
     translationIds: List<Long>,
     jobId: Long,
-  ) {
+  ): List<AiReviewUpdate> {
+    val updates = mutableListOf<AiReviewUpdate>()
     translationIds.chunked(CHUNK).forEach { chunk ->
       reviewRepository.findAllByTranslationIdIn(chunk).forEach { row ->
         row.reReviewRequested = true
         row.manualRunBatchJobId = jobId
+        updates += AiReviewUpdate.of(row, scoreOnlyRun = scoreOnlyRun(row))
       }
     }
+    return updates
   }
+
+  private fun scoreOnlyRun(row: TranslationAiReview): Boolean =
+    row.ruleMode == AiReviewRuleMode.SCORE_ONLY || row.status in SCORE_ONLY_STATUSES
 
   /**
    * Cancel undoes only what this run queued: a row replaced in the meantime has no
@@ -202,7 +211,7 @@ class AiReviewRunService(
       if (decision is RuleDecision.Never) return CandidateResult.Skipped(AiReviewSkipReason.NEVER)
       if (decision !is RuleDecision.Review) return CandidateResult.Skipped(AiReviewSkipReason.NO_RULE)
       val reason =
-        rowSkipReason(row)
+        rowSkipReason(row, decision)
           ?: qaSkipReason(decision, translation, openQaIssueIds)
           ?: permissionSkipReason(decision, translation)
       if (reason != null) return CandidateResult.Skipped(reason)
@@ -230,12 +239,17 @@ class AiReviewRunService(
     private fun reRunsHumanDecision(row: TranslationAiReview?): Boolean =
       request.reReview && row != null && AiReviewEligibility.isHumanDecision(row)
 
-    private fun rowSkipReason(row: TranslationAiReview?): AiReviewSkipReason? {
+    private fun rowSkipReason(
+      row: TranslationAiReview?,
+      decision: RuleDecision.Review,
+    ): AiReviewSkipReason? {
       if (row == null) return null
       if (!request.reReview && row.status == AiReviewStatus.OVERRIDDEN) return AiReviewSkipReason.OVERRIDDEN
       if (AiReviewEligibility.isQueued(row)) return AiReviewSkipReason.ALREADY_QUEUED
+      val scoreOnlyRerun =
+        decision.rule.mode == AiReviewRuleMode.ACTIVE && row.status in SCORE_ONLY_STATUSES
       val hasResult = row.status in RESULT_STATUSES
-      val reRun = request.reReview || (request.failedOnly && row.lastFailureReason != null)
+      val reRun = request.reReview || scoreOnlyRerun || (request.failedOnly && row.lastFailureReason != null)
       if (hasResult && !reRun) return AiReviewSkipReason.ALREADY_HAS_RESULT
       return null
     }
@@ -295,6 +309,12 @@ class AiReviewRunService(
       setOf(
         AiReviewStatus.APPROVED,
         AiReviewStatus.BELOW_THRESHOLD,
+        AiReviewStatus.SCORE_ONLY_PASS,
+        AiReviewStatus.SCORE_ONLY_FAIL,
+      )
+
+    private val SCORE_ONLY_STATUSES =
+      setOf(
         AiReviewStatus.SCORE_ONLY_PASS,
         AiReviewStatus.SCORE_ONLY_FAIL,
       )

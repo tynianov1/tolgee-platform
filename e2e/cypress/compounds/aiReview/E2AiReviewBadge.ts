@@ -4,6 +4,7 @@ import { getTranslationCell } from '../../common/translations';
 type BadgeOptions = {
   timeout?: number;
   lastFailed?: boolean;
+  queued?: boolean;
 };
 
 export class E2AiReviewBadge {
@@ -49,6 +50,9 @@ export class E2AiReviewBadge {
       };
       if (options?.lastFailed !== undefined) {
         selector['last-failed'] = String(options.lastFailed);
+      }
+      if (options?.queued !== undefined) {
+        selector['queued'] = String(options.queued);
       }
       fn(
         gcyAdvanced(

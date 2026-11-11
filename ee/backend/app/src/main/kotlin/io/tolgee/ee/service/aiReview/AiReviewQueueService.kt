@@ -151,7 +151,14 @@ class AiReviewQueueService(
   private fun rowUpdate(
     translation: Translation,
     status: AiReviewStatus?,
-  ) = AiReviewUpdate.of(translation, status, score = null, scoreOnlyRun = false, lastFailed = false)
+  ) = AiReviewUpdate.of(
+    translation,
+    status,
+    score = null,
+    scoreOnlyRun = false,
+    lastFailed = false,
+    queued = status == AiReviewStatus.PENDING,
+  )
 
   @Transactional
   fun onSourceChanged(
@@ -183,8 +190,8 @@ class AiReviewQueueService(
   fun queueAndClearContext(
     translationIds: Collection<Long>,
     manualRunBatchJobId: Long? = null,
-  ): Int {
-    var queued = 0
+  ): List<AiReviewUpdate> {
+    val updates = mutableListOf<AiReviewUpdate>()
     translationIds.chunked(IN_CLAUSE_CHUNK).forEach { chunk ->
       val existing =
         reviewRepository
@@ -196,11 +203,11 @@ class AiReviewQueueService(
           .findAllForAiReviewRuleEvaluation(chunk)
           .filter { it.id !in existing }
       insertRows(toQueue, AiReviewStatus.PENDING, manualRunBatchJobId)
-      queued += toQueue.size
+      updates += toQueue.map { rowUpdate(it, AiReviewStatus.PENDING) }
       entityManager.flush()
       entityManager.clear()
     }
-    return queued
+    return updates
   }
 
   // on conflict do nothing: a user edit and a run start can insert the same translation_id

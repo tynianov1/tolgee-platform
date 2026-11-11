@@ -3,6 +3,7 @@ package io.tolgee.ee.service.aiReview
 import io.tolgee.ee.service.aiReview.AiReviewKeyScopeSql.toKeyScope
 import io.tolgee.ee.service.aiReview.matching.KeyScope
 import io.tolgee.model.enums.TranslationState
+import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.service.aiReview.AiReviewEligibleText
 import io.tolgee.service.aiReview.AiReviewTextHash
 import jakarta.persistence.EntityManager
@@ -19,12 +20,14 @@ class AiReviewBacklogQuery(
     val scope: KeyScope,
     val languageId: Long,
     val translationCount: Long,
+    val hasScoreOnlyRow: Boolean,
   )
 
   data class Candidate(
     val translationId: Long,
     val scope: KeyScope,
     val languageId: Long,
+    val hasScoreOnlyRow: Boolean,
   )
 
   fun groupCandidates(
@@ -35,9 +38,10 @@ class AiReviewBacklogQuery(
     val query =
       entityManager.createNativeQuery(
         """
-        select $SCOPE_COLUMNS, t.language_id as language_id, count(*) as translation_count
+        select $SCOPE_COLUMNS, t.language_id as language_id, (r.id is not null) as has_score_only_row,
+               count(*) as translation_count
         $CANDIDATES
-        group by 1, 2, 3, t.language_id
+        group by 1, 2, 3, 4, 5
         """,
         Tuple::class.java,
       )
@@ -49,6 +53,7 @@ class AiReviewBacklogQuery(
           scope = row.toKeyScope(keyId = 0),
           languageId = (row.get("language_id") as Number).toLong(),
           translationCount = (row.get("translation_count") as Number).toLong(),
+          hasScoreOnlyRow = row.get("has_score_only_row") as Boolean,
         )
       }
   }
@@ -62,7 +67,8 @@ class AiReviewBacklogQuery(
     val query =
       entityManager.createNativeQuery(
         """
-        select $SCOPE_COLUMNS, t.language_id as language_id, t.id as translation_id, k.id as key_id
+        select $SCOPE_COLUMNS, t.language_id as language_id, t.id as translation_id, k.id as key_id,
+               (r.id is not null) as has_score_only_row
         $CANDIDATES
         order by t.id
         """,
@@ -80,6 +86,7 @@ class AiReviewBacklogQuery(
               translationId = (row.get("translation_id") as Number).toLong(),
               scope = row.toKeyScope(keyId = (row.get("key_id") as Number).toLong()),
               languageId = (row.get("language_id") as Number).toLong(),
+              hasScoreOnlyRow = row.get("has_score_only_row") as Boolean,
             ),
           )
         }
@@ -110,7 +117,7 @@ class AiReviewBacklogQuery(
     """
 
     // Human-reviewed translations are excluded by the state check: an AI approval always has a row.
-    private const val CANDIDATES = """
+    private val CANDIDATES = """
       from translation t
       join key k on k.id = t.key_id
       left join namespace n on n.id = k.namespace_id
@@ -130,7 +137,10 @@ class AiReviewBacklogQuery(
         and (b.id is null or b.deleted_at is null)
         and t.language_id <> :baseLanguageId
         and ${AiReviewEligibleText.SQL_NOT_REVIEWED}
-        and r.id is null
+        and (
+          r.id is null
+          or r.status in ('${AiReviewStatus.SCORE_ONLY_PASS}', '${AiReviewStatus.SCORE_ONLY_FAIL}')
+        )
     """
   }
 }

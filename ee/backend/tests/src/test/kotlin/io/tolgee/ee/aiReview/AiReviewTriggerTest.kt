@@ -236,6 +236,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
           score = null,
           scoreOnlyRun = false,
           lastFailed = false,
+          queued = false,
         )
       }
 
@@ -252,6 +253,33 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
     event.allValues[index]
       .dataCollapsed.assert
       .isTrue()
+  }
+
+  @Test
+  fun `a run start publishes queued updates for existing and new rows`() {
+    val scored = testData.addKeyWithTranslations("k.scored")
+    testData.addReview(scored.de, AiReviewStatus.SCORE_ONLY_PASS, 90)
+    save()
+
+    performAuthPost("$projectUrl/ai-review/run", mapOf("ruleId" to testData.rule.id)).andIsOk
+
+    val destination = argumentCaptor<String>()
+    val event = argumentCaptor<WebsocketEvent>()
+    verify(websocketEventPublisher, atLeastOnce()).invoke(destination.capture(), event.capture())
+    @Suppress("UNCHECKED_CAST")
+    val updates =
+      destination.allValues
+        .zip(event.allValues)
+        .filter { (dest, _) -> dest == "/projects/${testData.project.id}/ai-review-updated" }
+        .flatMap { (_, e) -> e.data as? List<AiReviewUpdate> ?: emptyList() }
+    updates
+      .single { it.translationId == scored.de.self.id && it.queued }
+      .status.assert
+      .isEqualTo(AiReviewStatus.SCORE_ONLY_PASS)
+    updates
+      .single { it.translationId == testData.deTranslation.id && it.queued }
+      .status.assert
+      .isEqualTo(AiReviewStatus.PENDING)
   }
 
   @Test

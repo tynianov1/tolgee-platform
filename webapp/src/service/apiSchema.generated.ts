@@ -7693,6 +7693,7 @@ export interface components {
     /** @description AI review result for the current text. Null without a current result or the feature. */
     TranslationAiReviewSummaryModel: {
       lastFailed: boolean;
+      queued: boolean;
       /** Format: int32 */
       score?: number;
       scoreOnlyRun: boolean;

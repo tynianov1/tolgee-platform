@@ -10,6 +10,7 @@ import io.tolgee.fixtures.andIsOk
 import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.enums.TranslationState
 import io.tolgee.model.enums.aiReview.AiReviewFailureReason
+import io.tolgee.model.enums.aiReview.AiReviewRuleMode
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.repository.aiReview.TranslationAiReviewRepository
 import io.tolgee.testing.AuthorizedControllerTest
@@ -188,6 +189,49 @@ class AiReviewRuleStatsTest : AuthorizedControllerTest() {
     return executeInNewTransaction(platformTransactionManager) {
       ids.map { translationService.get(it) }.map { "${it.key.name}/${it.language.tag}" }.toSet()
     }
+  }
+
+  @Test
+  fun `score-only rows join the backlog when the winning rule is active`() {
+    review("k.scoredPass", AiReviewStatus.SCORE_ONLY_PASS)
+    review("k.scoredFail", AiReviewStatus.SCORE_ONLY_FAIL)
+    review("k.approved", AiReviewStatus.APPROVED, reviewed = true)
+    review("k.belowThreshold", AiReviewStatus.BELOW_THRESHOLD)
+    save()
+
+    backlogOf(testData.rule.id).assert.containsExactlyInAnyOrder(
+      "checkout.pay/de",
+      "checkout.pay/fr",
+      "k.scoredPass/de",
+      "k.scoredPass/fr",
+      "k.scoredFail/de",
+      "k.scoredFail/fr",
+      "k.approved/fr",
+      "k.belowThreshold/fr",
+    )
+    statsService
+      .getCounts(testData.project.id)
+      .getValue(testData.rule.id)
+      .backlog.assert
+      .isEqualTo(8)
+  }
+
+  @Test
+  fun `score-only rows stay out of the backlog when the winning rule is score only`() {
+    testData.rule.mode = AiReviewRuleMode.SCORE_ONLY
+    review("k.scored", AiReviewStatus.SCORE_ONLY_FAIL)
+    save()
+
+    backlogOf(testData.rule.id).assert.containsExactlyInAnyOrder(
+      "checkout.pay/de",
+      "checkout.pay/fr",
+      "k.scored/fr",
+    )
+    statsService
+      .getCounts(testData.project.id)
+      .getValue(testData.rule.id)
+      .backlog.assert
+      .isEqualTo(3)
   }
 
   @Test

@@ -211,6 +211,7 @@ export type AiReviewUpdate = {
   score: number | null;
   scoreOnlyRun: boolean;
   lastFailed: boolean;
+  queued: boolean;
 };
 // `data` is null when the server collapsed a too-large update; clients refetch then.
 export type AiReviewUpdatedData = WebsocketEvent<AiReviewUpdate[] | null>;

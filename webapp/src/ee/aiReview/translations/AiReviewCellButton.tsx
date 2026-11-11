@@ -25,7 +25,11 @@ export const AiReviewCellButton = ({
         className={className}
         ref={buttonRef}
         onClick={() => setOpen(true)}
-        tooltip={t('translation_cell_ai_review', 'AI review')}
+        tooltip={
+          aiReview.queued
+            ? t('translation_cell_ai_review_queued', 'AI review in progress')
+            : t('translation_cell_ai_review', 'AI review')
+        }
         data-cy="translations-cell-ai-review-button"
       >
         <AiReviewBadge aiReview={aiReview} />

@@ -110,6 +110,18 @@ export const AiReviewPopover = ({
             </Typography>
             <AiReviewBadge aiReview={aiReview} />
           </Box>
+          {aiReview.queued && aiReview.status !== 'PENDING' && (
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              data-cy="ai-review-popover-queued"
+            >
+              {t(
+                'ai_review_popover_queued',
+                'A new AI review is running. This result will be replaced.'
+              )}
+            </Typography>
+          )}
           {protectedNoteVisible && (
             <Typography
               variant="body2"
