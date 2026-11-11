@@ -98,7 +98,7 @@ class AiReviewRuleController(
 
   @PutMapping("/enabled")
   @Operation(summary = "Enable or disable AI review for the project")
-  @RequestActivity(ActivityType.AI_REVIEW_SETTINGS_UPDATE)
+  @RequestActivity(ActivityType.AI_REVIEW_ENABLED_UPDATE)
   @RequiresProjectPermissions([Scope.PROMPTS_EDIT])
   @AllowApiAccess
   @RequiresFeatures(Feature.AI_REVIEW)

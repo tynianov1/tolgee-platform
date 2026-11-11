@@ -5698,6 +5698,7 @@ export interface components {
         | "AI_PROMPT_UPDATE"
         | "AI_PROMPT_DELETE"
         | "AI_REVIEW_SETTINGS_UPDATE"
+        | "AI_REVIEW_ENABLED_UPDATE"
         | "AI_REVIEW_RULE_CREATE"
         | "AI_REVIEW_RULE_UPDATE"
         | "AI_REVIEW_RULE_DELETE"

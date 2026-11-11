@@ -367,6 +367,20 @@ export const actionsConfiguration: Partial<
       ],
     },
   },
+  AI_REVIEW_ENABLED_UPDATE: {
+    label(params) {
+      return (
+        <T
+          keyName="activity_ai_review_enabled_update"
+          defaultValue="Turned AI review on or off"
+          params={params}
+        />
+      );
+    },
+    entities: {
+      Project: ['useAiReview'],
+    },
+  },
   CONTENT_DELIVERY_CONFIG_CREATE: {
     label(params) {
       return (

@@ -219,6 +219,17 @@ export const activityEntities: Record<EntityEnum, EntityOptions> = {
       return <T keyName="activity_entity_project" params={params} />;
     },
     fields: {
+      useAiReview: {
+        type: 'ai_review_enabled',
+        label() {
+          return (
+            <T
+              keyName="activity_entity_project.use_ai_review"
+              defaultValue="AI review"
+            />
+          );
+        },
+      },
       aiApprovedSourceChangeAction: {
         type: 'text',
         label() {
@@ -644,7 +655,7 @@ export const activityEntities: Record<EntityEnum, EntityOptions> = {
         },
       },
       enabled: {
-        type: 'text',
+        type: 'ai_review_enabled',
         label() {
           return (
             <T

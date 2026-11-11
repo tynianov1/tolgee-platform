@@ -159,6 +159,19 @@ class AiReviewProjectSwitchTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `the toggle is logged with its own activity type`() {
+    save()
+
+    performAuthPut("$projectUrl/ai-review-rules/enabled", mapOf("enabled" to false)).andIsOk
+
+    performAuthGet("$projectUrl/activity").andIsOk.andAssertThatJson {
+      node("_embedded.activities[0].type").isEqualTo("AI_REVIEW_ENABLED_UPDATE")
+      node("_embedded.activities[0].modifiedEntities.Project[0].modifications.useAiReview.old").isEqualTo(true)
+      node("_embedded.activities[0].modifiedEntities.Project[0].modifications.useAiReview.new").isEqualTo(false)
+    }
+  }
+
+  @Test
   fun `a user with prompts view only cannot toggle`() {
     save()
     userAccount = testData.promptsViewer
