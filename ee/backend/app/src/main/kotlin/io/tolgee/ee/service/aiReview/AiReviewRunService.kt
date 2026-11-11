@@ -107,14 +107,11 @@ class AiReviewRunService(
       reviewRepository.findAllByTranslationIdIn(chunk).forEach { row ->
         row.reReviewRequested = true
         row.manualRunBatchJobId = jobId
-        updates += AiReviewUpdate.of(row, scoreOnlyRun = scoreOnlyRun(row))
+        updates += AiReviewUpdate.of(row, scoreOnlyRun = AiReviewUpdate.scoreOnlyRun(row))
       }
     }
     return updates
   }
-
-  private fun scoreOnlyRun(row: TranslationAiReview): Boolean =
-    row.ruleMode == AiReviewRuleMode.SCORE_ONLY || row.status in SCORE_ONLY_STATUSES
 
   /**
    * Cancel undoes only what this run queued: a row replaced in the meantime has no

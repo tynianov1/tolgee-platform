@@ -211,20 +211,33 @@ interface TranslationAiReviewRepository : JpaRepository<TranslationAiReview, Lon
   )
   fun clearReReviewByProject(projectId: Long): Int
 
-  @Modifying
   @Query(
     """
-    delete from TranslationAiReview r
+    select r from TranslationAiReview r
+    join fetch r.translation tr
+    join fetch tr.key
+    join fetch tr.language
     where r.rule.id = :ruleId and r.status in :statuses
       and not exists (
         select 1 from Translation t where t.id = r.translation.id and ${AiReviewManaged.JPQL}
       )
     """,
   )
-  fun deleteByRuleAndStatusesUnlessAiManaged(
+  fun findByRuleAndStatusesUnlessAiManaged(
     ruleId: Long,
     statuses: Collection<AiReviewStatus>,
-  ): Int
+  ): List<TranslationAiReview>
+
+  @Query(
+    """
+    select r from TranslationAiReview r
+    join fetch r.translation tr
+    join fetch tr.key k
+    join fetch tr.language
+    where k.project.id = :projectId and ${AiReviewQueued.JPQL}
+    """,
+  )
+  fun findQueuedByProject(projectId: Long): List<TranslationAiReview>
 
   @Query(
     """

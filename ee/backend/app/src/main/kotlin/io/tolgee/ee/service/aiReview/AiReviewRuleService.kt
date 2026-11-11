@@ -7,6 +7,7 @@ import io.tolgee.exceptions.NotFoundException
 import io.tolgee.model.Language
 import io.tolgee.model.Project
 import io.tolgee.model.aiReview.AiReviewRule
+import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.enums.PromptType
 import io.tolgee.model.enums.aiReview.AiReviewRuleMode
 import io.tolgee.model.enums.aiReview.AiReviewStatus
@@ -30,6 +31,7 @@ class AiReviewRuleService(
   private val aiReviewQueueService: AiReviewQueueService,
   private val translationAiReviewRepository: TranslationAiReviewRepository,
   private val projectService: ProjectService,
+  private val websocketPublisher: AiReviewWebsocketPublisher,
 ) {
   @Transactional
   fun setProjectEnabled(
@@ -44,8 +46,22 @@ class AiReviewRuleService(
       createDefaultRuleIfNone(projectId, project)
       return
     }
+    val queued = translationAiReviewRepository.findQueuedByProject(projectId)
     translationAiReviewRepository.deletePendingByProject(projectId)
     translationAiReviewRepository.clearReReviewByProject(projectId)
+    websocketPublisher.publishAfterCommit(projectId, queued.map { queueClearedUpdate(it) })
+  }
+
+  private fun queueClearedUpdate(row: TranslationAiReview): AiReviewUpdate {
+    if (row.status == AiReviewStatus.PENDING) return AiReviewUpdate.removed(row.translation)
+    return AiReviewUpdate.of(
+      row.translation,
+      row.status,
+      row.score,
+      scoreOnlyRun = AiReviewUpdate.scoreOnlyRun(row),
+      lastFailed = row.lastFailureReason != null,
+      queued = false,
+    )
   }
 
   private fun createDefaultRuleIfNone(
@@ -111,9 +127,17 @@ class AiReviewRuleService(
     ruleId: Long,
   ) {
     val rule = get(projectId, ruleId)
-    translationAiReviewRepository.deleteByRuleAndStatusesUnlessAiManaged(ruleId, TRANSIENT_STATUSES)
+    val removed = translationAiReviewRepository.findByRuleAndStatusesUnlessAiManaged(ruleId, TRANSIENT_STATUSES)
+    val updates = removed.map { AiReviewUpdate.removed(it.translation) }
+    if (removed.isNotEmpty()) {
+      // The bulk delete bypasses the persistence context, so the loaded rows must leave it
+      // before the flush, or they reference the deleted rule.
+      removed.forEach { entityManager.detach(it) }
+      translationAiReviewRepository.deleteAllByIdInBatch(removed.map { it.id })
+    }
     aiReviewRuleRepository.delete(rule)
     aiReviewRuleCache.evict(projectId)
+    websocketPublisher.publishAfterCommit(projectId, updates)
   }
 
   @Transactional

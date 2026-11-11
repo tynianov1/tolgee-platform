@@ -2,6 +2,7 @@ package io.tolgee.ee.service.aiReview
 
 import io.tolgee.component.CurrentDateProvider
 import io.tolgee.model.aiReview.TranslationAiReview
+import io.tolgee.model.enums.aiReview.AiReviewRuleMode
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.model.translation.Translation
 import io.tolgee.service.aiReview.AiReviewQueued
@@ -71,6 +72,11 @@ data class AiReviewUpdate(
         lastFailed = false,
         queued = false,
       )
+
+    fun scoreOnlyRun(row: TranslationAiReview): Boolean =
+      row.ruleMode == AiReviewRuleMode.SCORE_ONLY ||
+        row.status == AiReviewStatus.SCORE_ONLY_PASS ||
+        row.status == AiReviewStatus.SCORE_ONLY_FAIL
   }
 }
 

@@ -263,15 +263,7 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
 
     performAuthPost("$projectUrl/ai-review/run", mapOf("ruleId" to testData.rule.id)).andIsOk
 
-    val destination = argumentCaptor<String>()
-    val event = argumentCaptor<WebsocketEvent>()
-    verify(websocketEventPublisher, atLeastOnce()).invoke(destination.capture(), event.capture())
-    @Suppress("UNCHECKED_CAST")
-    val updates =
-      destination.allValues
-        .zip(event.allValues)
-        .filter { (dest, _) -> dest == "/projects/${testData.project.id}/ai-review-updated" }
-        .flatMap { (_, e) -> e.data as? List<AiReviewUpdate> ?: emptyList() }
+    val updates = aiReviewUpdates()
     updates
       .single { it.translationId == scored.de.self.id && it.queued }
       .status.assert
@@ -280,6 +272,54 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
       .single { it.translationId == testData.deTranslation.id && it.queued }
       .status.assert
       .isEqualTo(AiReviewStatus.PENDING)
+  }
+
+  @Test
+  fun `deleting a rule publishes the removal of its transient rows`() {
+    val scored = testData.addKeyWithTranslations("k.scored")
+    testData.addReview(scored.de, AiReviewStatus.SCORE_ONLY_PASS, 90) {
+      rule = testData.rule
+      ruleMode = AiReviewRuleMode.SCORE_ONLY
+    }
+    save()
+
+    performAuthDelete("$projectUrl/ai-review-rules/${testData.rule.id}").andIsOk
+
+    aiReviewUpdates()
+      .single { it.translationId == scored.de.self.id }
+      .status.assert
+      .isNull()
+  }
+
+  @Test
+  fun `disabling AI review publishes the deleted queue rows and cleared re-review flags`() {
+    testData.addReview(testData.deTranslationBuilder, AiReviewStatus.PENDING)
+    testData.addReview(testData.frTranslationBuilder, AiReviewStatus.SCORE_ONLY_PASS, 90) {
+      reReviewRequested = true
+    }
+    save()
+
+    performAuthPut("$projectUrl/ai-review-rules/enabled", mapOf("enabled" to false)).andIsOk
+
+    val updates = aiReviewUpdates()
+    updates
+      .single { it.translationId == testData.deTranslation.id }
+      .status.assert
+      .isNull()
+    val cleared = updates.single { it.translationId == testData.frTranslation.id }
+    cleared.status.assert.isEqualTo(AiReviewStatus.SCORE_ONLY_PASS)
+    cleared.queued.assert.isFalse()
+  }
+
+  private fun aiReviewUpdates(): List<AiReviewUpdate> {
+    val destination = argumentCaptor<String>()
+    val event = argumentCaptor<WebsocketEvent>()
+    verify(websocketEventPublisher, atLeastOnce()).invoke(destination.capture(), event.capture())
+    @Suppress("UNCHECKED_CAST")
+    return destination.allValues
+      .zip(event.allValues)
+      .filter { (dest, _) -> dest == "/projects/${testData.project.id}/ai-review-updated" }
+      .flatMap { (_, e) -> e.data as? List<AiReviewUpdate> ?: emptyList() }
   }
 
   @Test
