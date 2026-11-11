@@ -3,6 +3,7 @@ package io.tolgee.ee.service.aiReview
 import io.tolgee.dtos.request.prompt.PromptDto
 import io.tolgee.model.enums.LlmProviderPriority
 import io.tolgee.repository.TranslationRepository
+import io.tolgee.service.aiReview.AiReviewEligibleText
 import io.tolgee.service.aiReview.AiReviewPlaygroundReviewer
 import io.tolgee.service.aiReview.PlaygroundReviewResult
 import io.tolgee.service.project.ProjectService
@@ -27,7 +28,7 @@ class AiReviewPlaygroundReviewerEeImpl(
     val translation =
       translationRepository.findOneByProjectIdAndKeyIdAndLanguageId(projectId, keyId, languageId)
         ?: return null
-    if (translation.text.isNullOrBlank()) return null
+    if (!AiReviewEligibleText.hasReviewableText(translation)) return null
     val organizationId = projectService.getDto(projectId).organizationOwnerId
     val result =
       aiReviewPromptService.reviewWithPrompt(

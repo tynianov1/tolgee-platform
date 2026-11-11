@@ -74,13 +74,14 @@ class AiReviewRuleStatsService(
     lastFailed: Boolean,
     count: Long,
   ): AiReviewRuleCounts {
+    val retryableFailure = lastFailed && status != AiReviewStatus.OVERRIDDEN
     val withFailure =
       when {
-        lastFailed -> copy(failed = failed + count)
+        retryableFailure -> copy(failed = failed + count)
         else -> this
       }
     return when (status) {
-      AiReviewStatus.FAILED -> withFailure.copy(failed = failed + count)
+      AiReviewStatus.FAILED -> withFailure.copy(failed = withFailure.failed + count)
       AiReviewStatus.SCORE_ONLY_PASS ->
         withFailure.copy(scored = scored + count, wouldBeAutoReviewed = wouldBeAutoReviewed + count)
       AiReviewStatus.SCORE_ONLY_FAIL -> withFailure.copy(scored = scored + count)

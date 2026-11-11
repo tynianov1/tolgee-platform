@@ -1,5 +1,9 @@
 package io.tolgee.ee.service.aiReview.matching
 
+/**
+ * Must match the Criteria twin AiReviewRuleSqlPredicates in backend/data
+ * (translationViewBuilder), including the tag, namespace and branch semantics.
+ */
 object RuleScopeMatcher {
   private const val WITHOUT_TAGS = ""
 
@@ -26,6 +30,12 @@ object RuleScopeMatcher {
     if (WITHOUT_TAGS in ruleTags && keyTags.isEmpty()) return true
     return keyTags.any { it in ruleTags }
   }
+
+  fun branchCoverageChanges(
+    rule: RuleSnapshot,
+    oldName: String,
+    newName: String,
+  ): Boolean = rule.enabled && matchesBranch(rule, oldName) != matchesBranch(rule, newName)
 
   private fun matchesBranch(
     rule: RuleSnapshot,

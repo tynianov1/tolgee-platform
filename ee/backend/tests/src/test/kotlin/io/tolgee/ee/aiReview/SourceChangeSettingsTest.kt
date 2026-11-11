@@ -46,8 +46,8 @@ class SourceChangeSettingsTest : AuthorizedControllerTest() {
   fun setup() {
     enabledFeaturesProvider.forceEnabled = setOf(Feature.AI_REVIEW)
     testData = AiReviewTestData()
-    promptsEditor = addUserWithScopes("sc_prompts_editor", Scope.PROMPTS_VIEW, Scope.PROMPTS_EDIT)
-    projectEditor = addUserWithScopes("sc_project_editor", Scope.PROJECT_EDIT)
+    promptsEditor = testData.addUserWithScopes("sc_prompts_editor", Scope.PROMPTS_VIEW, Scope.PROMPTS_EDIT)
+    projectEditor = testData.addUserWithScopes("sc_project_editor", Scope.PROJECT_EDIT)
   }
 
   @AfterEach
@@ -167,6 +167,19 @@ class SourceChangeSettingsTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `under Protect reviewed PUT keeps the stored values of the locked fields`() {
+    testData.project.translationProtection = TranslationProtection.PROTECT_REVIEWED
+    save()
+
+    performAuthPut(url, body()).andIsOk
+
+    val project = project()
+    project.humanEditedSourceChangeAction.assert.isEqualTo(SourceChangeAction.RETRANSLATE)
+    project.aiApprovedSourceChangeAction.assert.isEqualTo(SourceChangeAction.RETRANSLATE)
+    project.humanReviewedSourceChangeAction.assert.isEqualTo(SourceChangeAction.MARK_OUTDATED)
+  }
+
+  @Test
   fun `without AI review the service stores the human settings and keeps aiApproved`() {
     save()
     enabledFeaturesProvider.forceEnabled = emptySet()
@@ -218,19 +231,4 @@ class SourceChangeSettingsTest : AuthorizedControllerTest() {
     executeInNewTransaction(platformTransactionManager) {
       entityManager.find(Project::class.java, testData.project.id)
     }
-
-  private fun addUserWithScopes(
-    name: String,
-    vararg scopes: Scope,
-  ): UserAccount =
-    testData.root
-      .addUserAccount { username = name }
-      .self
-      .also { user ->
-        testData.projectBuilder.addPermission {
-          this.user = user
-          type = null
-          this.scopes = scopes.toList().toTypedArray()
-        }
-      }
 }

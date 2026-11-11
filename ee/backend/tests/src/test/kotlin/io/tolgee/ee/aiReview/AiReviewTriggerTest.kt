@@ -8,6 +8,7 @@ import io.tolgee.constants.Feature
 import io.tolgee.ee.component.PublicEnabledFeaturesProvider
 import io.tolgee.ee.development.AiReviewTestData
 import io.tolgee.ee.service.aiReview.AiReviewUpdate
+import io.tolgee.ee.service.aiReview.AiReviewWebsocketPublisher
 import io.tolgee.fixtures.andIsOk
 import io.tolgee.fixtures.waitForNotThrowing
 import io.tolgee.model.Project
@@ -54,6 +55,9 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
   @Autowired
   @MockitoBean
   private lateinit var websocketEventPublisher: WebsocketEventPublisher
+
+  @Autowired
+  private lateinit var aiReviewWebsocketPublisher: AiReviewWebsocketPublisher
 
   lateinit var testData: AiReviewTestData
 
@@ -217,6 +221,37 @@ class AiReviewTriggerTest : AuthorizedControllerTest() {
 
     review(testData.deTranslation.id).assert.isNull()
     review(testData.frTranslation.id).assert.isNull()
+  }
+
+  @Test
+  fun `a bulk update above the limit sends one collapsed event`() {
+    save()
+    val updates =
+      (1..500L).map {
+        AiReviewUpdate(
+          translationId = it,
+          keyId = it,
+          languageTag = "de",
+          status = null,
+          score = null,
+          scoreOnlyRun = false,
+          lastFailed = false,
+        )
+      }
+
+    aiReviewWebsocketPublisher.publishAfterCommit(testData.project.id, updates)
+
+    val destination = argumentCaptor<String>()
+    val event = argumentCaptor<WebsocketEvent>()
+    verify(websocketEventPublisher, atLeastOnce()).invoke(destination.capture(), event.capture())
+    val index = destination.allValues.indexOf("/projects/${testData.project.id}/ai-review-updated")
+    index.assert.isGreaterThanOrEqualTo(0)
+    event.allValues[index]
+      .data.assert
+      .isNull()
+    event.allValues[index]
+      .dataCollapsed.assert
+      .isTrue()
   }
 
   @Test

@@ -14,14 +14,17 @@ import io.tolgee.component.eventListeners.BypassableActivityListener
 import io.tolgee.constants.Feature
 import io.tolgee.ee.service.aiReview.AiReviewActionService
 import io.tolgee.ee.service.aiReview.AiReviewQueueService
+import io.tolgee.ee.service.aiReview.AiReviewRuleEvaluator
 import io.tolgee.ee.service.aiReview.AiReviewRunService
 import io.tolgee.ee.service.aiReview.IN_CLAUSE_CHUNK
+import io.tolgee.ee.service.aiReview.matching.RuleScopeMatcher
 import io.tolgee.events.OnProjectActivityEvent
 import io.tolgee.events.OnQaIssuesIgnored
 import io.tolgee.model.Project
 import io.tolgee.model.activity.ActivityModifiedEntity
 import io.tolgee.model.batch.params.AiReviewJobParams
 import io.tolgee.model.batch.params.QaCheckJobParams
+import io.tolgee.model.branching.Branch
 import io.tolgee.model.enums.SystemActor
 import io.tolgee.model.enums.TranslationState
 import io.tolgee.model.key.Key
@@ -51,6 +54,7 @@ class AiReviewActivityListener(
   private val keyMetaRepository: KeyMetaRepository,
   private val aiReviewActionService: AiReviewActionService,
   private val aiReviewRunService: AiReviewRunService,
+  private val aiReviewRuleEvaluator: AiReviewRuleEvaluator,
 ) : BypassableActivityListener {
   @Volatile
   override var bypass = false
@@ -149,6 +153,7 @@ class AiReviewActivityListener(
     entities: List<ActivityModifiedEntity>,
   ) {
     startDemotionForKeyScopeChanges(projectId, entities)
+    startDemotionForBranchRename(projectId, entities)
     val textChanged = textChangedTranslations(entities)
     if (textChanged.isEmpty()) return
     if (!isAiReviewOn(projectId) && !hasRowsOnKeysOf(textChanged)) return
@@ -231,6 +236,32 @@ class AiReviewActivityListener(
           it.revisionType != RevisionType.DEL &&
           it.modifications.containsKey("tags")
       }.map { it.entityId }
+
+  private fun startDemotionForBranchRename(
+    projectId: Long,
+    entities: List<ActivityModifiedEntity>,
+  ) {
+    val renames = branchRenames(entities)
+    if (renames.isEmpty()) return
+    if (!isAiReviewOn(projectId)) return
+    val rules = aiReviewRuleEvaluator.loadRules(projectId)
+    val coverageChanges =
+      renames.any { (oldName, newName) ->
+        rules.any { RuleScopeMatcher.branchCoverageChanges(it, oldName, newName) }
+      }
+    if (!coverageChanges) return
+    aiReviewQueueService.startDemotionJobForApprovals(projectId)
+  }
+
+  private fun branchRenames(entities: List<ActivityModifiedEntity>): List<Pair<String, String>> =
+    entities
+      .filter { it.entityClass == Branch::class.simpleName && it.revisionType == RevisionType.MOD }
+      .mapNotNull { entity ->
+        val modification = entity.modifications["name"] ?: return@mapNotNull null
+        val oldName = modification.old?.toString() ?: return@mapNotNull null
+        val newName = modification.new?.toString() ?: return@mapNotNull null
+        oldName to newName
+      }
 
   // Runs in beforeTransactionCompletion, where a languageService lookup can write or fail, so the
   // id comes from the modification itself.

@@ -72,7 +72,7 @@ class ActivityWebsocketListener(
     translationDataModifications: List<ActivityModifiedEntity>,
   ) {
     val data =
-      if (translationDataModifications.size < 500) {
+      if (translationDataModifications.size < COLLAPSE_LIMIT) {
         mapOf(
           "keys" to
             translationDataModifications.filter { it.entityClass == Key::class.simpleName }.map {
@@ -192,5 +192,10 @@ class ActivityWebsocketListener(
             )
         }?.toMap()
     return data
+  }
+
+  companion object {
+    // A bigger message can exceed the websocket session's send buffer.
+    const val COLLAPSE_LIMIT = 500
   }
 }

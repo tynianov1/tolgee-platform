@@ -8,11 +8,16 @@ import jakarta.persistence.criteria.Path
 import jakarta.persistence.criteria.Predicate
 
 object AiReviewEligibleText {
+  // Same as the SQL `~ '\S'`: Postgres keeps NBSP as text, isNullOrBlank does not.
+  private val NON_SPACE = Regex("""\S""")
+
   /** REVIEWED rows: see AiReviewManaged. */
   fun of(translation: Translation): Boolean =
-    !translation.text.isNullOrBlank() &&
+    hasReviewableText(translation) &&
       translation.state != TranslationState.DISABLED &&
       !translation.outdated
+
+  fun hasReviewableText(translation: Translation): Boolean = translation.text?.contains(NON_SPACE) == true
 
   const val SQL_NOT_REVIEWED = """t.text ~ '\S'
         and t.state <> :disabled

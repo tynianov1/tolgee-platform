@@ -59,7 +59,7 @@ class SourceChangeSettingsController(
 
   private fun toModel(project: ProjectDto): SourceChangeSettingsModel {
     val effective = sourceChangeSettingsProvider.getEffective(project)
-    val locked = sourceChangeSettingsProvider.isProtectReviewed(project.id)
+    val locked = sourceChangeSettingsProvider.isProtectReviewed(project)
     return SourceChangeSettingsModel(
       aiApproved = effective.aiApproved,
       humanEdited = effective.humanEdited,

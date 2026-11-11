@@ -4,6 +4,7 @@ import io.tolgee.configuration.tolgee.machineTranslation.LlmProperties
 import io.tolgee.constants.Feature
 import io.tolgee.ee.component.PublicEnabledFeaturesProvider
 import io.tolgee.ee.development.AiReviewTestData
+import io.tolgee.ee.service.aiReview.AiReviewUpdate
 import io.tolgee.fixtures.andIsOk
 import io.tolgee.fixtures.waitForNotThrowing
 import io.tolgee.model.aiReview.TranslationAiReview
@@ -18,12 +19,18 @@ import io.tolgee.repository.aiReview.TranslationAiReviewRepository
 import io.tolgee.testing.AuthorizedControllerTest
 import io.tolgee.testing.assert
 import io.tolgee.util.executeInNewTransaction
+import io.tolgee.websocket.WebsocketEvent
+import io.tolgee.websocket.WebsocketEventPublisher
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.security.MessageDigest
 
 @SpringBootTest
@@ -34,6 +41,10 @@ class SourceChangeBehaviourTest : AuthorizedControllerTest() {
 
   @Autowired
   private lateinit var translationAiReviewRepository: TranslationAiReviewRepository
+
+  @Autowired
+  @MockitoBean
+  private lateinit var websocketEventPublisher: WebsocketEventPublisher
 
   lateinit var testData: AiReviewTestData
 
@@ -123,6 +134,31 @@ class SourceChangeBehaviourTest : AuthorizedControllerTest() {
     }
     Thread.sleep(2000)
     translation(testData.deTranslation.id).text.assert.isEqualTo("Jetzt bezahlen")
+  }
+
+  @Test
+  fun `an AI approval with Keep publishes the removal of its row`() {
+    setAiApprovedAction(SourceChangeAction.MARK_OUTDATED)
+    aiApproval()
+    save()
+    changeBaseText()
+
+    waitForNotThrowing(pollTime = 100, timeout = 10_000) {
+      review(testData.deTranslation.id).assert.isNull()
+    }
+    val destination = argumentCaptor<String>()
+    val event = argumentCaptor<WebsocketEvent>()
+    verify(websocketEventPublisher, atLeastOnce()).invoke(destination.capture(), event.capture())
+    val removals =
+      destination.allValues
+        .zip(event.allValues)
+        .filter { it.first == "/projects/${testData.project.id}/ai-review-updated" }
+        .flatMap {
+          @Suppress("UNCHECKED_CAST")
+          it.second.data as List<AiReviewUpdate>
+        }.filter { it.translationId == testData.deTranslation.id }
+    removals.assert.isNotEmpty
+    removals.forEach { it.status.assert.isNull() }
   }
 
   @Test

@@ -81,4 +81,40 @@ class RuleScopeMatcherTest {
       branchingEnabled = false,
     ).assert.isTrue()
   }
+
+  @Test
+  fun `a rename across a pattern border changes the branch coverage`() {
+    RuleScopeMatcher
+      .branchCoverageChanges(rule(branchIn = listOf("release*")), "dev", "release-1")
+      .assert
+      .isTrue()
+    RuleScopeMatcher
+      .branchCoverageChanges(rule(branchNotIn = listOf("draft/*")), "draft/x", "main")
+      .assert
+      .isTrue()
+  }
+
+  @Test
+  fun `a rename inside the same patterns does not change the branch coverage`() {
+    RuleScopeMatcher
+      .branchCoverageChanges(rule(branchIn = listOf("release*")), "release-1", "release-2")
+      .assert
+      .isFalse()
+    RuleScopeMatcher
+      .branchCoverageChanges(rule(branchIn = listOf("release*")), "dev", "feature-1")
+      .assert
+      .isFalse()
+    RuleScopeMatcher
+      .branchCoverageChanges(rule(), "dev", "release-1")
+      .assert
+      .isFalse()
+  }
+
+  @Test
+  fun `a disabled rule never changes the branch coverage`() {
+    RuleScopeMatcher
+      .branchCoverageChanges(rule(enabled = false, branchIn = listOf("release*")), "dev", "release-1")
+      .assert
+      .isFalse()
+  }
 }

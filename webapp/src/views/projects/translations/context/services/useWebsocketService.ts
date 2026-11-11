@@ -75,9 +75,13 @@ export const useWebsocketService = (
   }
 
   function updateAiReviews(events: AiReviewUpdatedData[]) {
+    if (events.some((event) => !event.data)) {
+      translationService.refetchTranslations();
+      return;
+    }
     translationService.changeTranslations(
       events.flatMap((event) =>
-        event.data.map((update) => ({
+        (event.data ?? []).map((update) => ({
           keyId: update.keyId,
           language: update.languageTag,
           value: {

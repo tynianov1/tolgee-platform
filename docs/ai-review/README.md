@@ -228,6 +228,11 @@ stay.
   look like human reviews. Later demotion runs keep these approvals too (also for a disabled rule):
   only a matching rule that is stricter than the stored score, or a Never, removes them. A rule edit
   that changes only the name starts no demotion.
+- **Scope drift starts a demotion.** Moving a key to another namespace, changing its tags, or
+  renaming a branch re-checks approvals, so a Never or stricter rule that now matches them takes
+  effect. A namespace rename instead rewrites the rules' scope lists, and deleting a rule's only
+  language disables the rule. *Why:* scoping must stay a reliable off switch when the things it
+  matches on change under it.
 - **A base language change deletes all rows except human decisions** (`OVERRIDDEN`).
   *Why:* every stored score was measured against the old base language. The cost: a Reviewed
   translation that the AI approved keeps its state and `auto` but loses its row, so it counts as a
@@ -243,8 +248,19 @@ stay.
   job holds. *Why:* the batch framework needs the target list when the job is created, and the
   debounce would return the running job and drop the new targets. This shape is temporary. The
   planned follow-up is one queue-reading job per project that claims ready rows itself
-  (`for update skip locked`). Then triggers only write `PENDING` rows, and self-heal,
-  `handlingStuckItems` and `excludedJobId` go away.
+  (`for update skip locked`). Then triggers only write `PENDING` rows, and the follow-up deletes:
+  `selfHeal` and its project-wide scans, `handlingStuckItems` on `AiReviewRequest`, the
+  `excludedJobId` parameter on `BatchJobService.hasActiveJobForProject`, the revision ordering and
+  type coalescing added to `BatchJobActivityFinalizer`, and the claim re-pointing in
+  `AiReviewBatchServiceEeImpl.refreshForCurrentText`. The queue columns on the result row
+  (`PENDING`, `batch_job_id`, `manual_run_batch_job_id`, `re_review_requested`) then move to a
+  separate queue table.
+- **Known costs of the interim shape.** Self-heal runs after every finished QA or AI review job, so
+  one edit in a project with QA on runs two project-wide queue scans. Two AI review jobs that
+  finalize at the same time can each see the other as active, so neither self-heals; the rows then
+  wait for the next job in the project. A bulk text change (import, machine translate all) loads
+  the affected translations as entities inside the finalize transaction. All of this goes away with
+  the queue-reading job above, so it is accepted, not fixed, in this shape.
 - **Queued rows are inserted with `on conflict (translation_id) do nothing`.** *Why:* a user edit and a
   run start can queue the same translation at the same time, and a unique violation would abort the
   user's own transaction.

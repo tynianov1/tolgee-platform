@@ -5,6 +5,7 @@ import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.model.translation.Translation
 import io.tolgee.service.aiReview.AiReviewResultApplies
+import io.tolgee.websocket.ActivityWebsocketListener
 import io.tolgee.websocket.WebsocketEvent
 import io.tolgee.websocket.WebsocketEventPublisher
 import io.tolgee.websocket.WebsocketEventType
@@ -90,10 +91,19 @@ class AiReviewWebsocketPublisher(
   ) {
     websocketEventPublisher(
       WebsocketEventType.AI_REVIEW_UPDATED.projectDestinationFor(projectId),
-      WebsocketEvent(
-        data = updates,
-        timestamp = currentDateProvider.date.time,
-      ),
+      when {
+        updates.size >= ActivityWebsocketListener.COLLAPSE_LIMIT ->
+          WebsocketEvent(
+            data = null,
+            dataCollapsed = true,
+            timestamp = currentDateProvider.date.time,
+          )
+        else ->
+          WebsocketEvent(
+            data = updates,
+            timestamp = currentDateProvider.date.time,
+          )
+      },
     )
   }
 }

@@ -9,7 +9,6 @@ import io.tolgee.model.enums.TranslationProtection
 import io.tolgee.service.aiReview.EffectiveSourceChangeSettings
 import io.tolgee.service.aiReview.SourceChangeSettingsProvider
 import io.tolgee.service.project.ProjectFeatureGuard
-import io.tolgee.service.project.ProjectService
 import jakarta.persistence.EntityManager
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.context.annotation.Primary
@@ -19,12 +18,11 @@ import org.springframework.transaction.annotation.Transactional
 @Primary
 @Service
 class SourceChangeSettingsProviderEeImpl(
-  private val projectService: ProjectService,
   private val projectFeatureGuard: ProjectFeatureGuard,
   private val entityManager: EntityManager,
 ) : SourceChangeSettingsProvider {
   override fun getEffective(project: ProjectDto): EffectiveSourceChangeSettings {
-    val protect = project.translationProtection == TranslationProtection.PROTECT_REVIEWED
+    val protect = isProtectReviewed(project)
     val aiApprovedApplies = !protect && projectFeatureGuard.isFeatureEnabled(Feature.AI_REVIEW, project)
     return EffectiveSourceChangeSettings(
       aiApproved =
@@ -41,8 +39,8 @@ class SourceChangeSettingsProviderEeImpl(
     )
   }
 
-  fun isProtectReviewed(projectId: Long): Boolean =
-    projectService.getDto(projectId).translationProtection == TranslationProtection.PROTECT_REVIEWED
+  fun isProtectReviewed(project: ProjectDto): Boolean =
+    project.translationProtection == TranslationProtection.PROTECT_REVIEWED
 
   @Transactional
   @CacheEvict(cacheNames = [Caches.PROJECTS], key = "#projectId")
@@ -53,11 +51,14 @@ class SourceChangeSettingsProviderEeImpl(
     humanReviewed: SourceChangeAction,
   ): Project {
     val project = entityManager.find(Project::class.java, projectId)
-    if (projectFeatureGuard.isFeatureEnabled(Feature.AI_REVIEW, project)) {
+    val protect = project.translationProtection == TranslationProtection.PROTECT_REVIEWED
+    if (!protect && projectFeatureGuard.isFeatureEnabled(Feature.AI_REVIEW, project)) {
       project.aiApprovedSourceChangeAction = aiApproved
     }
     project.humanEditedSourceChangeAction = humanEdited
-    project.humanReviewedSourceChangeAction = humanReviewed
+    if (!protect) {
+      project.humanReviewedSourceChangeAction = humanReviewed
+    }
     return project
   }
 }

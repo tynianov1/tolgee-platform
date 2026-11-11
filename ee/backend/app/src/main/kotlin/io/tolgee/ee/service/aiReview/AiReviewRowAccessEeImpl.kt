@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service
 @Service
 class AiReviewRowAccessEeImpl(
   private val reviewRepository: TranslationAiReviewRepository,
+  private val websocketPublisher: AiReviewWebsocketPublisher,
 ) : AiReviewRowAccess {
   override fun reviewStates(translations: Collection<Translation>): Map<Long, AiReviewRowState> {
     if (translations.isEmpty()) return emptyMap()
@@ -29,6 +30,12 @@ class AiReviewRowAccessEeImpl(
   }
 
   override fun deleteRow(translationId: Long) {
-    reviewRepository.findByTranslationId(translationId)?.let { reviewRepository.delete(it) }
+    val row = reviewRepository.findByTranslationId(translationId) ?: return
+    reviewRepository.delete(row)
+    val translation = row.translation
+    websocketPublisher.publishAfterCommit(
+      translation.key.project.id,
+      listOf(AiReviewUpdate.removed(translation)),
+    )
   }
 }

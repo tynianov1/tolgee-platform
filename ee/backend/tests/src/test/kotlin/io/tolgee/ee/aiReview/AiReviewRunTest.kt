@@ -335,6 +335,19 @@ class AiReviewRunTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `an NBSP-only text is reviewable in the run preview like in the SQL backlog`() {
+    val nbsp = testData.addKeyWithTranslations("k.nbsp", deText = "\u00A0")
+    save()
+
+    performAuthPost(
+      "$projectUrl/ai-review/run/preview",
+      runBody(keyIds = listOf(nbsp.key.id), languageIds = listOf(testData.german.id)),
+    ).andIsOk.andAssertThatJson {
+      node("toReview").isEqualTo(1)
+    }
+  }
+
+  @Test
   fun `a Score only winner needs no state edit, an Active winner without it is skipped`() {
     testData.addRule {
       name = "Dry french"
@@ -344,21 +357,14 @@ class AiReviewRunTest : AuthorizedControllerTest() {
     }
     val dryKey = testData.addKeyWithTranslations("k.dry", tags = listOf("dry"))
     val restricted =
-      testData.root
-        .addUserAccount { username = "run_restricted" }
-        .self
-    testData.projectBuilder.addPermission {
-      user = restricted
-      type = null
-      scopes =
-        arrayOf(
-          Scope.KEYS_VIEW,
-          Scope.TRANSLATIONS_VIEW,
-          Scope.BATCH_MACHINE_TRANSLATE,
-          Scope.TRANSLATIONS_STATE_EDIT,
-        )
-      stateChangeLanguages = mutableSetOf(testData.german)
-    }
+      testData.addUserWithScopes(
+        "run_restricted",
+        Scope.KEYS_VIEW,
+        Scope.TRANSLATIONS_VIEW,
+        Scope.BATCH_MACHINE_TRANSLATE,
+        Scope.TRANSLATIONS_STATE_EDIT,
+        stateChangeLanguages = setOf(testData.german),
+      )
     save()
     userAccount = restricted
 
@@ -388,20 +394,13 @@ class AiReviewRunTest : AuthorizedControllerTest() {
     val branched = testData.addKeyWithTranslations("branched.key")
     branched.keyBuilder.self.branch = branch
     val restricted =
-      testData.root
-        .addUserAccount { username = "run_branch_restricted" }
-        .self
-    testData.projectBuilder.addPermission {
-      user = restricted
-      type = null
-      scopes =
-        arrayOf(
-          Scope.KEYS_VIEW,
-          Scope.TRANSLATIONS_VIEW,
-          Scope.BATCH_MACHINE_TRANSLATE,
-          Scope.TRANSLATIONS_STATE_EDIT,
-        )
-    }
+      testData.addUserWithScopes(
+        "run_branch_restricted",
+        Scope.KEYS_VIEW,
+        Scope.TRANSLATIONS_VIEW,
+        Scope.BATCH_MACHINE_TRANSLATE,
+        Scope.TRANSLATIONS_STATE_EDIT,
+      )
     save()
     userAccount = restricted
 
@@ -602,20 +601,13 @@ class AiReviewRunTest : AuthorizedControllerTest() {
     val branched = testData.addKeyWithTranslations("branched.key")
     branched.keyBuilder.self.branch = branch
     val restricted =
-      testData.root
-        .addUserAccount { username = "retry_restricted" }
-        .self
-    testData.projectBuilder.addPermission {
-      user = restricted
-      type = null
-      scopes =
-        arrayOf(
-          Scope.KEYS_VIEW,
-          Scope.TRANSLATIONS_VIEW,
-          Scope.BATCH_MACHINE_TRANSLATE,
-          Scope.TRANSLATIONS_STATE_EDIT,
-        )
-    }
+      testData.addUserWithScopes(
+        "retry_restricted",
+        Scope.KEYS_VIEW,
+        Scope.TRANSLATIONS_VIEW,
+        Scope.BATCH_MACHINE_TRANSLATE,
+        Scope.TRANSLATIONS_STATE_EDIT,
+      )
     save()
     userAccount = restricted
 

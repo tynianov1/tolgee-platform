@@ -212,7 +212,8 @@ export type AiReviewUpdate = {
   scoreOnlyRun: boolean;
   lastFailed: boolean;
 };
-export type AiReviewUpdatedData = WebsocketEvent<AiReviewUpdate[]>;
+// `data` is null when the server collapsed a too-large update; clients refetch then.
+export type AiReviewUpdatedData = WebsocketEvent<AiReviewUpdate[] | null>;
 
 export type EntityModification<T> = T extends keyof schemas
   ? {

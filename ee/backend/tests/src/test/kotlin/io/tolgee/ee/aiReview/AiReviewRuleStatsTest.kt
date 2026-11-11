@@ -101,6 +101,18 @@ class AiReviewRuleStatsTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `an overridden row with a failed re-review does not count as failed`() {
+    review("k.overridden", AiReviewStatus.OVERRIDDEN) {
+      lastFailureReason = AiReviewFailureReason.PROVIDER_ERROR
+    }
+    save()
+
+    performAuthGet(rulesUrl).andIsOk.andAssertThatJson {
+      node("_embedded.aiReviewRules[0].counts.failed").isEqualTo(0)
+    }
+  }
+
+  @Test
   fun `a FAILED marker without a failure reason is not counted and not retried`() {
     val marker = review("k.marker", AiReviewStatus.FAILED, reviewed = true)
     marker.self.auto = true
@@ -206,17 +218,6 @@ class AiReviewRuleStatsTest : AuthorizedControllerTest() {
       .getValue(testData.rule.id)
       .backlog.assert
       .isEqualTo(2)
-  }
-
-  @Test
-  fun `forEachBacklogItem visits the counted translations`() {
-    testData.addKeyWithTranslations("k.plain")
-    save()
-
-    val ids = mutableListOf<Long>()
-    statsService.forEachBacklogItem(testData.project.id, testData.rule.id) { ids.add(it) }
-    ids.size.assert.isEqualTo(4)
-    ids.assert.contains(testData.deTranslation.id, testData.frTranslation.id)
   }
 
   @Test

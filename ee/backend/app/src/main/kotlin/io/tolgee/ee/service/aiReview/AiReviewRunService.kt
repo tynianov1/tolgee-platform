@@ -19,6 +19,7 @@ import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.model.translation.Translation
 import io.tolgee.repository.TranslationRepository
 import io.tolgee.repository.aiReview.TranslationAiReviewRepository
+import io.tolgee.service.aiReview.AiReviewEligibleText
 import io.tolgee.service.language.LanguageService
 import io.tolgee.service.project.ProjectFeatureGuard
 import io.tolgee.service.project.ProjectService
@@ -216,7 +217,7 @@ class AiReviewRunService(
       translation: Translation,
       row: TranslationAiReview?,
     ): AiReviewSkipReason? {
-      if (translation.text.isNullOrBlank() || translation.state == TranslationState.DISABLED) {
+      if (!AiReviewEligibleText.hasReviewableText(translation) || translation.state == TranslationState.DISABLED) {
         return AiReviewSkipReason.EMPTY
       }
       if (translation.outdated) return AiReviewSkipReason.OUTDATED

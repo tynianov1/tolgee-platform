@@ -221,6 +221,23 @@ class AiReviewTranslationsViewTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `an NBSP-only text is reviewable in the filter, the backlog and the eligibility check`() {
+    val nbsp = testData.addKeyWithTranslations("k.nbsp", deText = "\u00A0").de
+    save()
+    keysFor("filterAiReviewStatus=NOT_REVIEWED_YET&filterAiReviewInLang=de").assert.contains("k.nbsp")
+    val backlog = mutableListOf<Long>()
+    statsService.forEachBacklogItem(testData.project.id, testData.rule.id) { backlog += it }
+    backlog.assert.contains(nbsp.self.id)
+    executeInNewTransaction(platformTransactionManager) {
+      val translation = translationService.get(nbsp.self.id)
+      AiReviewEligibility
+        .isEligible(translation, testData.englishTranslationBuilder.self.language.id, null)
+        .assert
+        .isTrue()
+    }
+  }
+
+  @Test
   fun `the outcome filters match only rows for the current text`() {
     testData.addKeyWithTranslations("k.stalehash").let {
       testData.addReview(it.de, AiReviewStatus.APPROVED, 90) {

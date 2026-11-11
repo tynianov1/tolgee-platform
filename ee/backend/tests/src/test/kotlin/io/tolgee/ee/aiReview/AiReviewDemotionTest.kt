@@ -251,6 +251,66 @@ class AiReviewDemotionTest : AuthorizedControllerTest() {
   }
 
   @Test
+  fun `renaming a branch demotes approvals that a Never rule now covers`() {
+    enabledFeaturesProvider.forceEnabled = setOf(Feature.AI_REVIEW, Feature.BRANCHING)
+    testData.project.useBranching = true
+    testData.addRule {
+      name = "Release never"
+      never = true
+      branchIn = mutableListOf("release*")
+    }
+    val devBranch =
+      testData.projectBuilder
+        .addBranch {
+          name = "dev"
+          project = testData.project
+        }.self
+    lateinit var branchDe: TranslationBuilder
+    testData.projectBuilder
+      .addKey {
+        name = "branch.key"
+        branch = devBranch
+      }.build {
+        addTag("ui")
+        addTranslation("en", "Branch source")
+        branchDe = addTranslation("de", "Branch Text")
+      }
+    approve(branchDe)
+    save()
+
+    performAuthPost("$projectUrl/branches/${devBranch.id}", mapOf("name" to "release-1")).andIsOk
+
+    waitForNotThrowing(pollTime = 100, timeout = 30_000) {
+      review(branchDe.self.id).assert.isNull()
+    }
+    translation(branchDe.self.id).state.assert.isEqualTo(TranslationState.TRANSLATED)
+    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.APPROVED)
+  }
+
+  @Test
+  fun `renaming a branch without a rule coverage change starts no demotion job`() {
+    enabledFeaturesProvider.forceEnabled = setOf(Feature.AI_REVIEW, Feature.BRANCHING)
+    testData.project.useBranching = true
+    testData.addRule {
+      name = "Release never"
+      never = true
+      branchIn = mutableListOf("release*")
+    }
+    val devBranch =
+      testData.projectBuilder
+        .addBranch {
+          name = "dev"
+          project = testData.project
+        }.self
+    save()
+
+    performAuthPost("$projectUrl/branches/${devBranch.id}", mapOf("name" to "feature-1")).andIsOk
+
+    demotionJobCount().assert.isZero()
+    review(testData.deTranslation.id)!!.status.assert.isEqualTo(AiReviewStatus.APPROVED)
+  }
+
+  @Test
   fun `disabling a rule does not demote`() {
     save()
     performAuthPut("$ruleUrl/enabled", mapOf("enabled" to false)).andIsOk
